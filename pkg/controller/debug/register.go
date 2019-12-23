@@ -29,7 +29,7 @@ func DefaultOptions() *Options {
 	}
 }
 
-// Register use to register the different debug endpoint
+// Register used to register the different debug endpoints
 func Register(mux httpserver.Server, options *Options) {
 	mux.HandleFunc("/debug/pprof/", pprof.Index)
 	if options == nil {
