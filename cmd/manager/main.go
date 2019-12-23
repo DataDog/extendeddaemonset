@@ -18,19 +18,19 @@ import (
 	"github.com/datadog/extendeddaemonset/pkg/apis"
 	edsconfig "github.com/datadog/extendeddaemonset/pkg/config"
 	"github.com/datadog/extendeddaemonset/pkg/controller"
+	"github.com/datadog/extendeddaemonset/pkg/controller/debug"
+	"github.com/datadog/extendeddaemonset/pkg/controller/httpserver"
+	"github.com/datadog/extendeddaemonset/pkg/controller/metrics"
 	"github.com/datadog/extendeddaemonset/version"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/operator-framework/operator-sdk/pkg/leader"
 	"github.com/operator-framework/operator-sdk/pkg/log/zap"
-	"github.com/operator-framework/operator-sdk/pkg/metrics"
 	"github.com/operator-framework/operator-sdk/pkg/restmapper"
 
 	"github.com/spf13/pflag"
 
 	"github.com/blang/semver"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	kversion "k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/discovery"
 
@@ -42,11 +42,13 @@ import (
 
 // Change below variables to serve metrics on different host or port.
 var (
-	metricsHost       = "0.0.0.0"
-	metricsPort int32 = 8383
+	bindHost              = "0.0.0.0"
+	bindPort        int32 = 8383
+	printVersionArg bool
+	pprofActive     bool
+
+	log = logf.Log.WithName("cmd")
 )
-var log = logf.Log.WithName("cmd")
-var printVersionArg bool
 
 func main() {
 	// Add the zap logger flag set to the CLI. The flag set must
@@ -57,6 +59,7 @@ func main() {
 	// controller-runtime)
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 	pflag.BoolVarP(&printVersionArg, "version", "v", printVersionArg, "print version")
+	pflag.BoolVarP(&pprofActive, "pprof", "", false, "enable pprof endpoint")
 
 	pflag.Parse()
 
@@ -130,7 +133,7 @@ func main() {
 	mgr, err := manager.New(cfg, manager.Options{
 		Namespace:          namespace,
 		MapperProvider:     restmapper.NewDynamicRESTMapper,
-		MetricsBindAddress: fmt.Sprintf("%s:%d", metricsHost, metricsPort),
+		MetricsBindAddress: "0",
 	})
 	if err != nil {
 		log.Error(err, "")
@@ -151,13 +154,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Create Service object to expose the metrics port.
-	servicePorts := []v1.ServicePort{
-		{Port: metricsPort, Name: metrics.OperatorPortName, Protocol: v1.ProtocolTCP, TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: metricsPort}},
+	// Create HttpServer handler
+	srv := httpserver.New(httpserver.Options{BindAddress: fmt.Sprintf("%s:%d", bindHost, bindPort)})
+	metrics.Register(srv)
+	if pprofActive {
+		debug.Register(srv, debug.DefaultOptions())
 	}
-	_, err = metrics.CreateMetricsService(ctx, cfg, servicePorts)
-	if err != nil {
-		log.Info(err.Error())
+	if err = mgr.Add(srv); err != nil {
+		log.Error(err, "HTTP server registration error")
+		os.Exit(1)
 	}
 
 	log.Info("Starting the Cmd.")

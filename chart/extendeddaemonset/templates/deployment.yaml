@@ -31,6 +31,9 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - --zap-level={{ .Values.logLevel }}
+          {{- if .Values.pprof.enabled }}
+            - --pprof=true
+          {{- end }}
           env:  
             - name: WATCH_NAMESPACE
           {{- if .Values.clusterScope }}

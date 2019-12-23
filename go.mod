@@ -9,6 +9,7 @@ require (
 	github.com/hako/durafmt v0.0.0-20191009132224-3f39dc1ed9f4
 	github.com/olekukonko/tablewriter v0.0.2
 	github.com/operator-framework/operator-sdk v0.12.0
+	github.com/prometheus/client_golang v1.0.0
 	github.com/prometheus/common v0.4.1
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.3

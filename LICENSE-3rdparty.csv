@@ -88,7 +88,6 @@ core,"github.com/operator-framework/operator-sdk/internal/util/yamlutil",Apache-
 core,"github.com/operator-framework/operator-sdk/pkg/k8sutil",Apache-2.0
 core,"github.com/operator-framework/operator-sdk/pkg/leader",Apache-2.0
 core,"github.com/operator-framework/operator-sdk/pkg/log/zap",Apache-2.0
-core,"github.com/operator-framework/operator-sdk/pkg/metrics",Apache-2.0
 core,"github.com/operator-framework/operator-sdk/pkg/restmapper",Apache-2.0
 core,"github.com/operator-framework/operator-sdk/pkg/test",Apache-2.0
 core,"github.com/operator-framework/operator-sdk/pkg/test/e2eutil",Apache-2.0
