@@ -11,7 +11,7 @@ import (
 	"github.com/datadog/extendeddaemonset/pkg/controller/httpserver"
 )
 
-// Options use to provide configuration option
+// Options used to provide configuration options
 type Options struct {
 	CmdLine bool
 	Profile bool
