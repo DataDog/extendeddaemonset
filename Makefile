@@ -59,6 +59,7 @@ push: container
 
 clean:
 	rm -f ${ARTIFACT}
+	rm -rf ./bin
 
 validate:
 	./bin/golangci-lint run ./...
@@ -79,7 +80,7 @@ local-load: $(CRDS)
 $(filter %.yaml,$(files)): %.yaml: %yaml
 	kubectl apply -f $@
 
-install-tools: bin/golangci-lint bin/operator-sdk bin/openapi-gen
+install-tools: bin/golangci-lint bin/operator-sdk
 
 bin/golangci-lint:
 	./hack/golangci-lint.sh v1.18.0

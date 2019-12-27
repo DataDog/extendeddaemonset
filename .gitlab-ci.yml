@@ -52,8 +52,6 @@ build_image:
   stage: image
   tags: [ "runner:docker", "size:large" ]
   image: 486234852809.dkr.ecr.us-east-1.amazonaws.com/docker-notary:0.6.1
-  before_script:
-    - ./hack/install_golang.sh
   script:
     - IMAGE_NAME=$DOCKER_REGISTRY/$PROJECTNAME:$TARGET_TAG
     - docker build --build-arg TAG=$TARGET_TAG -t $IMAGE_NAME -f Dockerfile .
@@ -80,11 +78,11 @@ test_e2e:
     - mkdir -p .cache
     - ./hack/install_golang.sh
     - ./hack/install_kube.sh
-    - export PATH=$PATH:/usr/local/go/bin:$(pwd)/bin
     - apt-get update && apt-get install -y mercurial jq
     - make install-tools
   script:
     - docker network inspect bridge
+    - export PATH=$PATH:/usr/local/go/bin:$(pwd)/bin
     - export KUBECONFIG="$(kind get kubeconfig-path)"
     - MASTER_IP=$(docker network inspect bridge | jq -r '.[].Containers[] | select( .Name | contains("kind-control-plane")).IPv4Address' | cut -d'/' -f1)
     - sed -i "s/127.0.0.1:32001/$MASTER_IP:6443/" $KUBECONFIG
