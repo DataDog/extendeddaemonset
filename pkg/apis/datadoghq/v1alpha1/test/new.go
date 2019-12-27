@@ -36,10 +36,11 @@ func NewExtendedDaemonSet(ns, name string, options *NewExtendedDaemonSetOptions)
 			APIVersion: apiVersion,
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace:   ns,
-			Name:        name,
-			Labels:      map[string]string{},
-			Annotations: map[string]string{},
+			Namespace:       ns,
+			Name:            name,
+			Labels:          map[string]string{},
+			Annotations:     map[string]string{},
+			ResourceVersion: "1",
 		},
 	}
 	if options != nil {
