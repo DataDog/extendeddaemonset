@@ -302,7 +302,12 @@ func TestReconcileExtendedDaemonSetReplicaSet_getPodList(t *testing.T) {
 			args: args{
 				ds: daemonset,
 			},
-			want:    &corev1.PodList{},
+			want: &corev1.PodList{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "PodList",
+					APIVersion: "v1",
+				},
+			},
 			wantErr: false,
 		},
 		{
@@ -315,6 +320,10 @@ func TestReconcileExtendedDaemonSetReplicaSet_getPodList(t *testing.T) {
 				ds: daemonset,
 			},
 			want: &corev1.PodList{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "PodList",
+					APIVersion: "v1",
+				},
 				Items: []corev1.Pod{*pod1, *pod2},
 			},
 			wantErr: false,
@@ -384,6 +393,10 @@ func TestReconcileExtendedDaemonSetReplicaSet_getNodeList(t *testing.T) {
 				replicaset: replicasset,
 			},
 			want: &corev1.NodeList{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "NodeList",
+					APIVersion: "v1",
+				},
 				Items: []corev1.Node{*node1, *node2},
 			},
 			wantErr: false,
@@ -402,7 +415,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_getNodeList(t *testing.T) {
 				return
 			}
 			if !apiequality.Semantic.DeepEqual(got, tt.want) {
-				t.Errorf("ReconcileExtendedDaemonSetReplicaSet.getNodeList() = %v, want %v", got, tt.want)
+				t.Errorf("ReconcileExtendedDaemonSetReplicaSet.getNodeList() = %#v \nwant %#v", got, tt.want)
 			}
 		})
 	}

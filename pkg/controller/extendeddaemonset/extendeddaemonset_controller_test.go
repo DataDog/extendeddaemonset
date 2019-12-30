@@ -510,6 +510,7 @@ func TestReconcileExtendedDaemonSet_updateStatusWithNewRS(t *testing.T) {
 		}})
 
 	daemonsetWithStatus := daemonset.DeepCopy()
+	daemonsetWithStatus.ResourceVersion = "2"
 	daemonsetWithStatus.Status = datadoghqv1alpha1.ExtendedDaemonSetStatus{
 		ActiveReplicaSet: "current",
 		Desired:          3,
@@ -622,10 +623,10 @@ func TestReconcileExtendedDaemonSet_updateStatusWithNewRS(t *testing.T) {
 				return
 			}
 			if !apiequality.Semantic.DeepEqual(got, tt.want) {
-				t.Errorf("ReconcileExtendedDaemonSet.updateStatusWithNewRS() got = %v, want %v", got, tt.want)
+				t.Errorf("ReconcileExtendedDaemonSet.updateStatusWithNewRS() got = %#v, \n want %#v", got, tt.want)
 			}
 			if !reflect.DeepEqual(got1, tt.wantResult) {
-				t.Errorf("ReconcileExtendedDaemonSet.updateStatusWithNewRS() gotResult = %v, wantResult %v", got1, tt.wantResult)
+				t.Errorf("ReconcileExtendedDaemonSet.updateStatusWithNewRS() gotResult = %v, \n wantResult %v", got1, tt.wantResult)
 			}
 		})
 	}
