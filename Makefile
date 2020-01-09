@@ -61,7 +61,7 @@ clean:
 	rm -f ${ARTIFACT}
 	rm -rf ./bin
 
-validate:
+validate: bin/golangci-lint bin/wwhrd
 	./bin/golangci-lint run ./...
 	./hack/verify-license.sh
 
