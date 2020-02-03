@@ -275,6 +275,12 @@ func schema_pkg_apis_datadoghq_v1alpha1_ExtendedDaemonSetReplicaSetStatus(ref co
 							Format: "int32",
 						},
 					},
+					"ignoredunresponsivenodes": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int32",
+						},
+					},
 					"conditions": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
@@ -294,7 +300,7 @@ func schema_pkg_apis_datadoghq_v1alpha1_ExtendedDaemonSetReplicaSetStatus(ref co
 						},
 					},
 				},
-				Required: []string{"status", "desired", "current", "ready", "available"},
+				Required: []string{"status", "desired", "current", "ready", "available", "ignoredunresponsivenodes"},
 			},
 		},
 		Dependencies: []string{
@@ -476,6 +482,12 @@ func schema_pkg_apis_datadoghq_v1alpha1_ExtendedDaemonSetStatus(ref common.Refer
 							Format: "int32",
 						},
 					},
+					"ignoredunresponsivenodes": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int32",
+						},
+					},
 					"state": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
@@ -494,7 +506,7 @@ func schema_pkg_apis_datadoghq_v1alpha1_ExtendedDaemonSetStatus(ref common.Refer
 						},
 					},
 				},
-				Required: []string{"desired", "current", "ready", "available", "upToDate", "activeReplicaSet"},
+				Required: []string{"desired", "current", "ready", "available", "upToDate", "ignoredunresponsivenodes", "activeReplicaSet"},
 			},
 		},
 		Dependencies: []string{

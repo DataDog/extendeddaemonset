@@ -235,6 +235,7 @@ func (r *ReconcileExtendedDaemonSet) updateStatusWithNewRS(logger logr.Logger, d
 		newDaemonset.Status.UpToDate = current.Status.Available
 		newDaemonset.Status.Available = current.Status.Available
 		newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateRunning
+		newDaemonset.Status.IgnoredUnresponsiveNodes = current.Status.IgnoredUnresponsiveNodes
 	}
 
 	if daemonset.Spec.Strategy.Canary != nil {
@@ -250,6 +251,7 @@ func (r *ReconcileExtendedDaemonSet) updateStatusWithNewRS(logger logr.Logger, d
 			newDaemonset.Status.Desired += upToDate.Status.Desired
 			newDaemonset.Status.UpToDate += upToDate.Status.Available
 			newDaemonset.Status.Available += upToDate.Status.Available
+			newDaemonset.Status.IgnoredUnresponsiveNodes += upToDate.Status.IgnoredUnresponsiveNodes
 
 			newDaemonset.Status.Canary.ReplicaSet = upToDate.Name
 

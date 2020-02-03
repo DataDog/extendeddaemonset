@@ -113,6 +113,22 @@ func GetPodConditionFromList(conditions []v1.PodCondition, conditionType v1.PodC
 	return -1, nil
 }
 
+// HasPodSchedulerIssue returns true if a pod remained unscheduled for more than 10 minutes
+// or if it stayed in `Terminating` state for longer than its grace period.
+func HasPodSchedulerIssue(pod *v1.Pod) bool {
+	_, isScheduled := IsPodScheduled(pod)
+	if !isScheduled && pod.CreationTimestamp.Add(10*time.Minute).Before(time.Now()) {
+		return true
+	}
+
+	if pod.DeletionTimestamp != nil && pod.DeletionGracePeriodSeconds != nil &&
+		pod.DeletionTimestamp.Add(time.Duration(*pod.DeletionGracePeriodSeconds)*time.Second).Before(time.Now()) {
+		return true
+	}
+
+	return false
+}
+
 // UpdatePodCondition updates existing pod condition or creates a new one. Sets LastTransitionTime to now if the
 // status has changed.
 // Returns true if pod condition has changed or has been added.

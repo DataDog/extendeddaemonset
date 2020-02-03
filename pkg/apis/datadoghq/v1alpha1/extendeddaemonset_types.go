@@ -92,11 +92,12 @@ const (
 // ExtendedDaemonSetStatus defines the observed state of ExtendedDaemonSet
 // +k8s:openapi-gen=true
 type ExtendedDaemonSetStatus struct {
-	Desired   int32 `json:"desired"`
-	Current   int32 `json:"current"`
-	Ready     int32 `json:"ready"`
-	Available int32 `json:"available"`
-	UpToDate  int32 `json:"upToDate"`
+	Desired                  int32 `json:"desired"`
+	Current                  int32 `json:"current"`
+	Ready                    int32 `json:"ready"`
+	Available                int32 `json:"available"`
+	UpToDate                 int32 `json:"upToDate"`
+	IgnoredUnresponsiveNodes int32 `json:"ignoredunresponsivenodes"`
 
 	State            ExtendedDaemonSetStatusState   `json:"state,omitempty"`
 	ActiveReplicaSet string                         `json:"activeReplicaSet"`
@@ -121,6 +122,7 @@ type ExtendedDaemonSetStatusCanary struct {
 // +kubebuilder:printcolumn:name="ready",type="integer",JSONPath=".status.ready"
 // +kubebuilder:printcolumn:name="up-to-date",type="integer",JSONPath=".status.upToDate"
 // +kubebuilder:printcolumn:name="available",type="integer",JSONPath=".status.available"
+// +kubebuilder:printcolumn:name="ignored unresponsive nodes",type="integer",JSONPath=".status.ignoredunresponsivenodes"
 // +kubebuilder:printcolumn:name="status",type="string",JSONPath=".status.state"
 // +kubebuilder:printcolumn:name="active rs",type="string",JSONPath=".status.activeReplicaSet"
 // +kubebuilder:printcolumn:name="canary rs",type="string",JSONPath=".status.canary.replicaSet"
