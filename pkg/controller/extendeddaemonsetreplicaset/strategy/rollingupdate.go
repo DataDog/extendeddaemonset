@@ -31,16 +31,28 @@ func ManageDeployment(client client.Client, params *Parameters) (*Result, error)
 	}
 	now := time.Now()
 	metaNow := metav1.NewTime(now)
-	var desiredPods, availablePods, readyPods, currentPods, oldAvailablePods, podsTerminating int32
+	var desiredPods, availablePods, readyPods, currentPods, oldAvailablePods, podsTerminating, nbIgnoredUnresponsiveNodes int32
 
 	allPodToCreate := []string{}
 	allPodToDelete := []string{}
+
+	nbNodes := len(params.PodByNodeName)
+
+	maxPodSchedulerFailure, err := intstrutil.GetValueFromIntOrPercent(params.Replicaset.Spec.Strategy.RollingUpdate.MaxPodSchedulerFailure, nbNodes, true)
+	if err != nil {
+		params.Logger.Error(err, "unable to retrieve maxPodSchedulerFailure from the strategy.RollingUpdate.MaxPodSchedulerFailure parameter")
+		return result, err
+	}
 
 	for nodeName, pod := range params.PodByNodeName {
 		desiredPods++
 		if pod == nil {
 			allPodToCreate = append(allPodToCreate, nodeName)
 		} else {
+			if podutils.HasPodSchedulerIssue(pod) && int(nbIgnoredUnresponsiveNodes) < maxPodSchedulerFailure {
+				nbIgnoredUnresponsiveNodes++
+				continue
+			}
 			if !compareSpecTemplateMD5Hash(params.Replicaset.Spec.TemplateGeneration, pod) {
 				if pod.DeletionTimestamp == nil {
 					allPodToDelete = append(allPodToDelete, nodeName)
@@ -62,9 +74,8 @@ func ManageDeployment(client client.Client, params *Parameters) (*Result, error)
 			}
 		}
 	}
-	// Retrieves parameters for calculation
-	nbNodes := len(params.PodByNodeName)
 
+	// Retrieves parameters for calculation
 	maxUnavailable, err := intstrutil.GetValueFromIntOrPercent(params.Replicaset.Spec.Strategy.RollingUpdate.MaxUnavailable, nbNodes, true)
 	if err != nil {
 		params.Logger.Error(err, "unable to retrieve maxUnavailable pod from the strategy.RollingUpdate.MaxUnavailable parameter")
@@ -103,6 +114,7 @@ func ManageDeployment(client client.Client, params *Parameters) (*Result, error)
 		result.NewStatus.Ready = readyPods
 		result.NewStatus.Current = currentPods
 		result.NewStatus.Available = availablePods
+		result.NewStatus.IgnoredUnresponsiveNodes = nbIgnoredUnresponsiveNodes
 	}
 
 	// Populate list of unscheduled pods on nodes due to resource limitation

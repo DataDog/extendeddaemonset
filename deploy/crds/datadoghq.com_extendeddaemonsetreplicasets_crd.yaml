@@ -19,6 +19,9 @@ spec:
   - JSONPath: .status.available
     name: available
     type: integer
+  - JSONPath: .status.ignoredunresponsivenodes
+    name: ignored unresponsive nodes
+    type: integer
   - JSONPath: .spec.selector
     name: node selector
     type: string
@@ -5894,6 +5897,9 @@ spec:
             desired:
               format: int32
               type: integer
+            ignoredunresponsivenodes:
+              format: int32
+              type: integer
             ready:
               format: int32
               type: integer
@@ -5903,6 +5909,7 @@ spec:
           - available
           - current
           - desired
+          - ignoredunresponsivenodes
           - ready
           - status
           type: object

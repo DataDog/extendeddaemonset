@@ -55,6 +55,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_Reconcile(t *testing.T) {
 	}
 	daemonsetWithStatus := test.NewExtendedDaemonSet("but", "foo", &test.NewExtendedDaemonSetOptions{Labels: map[string]string{"foo-key": "bar-value"}, Status: status})
 	maxUnavailable := intstr.FromInt(1)
+	maxPodSchedulerFailure := intstr.FromInt(0)
 	slowStartAdditiveIncrease := intstr.FromInt(1)
 	slowStartIntervalDuration := metav1.Duration{Duration: time.Minute}
 	replicaset := test.NewExtendedDaemonSetReplicaSet("but", "foo-1", &test.NewExtendedDaemonSetReplicaSetOptions{
@@ -62,6 +63,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_Reconcile(t *testing.T) {
 		OwnerRefName: "foo",
 		RollingUpdate: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate{
 			MaxUnavailable:            &maxUnavailable,
+			MaxPodSchedulerFailure:    &maxPodSchedulerFailure,
 			SlowStartAdditiveIncrease: &slowStartAdditiveIncrease,
 			SlowStartIntervalDuration: &slowStartIntervalDuration,
 			MaxParallelPodCreation:    datadoghqv1alpha1.NewInt32(1),

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	intstrutil "k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	podutils "github.com/datadog/extendeddaemonset/pkg/controller/utils/pod"
@@ -23,19 +24,30 @@ func ManageUnknow(client client.Client, params *Parameters) (*Result, error) {
 	}
 	now := time.Now()
 	metaNow := metav1.NewTime(now)
-	var desiredPods, currentPods, availablePods, readyPods int32
+	var desiredPods, currentPods, availablePods, readyPods, nbIgnoredUnresponsiveNodes int32
+
+	maxPodSchedulerFailure, err := intstrutil.GetValueFromIntOrPercent(params.Replicaset.Spec.Strategy.RollingUpdate.MaxPodSchedulerFailure, len(params.PodByNodeName), true)
+	if err != nil {
+		params.Logger.Error(err, "unable to retrieve maxPodSchedulerFailure from the strategy.RollingUpdate.MaxPodSchedulerFailure parameter")
+		return result, err
+	}
 
 	for _, pod := range params.PodByNodeName {
 		desiredPods++
 		if pod == nil {
-		} else if compareSpecTemplateMD5Hash(params.Replicaset.Spec.TemplateGeneration, pod) {
-			currentPods++
-			if podutils.IsPodAvailable(pod, 0, metaNow) {
-				availablePods++
+		} else {
+			if podutils.HasPodSchedulerIssue(pod) && int(nbIgnoredUnresponsiveNodes) < maxPodSchedulerFailure {
+				nbIgnoredUnresponsiveNodes++
+				continue
 			}
-			if podutils.IsPodReady(pod) {
-
-				readyPods++
+			if compareSpecTemplateMD5Hash(params.Replicaset.Spec.TemplateGeneration, pod) {
+				currentPods++
+				if podutils.IsPodAvailable(pod, 0, metaNow) {
+					availablePods++
+				}
+				if podutils.IsPodReady(pod) {
+					readyPods++
+				}
 			}
 		}
 	}
@@ -46,6 +58,7 @@ func ManageUnknow(client client.Client, params *Parameters) (*Result, error) {
 	result.NewStatus.Ready = readyPods
 	result.NewStatus.Current = currentPods
 	result.NewStatus.Available = availablePods
+	result.NewStatus.IgnoredUnresponsiveNodes = nbIgnoredUnresponsiveNodes
 	params.Logger.V(1).Info("Status:", "Desired", result.NewStatus.Desired, "Ready", readyPods, "Available", availablePods)
 
 	if result.NewStatus.Desired != result.NewStatus.Ready {
