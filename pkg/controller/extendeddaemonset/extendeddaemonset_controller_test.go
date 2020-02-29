@@ -34,7 +34,7 @@ import (
 
 func TestReconcileExtendedDaemonSet_selectNodes(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
-	log := logf.Log.WithName("TestReconcileExtendedDaemonSet_selectNodes")
+	log = logf.Log.WithName("TestReconcileExtendedDaemonSet_selectNodes")
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
@@ -351,7 +351,7 @@ func Test_selectCurrentReplicaSet(t *testing.T) {
 
 func TestReconcileExtendedDaemonSet_cleanupReplicaSet(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
-	log := logf.Log.WithName("TestReconcileExtendedDaemonSet_cleanupReplicaSet")
+	log = logf.Log.WithName("TestReconcileExtendedDaemonSet_cleanupReplicaSet")
 
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(t.Logf)
@@ -432,7 +432,7 @@ func TestReconcileExtendedDaemonSet_createNewReplicaSet(t *testing.T) {
 	eventBroadcaster := record.NewBroadcaster()
 
 	logf.SetLogger(logf.ZapLogger(true))
-	log := logf.Log.WithName("TestReconcileExtendedDaemonSet_selectNodes")
+	log = logf.Log.WithName("TestReconcileExtendedDaemonSet_selectNodes")
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
@@ -491,7 +491,7 @@ func TestReconcileExtendedDaemonSet_updateStatusWithNewRS(t *testing.T) {
 	eventBroadcaster := record.NewBroadcaster()
 
 	logf.SetLogger(logf.ZapLogger(true))
-	log := logf.Log.WithName("TestReconcileExtendedDaemonSet_selectNodes")
+	log = logf.Log.WithName("TestReconcileExtendedDaemonSet_selectNodes")
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme

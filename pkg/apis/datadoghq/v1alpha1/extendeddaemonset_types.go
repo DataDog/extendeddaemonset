@@ -97,7 +97,7 @@ type ExtendedDaemonSetStatus struct {
 	Ready                    int32 `json:"ready"`
 	Available                int32 `json:"available"`
 	UpToDate                 int32 `json:"upToDate"`
-	IgnoredUnresponsiveNodes int32 `json:"ignoredunresponsivenodes"`
+	IgnoredUnresponsiveNodes int32 `json:"ignoredUnresponsiveNodes"`
 
 	State            ExtendedDaemonSetStatusState   `json:"state,omitempty"`
 	ActiveReplicaSet string                         `json:"activeReplicaSet"`
@@ -112,6 +112,7 @@ type ExtendedDaemonSetStatusCanary struct {
 	Nodes []string `json:"nodes,omitempty"`
 }
 
+// +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // ExtendedDaemonSet is the Schema for the extendeddaemonsets API

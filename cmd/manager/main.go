@@ -26,7 +26,6 @@ import (
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/operator-framework/operator-sdk/pkg/leader"
 	"github.com/operator-framework/operator-sdk/pkg/log/zap"
-	"github.com/operator-framework/operator-sdk/pkg/restmapper"
 
 	"github.com/spf13/pflag"
 
@@ -132,7 +131,6 @@ func main() {
 	// Create a new Cmd to provide shared dependencies and start components
 	mgr, err := manager.New(cfg, manager.Options{
 		Namespace:          namespace,
-		MapperProvider:     restmapper.NewDynamicRESTMapper,
 		MetricsBindAddress: "0",
 	})
 	if err != nil {
@@ -156,7 +154,14 @@ func main() {
 
 	// Create HttpServer handler
 	srv := httpserver.New(httpserver.Options{BindAddress: fmt.Sprintf("%s:%d", bindHost, bindPort)})
-	metrics.Register(srv)
+
+	// configure the metrics handler
+	metricsHandler := metrics.NewHandler(srv)
+	if err = controller.AddToMetricsHandler(mgr, metricsHandler); err != nil {
+		log.Error(err, "")
+		os.Exit(1)
+	}
+
 	if pprofActive {
 		debug.Register(srv, debug.DefaultOptions())
 	}

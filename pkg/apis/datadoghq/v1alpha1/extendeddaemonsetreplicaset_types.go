@@ -47,7 +47,7 @@ type ExtendedDaemonSetReplicaSetStatus struct {
 	Current                  int32  `json:"current"`
 	Ready                    int32  `json:"ready"`
 	Available                int32  `json:"available"`
-	IgnoredUnresponsiveNodes int32  `json:"ignoredunresponsivenodes"`
+	IgnoredUnresponsiveNodes int32  `json:"ignoredUnresponsiveNodes"`
 
 	// Conditions Represents the latest available observations of a DaemonSet's current state.
 	// +listType=set
@@ -106,7 +106,7 @@ const (
 // +kubebuilder:printcolumn:name="current",type="integer",JSONPath=".status.current"
 // +kubebuilder:printcolumn:name="ready",type="integer",JSONPath=".status.ready"
 // +kubebuilder:printcolumn:name="available",type="integer",JSONPath=".status.available"
-// +kubebuilder:printcolumn:name="ignored unresponsive nodes",type="integer",JSONPath=".status.ignoredunresponsivenodes"
+// +kubebuilder:printcolumn:name="ignored unresponsive nodes",type="integer",JSONPath=".status.ignoredUnresponsiveNodes"
 // +kubebuilder:printcolumn:name="node selector",type="string",JSONPath=".spec.selector"
 // +kubebuilder:printcolumn:name="age",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:resource:path=extendeddaemonsetreplicasets,shortName=ers

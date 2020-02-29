@@ -5,12 +5,12 @@ go 1.13
 require (
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/go-logr/logr v0.1.0
-	github.com/go-openapi/spec v0.19.2
+	github.com/go-openapi/spec v0.19.4
 	github.com/hako/durafmt v0.0.0-20191009132224-3f39dc1ed9f4
 	github.com/olekukonko/tablewriter v0.0.2
-	github.com/operator-framework/operator-sdk v0.13.0
-	github.com/prometheus/client_golang v1.1.0
-	github.com/prometheus/common v0.6.0
+	github.com/operator-framework/operator-sdk v0.15.2
+	github.com/prometheus/client_golang v1.2.1
+	github.com/prometheus/common v0.7.0
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
 	k8s.io/api v0.0.0
@@ -20,6 +20,7 @@ require (
 	k8s.io/code-generator v0.0.0
 	k8s.io/gengo v0.0.0-20191010091904-7fa3014cb28f
 	k8s.io/kube-openapi v0.0.0-20190918143330-0270cf2f1c1d
+	k8s.io/kube-state-metrics v1.7.2
 	sigs.k8s.io/controller-runtime v0.4.0
 )
 
@@ -47,3 +48,7 @@ replace (
 	k8s.io/metrics => k8s.io/metrics v0.0.0-20191016113814-3b1a734dba6e
 	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.0.0-20191016112829-06bb3c9d77c9
 )
+
+replace github.com/docker/docker => github.com/moby/moby v0.7.3-0.20190826074503-38ab9da00309 // Required by Helm
+
+replace github.com/openshift/api => github.com/openshift/api v0.0.0-20190924102528-32369d4db2ad // Required until https://github.com/operator-framework/operator-lifecycle-manager/pull/1241 is resolved
