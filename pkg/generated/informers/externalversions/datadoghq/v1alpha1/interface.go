@@ -15,6 +15,8 @@ import (
 type Interface interface {
 	// ExtendedDaemonSets returns a ExtendedDaemonSetInformer.
 	ExtendedDaemonSets() ExtendedDaemonSetInformer
+	// ExtendedDaemonSetReplicaSets returns a ExtendedDaemonSetReplicaSetInformer.
+	ExtendedDaemonSetReplicaSets() ExtendedDaemonSetReplicaSetInformer
 }
 
 type version struct {
@@ -31,4 +33,9 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // ExtendedDaemonSets returns a ExtendedDaemonSetInformer.
 func (v *version) ExtendedDaemonSets() ExtendedDaemonSetInformer {
 	return &extendedDaemonSetInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// ExtendedDaemonSetReplicaSets returns a ExtendedDaemonSetReplicaSetInformer.
+func (v *version) ExtendedDaemonSetReplicaSets() ExtendedDaemonSetReplicaSetInformer {
+	return &extendedDaemonSetReplicaSetInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

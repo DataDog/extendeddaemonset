@@ -21,6 +21,10 @@ func (c *FakeDatadoghqV1alpha1) ExtendedDaemonSets(namespace string) v1alpha1.Ex
 	return &FakeExtendedDaemonSets{c, namespace}
 }
 
+func (c *FakeDatadoghqV1alpha1) ExtendedDaemonSetReplicaSets(namespace string) v1alpha1.ExtendedDaemonSetReplicaSetInterface {
+	return &FakeExtendedDaemonSetReplicaSets{c, namespace}
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeDatadoghqV1alpha1) RESTClient() rest.Interface {

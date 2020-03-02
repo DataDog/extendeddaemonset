@@ -44,6 +44,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=datadoghq.com, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("extendeddaemonsets"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Datadoghq().V1alpha1().ExtendedDaemonSets().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("extendeddaemonsetreplicasets"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Datadoghq().V1alpha1().ExtendedDaemonSetReplicaSets().Informer()}, nil
 
 	}
 

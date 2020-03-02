@@ -8,3 +8,5 @@
 package v1alpha1
 
 type ExtendedDaemonSetExpansion interface{}
+
+type ExtendedDaemonSetReplicaSetExpansion interface{}

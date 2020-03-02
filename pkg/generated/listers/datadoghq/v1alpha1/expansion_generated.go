@@ -14,3 +14,11 @@ type ExtendedDaemonSetListerExpansion interface{}
 // ExtendedDaemonSetNamespaceListerExpansion allows custom methods to be added to
 // ExtendedDaemonSetNamespaceLister.
 type ExtendedDaemonSetNamespaceListerExpansion interface{}
+
+// ExtendedDaemonSetReplicaSetListerExpansion allows custom methods to be added to
+// ExtendedDaemonSetReplicaSetLister.
+type ExtendedDaemonSetReplicaSetListerExpansion interface{}
+
+// ExtendedDaemonSetReplicaSetNamespaceListerExpansion allows custom methods to be added to
+// ExtendedDaemonSetReplicaSetNamespaceLister.
+type ExtendedDaemonSetReplicaSetNamespaceListerExpansion interface{}
