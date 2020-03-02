@@ -6,6 +6,8 @@
 package controller
 
 import (
+	"github.com/datadog/extendeddaemonset/pkg/controller/metrics"
+
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
@@ -16,6 +18,19 @@ var AddToManagerFuncs []func(manager.Manager) error
 func AddToManager(m manager.Manager) error {
 	for _, f := range AddToManagerFuncs {
 		if err := f(m); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// AddToMetricsHandlerFuncs is a list of functions to get all Metrics store to the Metrics.Handler
+var AddToMetricsHandlerFuncs []func(m manager.Manager, h metrics.Handler) error
+
+// AddToMetricsHandler add metrics to the Metrics.Handler
+func AddToMetricsHandler(m manager.Manager, h metrics.Handler) error {
+	for _, f := range AddToMetricsHandlerFuncs {
+		if err := f(m, h); err != nil {
 			return err
 		}
 	}

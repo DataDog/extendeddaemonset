@@ -3,6 +3,7 @@ build/_output
 build/_test
 /controller
 /kubectl-eds
+/test/fake-process/fake-process
 # Code coverage report
 /.cover
 /bin
