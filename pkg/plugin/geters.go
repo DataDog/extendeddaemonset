@@ -143,7 +143,7 @@ func (o *GetERSOptions) Run() error {
 
 	table := newGetERSTable(o.Out)
 	for _, item := range ersList.Items {
-		data := []string{item.Namespace, item.Name, intToString(item.Status.Desired), intToString(item.Status.Current), intToString(item.Status.Ready), intToString(item.Status.Available), item.Status.Status, getDuration(&item.ObjectMeta)}
+		data := []string{item.Namespace, item.Name, intToString(item.Status.Desired), intToString(item.Status.Current), intToString(item.Status.Ready), intToString(item.Status.Available), intToString(item.Status.IgnoredUnresponsiveNodes), item.Status.Status, getDuration(&item.ObjectMeta)}
 		table.Append(data)
 	}
 
@@ -154,7 +154,7 @@ func (o *GetERSOptions) Run() error {
 
 func newGetERSTable(out io.Writer) *tablewriter.Table {
 	table := tablewriter.NewWriter(out)
-	table.SetHeader([]string{"Namespace", "Name", "Desired", "Current", "Ready", "Available", "Status", "Age"})
+	table.SetHeader([]string{"Namespace", "Name", "Desired", "Current", "Ready", "Available", "Ignored Unresponsive Nodes", "Status", "Age"})
 	table.SetBorders(tablewriter.Border{Left: false, Top: false, Right: false, Bottom: false})
 	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
 	table.SetRowLine(false)

@@ -24,19 +24,17 @@ func NewHandler(mux httpserver.Server) Handler {
 		mux: mux,
 	}
 
-	var ksmetricsPath = "/ksmetrics"
-	mux.HandleFunc(ksmetricsPath, handler.ServeHTTP)
-
-	var metricsPath = "/metrics"
 	promHandler := promhttp.HandlerFor(metrics.Registry, promhttp.HandlerOpts{
 		ErrorHandling: promhttp.HTTPErrorOnError,
 	})
-	handler.mux.Handle(metricsPath, promHandler)
+
+	handler.mux.HandleFunc("/metrics", promHandler.ServeHTTP)
+	handler.mux.HandleFunc("/ksmetrics", handler.serveKsmHTTP)
 
 	return handler
 }
 
-func (h *storesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *storesHandler) serveKsmHTTP(w http.ResponseWriter, r *http.Request) {
 	resHeader := w.Header()
 	// 0.0.4 is the exposition format version of prometheus
 	// https://prometheus.io/docs/instrumenting/exposition_formats/#text-based-format
