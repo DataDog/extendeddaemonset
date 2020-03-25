@@ -34,7 +34,7 @@ spec:
           {{- if .Values.pprof.enabled }}
             - --pprof=true
           {{- end }}
-          env:  
+          env:
             - name: WATCH_NAMESPACE
           {{- if .Values.clusterScope }}
               value: ""
@@ -53,10 +53,16 @@ spec:
             - name: metrics
               containerPort: 8383
               protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            periodSeconds: 10
           livenessProbe:
             httpGet:
-              path: /metrics
-              port: metrics
+              path: /live
+              port: 8080
+            periodSeconds: 10
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
