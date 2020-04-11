@@ -13,8 +13,6 @@ import (
 // ExtendedDaemonSetReplicaSetSpec defines the desired state of ExtendedDaemonSetReplicaSet
 // +k8s:openapi-gen=true
 type ExtendedDaemonSetReplicaSetSpec struct {
-	// DaemonSetReplicaSet deployment strategy
-	Strategy ExtendedDaemonSetReplicaSetSpecStrategy `json:"strategy"`
 	// A label query over pods that are managed by the daemon set.
 	// Must match in order to be controlled.
 	// If empty, defaulted to labels on Pod template.

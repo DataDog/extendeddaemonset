@@ -180,12 +180,6 @@ func schema_pkg_apis_datadoghq_v1alpha1_ExtendedDaemonSetReplicaSetSpec(ref comm
 				Description: "ExtendedDaemonSetReplicaSetSpec defines the desired state of ExtendedDaemonSetReplicaSet",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"strategy": {
-						SchemaProps: spec.SchemaProps{
-							Description: "DaemonSetReplicaSet deployment strategy",
-							Ref:         ref("./pkg/apis/datadoghq/v1alpha1.ExtendedDaemonSetReplicaSetSpecStrategy"),
-						},
-					},
 					"selector": {
 						SchemaProps: spec.SchemaProps{
 							Description: "A label query over pods that are managed by the daemon set. Must match in order to be controlled. If empty, defaulted to labels on Pod template.",
@@ -206,11 +200,11 @@ func schema_pkg_apis_datadoghq_v1alpha1_ExtendedDaemonSetReplicaSetSpec(ref comm
 						},
 					},
 				},
-				Required: []string{"strategy", "template"},
+				Required: []string{"template"},
 			},
 		},
 		Dependencies: []string{
-			"./pkg/apis/datadoghq/v1alpha1.ExtendedDaemonSetReplicaSetSpecStrategy", "k8s.io/api/core/v1.PodTemplateSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"},
+			"k8s.io/api/core/v1.PodTemplateSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"},
 	}
 }
 

@@ -135,20 +135,20 @@ func (r *ReconcileExtendedDaemonSetReplicaSet) Reconcile(request reconcile.Reque
 		return reconcile.Result{}, err
 	}
 
+	// First retrieve the Parent DDaemonset
+	daemonsetInstance, err := r.getDaemonsetOwner(replicaSetInstance)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	lastResyncTimeStampCond := conditions.GetExtendedDaemonSetReplicaSetStatusCondition(&replicaSetInstance.Status, datadoghqv1alpha1.ConditionTypeLastFullSync)
 	if lastResyncTimeStampCond != nil {
-		nextSyncTS := lastResyncTimeStampCond.LastUpdateTime.Add(replicaSetInstance.Spec.Strategy.ReconcileFrequency.Duration)
+		nextSyncTS := lastResyncTimeStampCond.LastUpdateTime.Add(daemonsetInstance.Spec.Strategy.ReconcileFrequency.Duration)
 		if nextSyncTS.After(now.Time) {
 			requeueDuration := nextSyncTS.Sub(now.Time)
 			reqLogger.V(1).Info("Reconcile, skip this resync", "requeueAfter", requeueDuration)
 			return reconcile.Result{RequeueAfter: requeueDuration}, nil
 		}
-	}
-
-	// First retrieve the Parent DDaemonset
-	daemonsetInstance, err := r.getDaemonsetOwner(replicaSetInstance)
-	if err != nil {
-		return reconcile.Result{}, err
 	}
 
 	// retrieved and build information for the strategy
@@ -190,8 +190,8 @@ func (r *ReconcileExtendedDaemonSetReplicaSet) Reconcile(request reconcile.Reque
 	}
 
 	lastPodCreationCondition := conditions.GetExtendedDaemonSetReplicaSetStatusCondition(newStatus, datadoghqv1alpha1.ConditionTypePodCreation)
-	if lastPodCreationCondition != nil && now.Sub(lastPodCreationCondition.LastUpdateTime.Time) < replicaSetInstance.Spec.Strategy.ReconcileFrequency.Duration {
-		result.RequeueAfter = replicaSetInstance.Spec.Strategy.ReconcileFrequency.Duration
+	if lastPodCreationCondition != nil && now.Sub(lastPodCreationCondition.LastUpdateTime.Time) < daemonsetInstance.Spec.Strategy.ReconcileFrequency.Duration {
+		result.RequeueAfter = daemonsetInstance.Spec.Strategy.ReconcileFrequency.Duration
 	} else {
 		errs = append(errs, createPods(reqLogger, r.client, r.scheme, r.isNodeAffinitySupported, replicaSetInstance, strategyResult.PodsToCreate)...)
 		if len(strategyResult.PodsToCreate) > 0 {
@@ -217,6 +217,7 @@ func (r *ReconcileExtendedDaemonSetReplicaSet) buildStrategyParams(logger logr.L
 	}
 
 	strategyParams := &strategy.Parameters{
+		Strategy:         &daemonset.Spec.Strategy,
 		Replicaset:       replicaset,
 		ReplicaSetStatus: string(rsStatus),
 		Logger:           logger.WithValues("strategy", rsStatus),

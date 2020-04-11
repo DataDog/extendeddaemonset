@@ -45,7 +45,19 @@ func TestReconcileExtendedDaemonSetReplicaSet_Reconcile(t *testing.T) {
 	s.AddKnownTypes(corev1.SchemeGroupVersion, &corev1.NodeList{})
 	s.AddKnownTypes(corev1.SchemeGroupVersion, &corev1.Node{})
 
-	daemonset := test.NewExtendedDaemonSet("but", "foo", &test.NewExtendedDaemonSetOptions{Labels: map[string]string{"foo-key": "bar-value"}})
+	maxUnavailable := intstr.FromInt(1)
+	maxPodSchedulerFailure := intstr.FromInt(0)
+	slowStartAdditiveIncrease := intstr.FromInt(1)
+	slowStartIntervalDuration := metav1.Duration{Duration: time.Minute}
+	rollingUpdate := &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate{
+		MaxUnavailable:            &maxUnavailable,
+		MaxPodSchedulerFailure:    &maxPodSchedulerFailure,
+		SlowStartAdditiveIncrease: &slowStartAdditiveIncrease,
+		SlowStartIntervalDuration: &slowStartIntervalDuration,
+		MaxParallelPodCreation:    datadoghqv1alpha1.NewInt32(1),
+	}
+	options := &test.NewExtendedDaemonSetOptions{Labels: map[string]string{"foo-key": "bar-value"}, RollingUpdate: rollingUpdate}
+	daemonset := test.NewExtendedDaemonSet("but", "foo", options)
 
 	status := &datadoghqv1alpha1.ExtendedDaemonSetStatus{
 		ActiveReplicaSet: "foo-1",
@@ -53,21 +65,10 @@ func TestReconcileExtendedDaemonSetReplicaSet_Reconcile(t *testing.T) {
 			ReplicaSet: "foo-2",
 		},
 	}
-	daemonsetWithStatus := test.NewExtendedDaemonSet("but", "foo", &test.NewExtendedDaemonSetOptions{Labels: map[string]string{"foo-key": "bar-value"}, Status: status})
-	maxUnavailable := intstr.FromInt(1)
-	maxPodSchedulerFailure := intstr.FromInt(0)
-	slowStartAdditiveIncrease := intstr.FromInt(1)
-	slowStartIntervalDuration := metav1.Duration{Duration: time.Minute}
+	daemonsetWithStatus := test.NewExtendedDaemonSet("but", "foo", &test.NewExtendedDaemonSetOptions{Labels: map[string]string{"foo-key": "bar-value"}, RollingUpdate: rollingUpdate, Status: status})
 	replicaset := test.NewExtendedDaemonSetReplicaSet("but", "foo-1", &test.NewExtendedDaemonSetReplicaSetOptions{
 		Labels:       map[string]string{"foo-key": "bar-value"},
 		OwnerRefName: "foo",
-		RollingUpdate: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate{
-			MaxUnavailable:            &maxUnavailable,
-			MaxPodSchedulerFailure:    &maxPodSchedulerFailure,
-			SlowStartAdditiveIncrease: &slowStartAdditiveIncrease,
-			SlowStartIntervalDuration: &slowStartIntervalDuration,
-			MaxParallelPodCreation:    datadoghqv1alpha1.NewInt32(1),
-		},
 	})
 
 	type fields struct {
