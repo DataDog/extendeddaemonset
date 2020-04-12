@@ -18,5 +18,5 @@ const (
 	// should be taken into consideration during the initial rolling-update.
 	ExtendedDaemonSetOldDaemonsetAnnotationKey = "extendeddaemonset.datadoghq.com/old-daemonset"
 	// ExtendedDaemonSetRessourceNodeAnnotationKey annotation key used on Node to overwrite the resource allocated to a specific container linked to an ExtendedDaemonset
-	ExtendedDaemonSetRessourceNodeAnnotationKey = "resources.extendeddaemonset.datadoghq.com/%s.%s"
+	ExtendedDaemonSetRessourceNodeAnnotationKey = "resources.extendeddaemonset.datadoghq.com/%s.%s.%s"
 )

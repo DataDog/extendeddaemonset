@@ -28,9 +28,13 @@ func createPods(logger logr.Logger, client client.Client, scheme *runtime.Scheme
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
-			newPod := podutils.CreatePodFromDaemonSetReplicaSet(scheme, replicaset, podsToCreate[id], podAffinitySupported)
+			newPod, err := podutils.CreatePodFromDaemonSetReplicaSet(scheme, replicaset, podsToCreate[id], podAffinitySupported)
+			if err != nil {
+				logger.Error(err, "Generate pod template failed", "name", newPod.GenerateName)
+				errsChan <- err
+			}
 			logger.V(1).Info("Create pod", "name", newPod.GenerateName, "node", podsToCreate[id], "addAffinity", podAffinitySupported)
-			err := client.Create(context.TODO(), newPod)
+			err = client.Create(context.TODO(), newPod)
 			if err != nil {
 				logger.Error(err, "Create pod failed", "name", newPod.GenerateName)
 				errsChan <- err

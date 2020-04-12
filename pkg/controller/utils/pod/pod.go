@@ -27,6 +27,8 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/datadog/extendeddaemonset/pkg/controller/utils/affinity"
 )
 
 // GetContainerStatus extracts the status of container "name" from "statuses".
@@ -50,7 +52,7 @@ func GetExistingContainerStatus(statuses []v1.ContainerStatus, name string) v1.C
 // IsPodScheduled return true if it is already assigned to a Node
 func IsPodScheduled(pod *v1.Pod) (string, bool) {
 	isScheduled := pod.Spec.NodeName != ""
-	nodeName := GetNodeNameFromAffinity(pod.Spec.Affinity)
+	nodeName := affinity.GetNodeNameFromAffinity(pod.Spec.Affinity)
 	return nodeName, isScheduled
 }
 

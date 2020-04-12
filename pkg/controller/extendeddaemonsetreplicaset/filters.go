@@ -28,7 +28,7 @@ func FilterAndMapPodsByNode(logger logr.Logger, replicaset *datadoghqv1alpha1.Ex
 	}
 
 	// create a Fake pod from the current replicaset.spec.template
-	newPod := podutils.CreatePodFromDaemonSetReplicaSet(nil, replicaset, nil, false)
+	newPod, _ := podutils.CreatePodFromDaemonSetReplicaSet(nil, replicaset, nil, false)
 	// var unschedulabledNodes []*corev1.Node
 	// Associate Pods to Nodes
 	podsByNodeName := make(map[string][]*corev1.Pod)

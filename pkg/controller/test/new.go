@@ -8,7 +8,7 @@ package test
 import (
 	corev1 "k8s.io/api/core/v1"
 
-	utilspod "github.com/datadog/extendeddaemonset/pkg/controller/utils/pod"
+	utilaffinity "github.com/datadog/extendeddaemonset/pkg/controller/utils/affinity"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -91,6 +91,6 @@ func NewPod(namespace, name, nodeName string, opts *NewPodOptions) *corev1.Pod {
 		pod.Status.Phase = opts.Phase
 	}
 
-	utilspod.ReplaceNodeNameNodeAffinity(pod.Spec.Affinity, nodeName)
+	utilaffinity.ReplaceNodeNameNodeAffinity(pod.Spec.Affinity, nodeName)
 	return pod
 }

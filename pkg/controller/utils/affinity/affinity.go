@@ -3,7 +3,7 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-2019 Datadog, Inc.
 
-package pod
+package affinity
 
 import (
 	v1 "k8s.io/api/core/v1"
