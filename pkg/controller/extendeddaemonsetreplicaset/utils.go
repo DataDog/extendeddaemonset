@@ -20,7 +20,7 @@ import (
 	"github.com/go-logr/logr"
 )
 
-func createPods(logger logr.Logger, client client.Client, scheme *runtime.Scheme, podAffinitySupported bool, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, podsToCreate []string) []error {
+func createPods(logger logr.Logger, client client.Client, scheme *runtime.Scheme, podAffinitySupported bool, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, podsToCreate []*corev1.Node) []error {
 	var errs []error
 	var wg sync.WaitGroup
 	errsChan := make(chan error, len(podsToCreate))
@@ -50,20 +50,20 @@ func createPods(logger logr.Logger, client client.Client, scheme *runtime.Scheme
 	return errs
 }
 
-func deletePods(logger logr.Logger, c client.Client, podByNodeName map[string]*corev1.Pod, nodeNames []string) []error {
+func deletePods(logger logr.Logger, c client.Client, podByNodeName map[*corev1.Node]*corev1.Pod, nodes []*corev1.Node) []error {
 	var errs []error
 	var wg sync.WaitGroup
-	errsChan := make(chan error, len(nodeNames))
-	for _, nodeName := range nodeNames {
+	errsChan := make(chan error, len(nodes))
+	for _, node := range nodes {
 		wg.Add(1)
-		go func(nodeName string) {
+		go func(n *corev1.Node) {
 			defer wg.Done()
-			logger.V(1).Info("Delete pod", "name", podByNodeName[nodeName].Name, "node", nodeName)
-			err := c.Delete(context.TODO(), podByNodeName[nodeName])
+			logger.V(1).Info("Delete pod", "name", podByNodeName[n].Name, "node", n.Name)
+			err := c.Delete(context.TODO(), podByNodeName[n])
 			if err != nil {
 				errsChan <- err
 			}
-		}(nodeName)
+		}(node)
 	}
 	go func() {
 		wg.Wait()

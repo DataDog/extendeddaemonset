@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
+	cmp "github.com/google/go-cmp/cmp"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 
 	corev1 "k8s.io/api/core/v1"
-	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	datadoghqv1alpha1 "github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
@@ -26,6 +26,8 @@ func TestFilterPodsByNode(t *testing.T) {
 	ns := "foo"
 	NodeNameA := "nodeA"
 	NodeNameB := "nodeB"
+	nodeA := ctrltest.NewNode(NodeNameA, nil)
+	nodeB := ctrltest.NewNode(NodeNameB, nil)
 	pod1NodeA := ctrltest.NewPod(ns, "pod1", NodeNameA, &ctrltest.NewPodOptions{
 		CreationTimestamp: metav1.NewTime(now),
 	})
@@ -37,53 +39,65 @@ func TestFilterPodsByNode(t *testing.T) {
 	})
 	tests := []struct {
 		name           string
+		nodeMap        map[string]*corev1.Node
 		podsByNodeName map[string][]*corev1.Pod
-		want           map[string]*corev1.Pod
+		want           map[*corev1.Node]*corev1.Pod
 		want1          []*corev1.Pod
 	}{
 		{
 			name: "one node, one pod",
+			nodeMap: map[string]*corev1.Node{
+				NodeNameA: nodeA,
+			},
 			podsByNodeName: map[string][]*corev1.Pod{
 				NodeNameA: {pod1NodeA},
 			},
-			want: map[string]*corev1.Pod{
-				NodeNameA: pod1NodeA,
+			want: map[*corev1.Node]*corev1.Pod{
+				nodeA: pod1NodeA,
 			},
 			want1: []*corev1.Pod{},
 		},
 		{
 			name: "2 nodes, 2 pods",
+			nodeMap: map[string]*corev1.Node{
+				NodeNameA: nodeA,
+				NodeNameB: nodeB,
+			},
 			podsByNodeName: map[string][]*corev1.Pod{
 				NodeNameA: {pod1NodeA},
 				NodeNameB: {pod2NodeB},
 			},
-			want: map[string]*corev1.Pod{
-				NodeNameA: pod1NodeA,
-				NodeNameB: pod2NodeB,
+			want: map[*corev1.Node]*corev1.Pod{
+				nodeA: pod1NodeA,
+				nodeB: pod2NodeB,
 			},
 			want1: []*corev1.Pod{},
 		},
 		{
 			name: "2 nodes, 3 pods",
+			nodeMap: map[string]*corev1.Node{
+				NodeNameA: nodeA,
+				NodeNameB: nodeB,
+			},
 			podsByNodeName: map[string][]*corev1.Pod{
 				NodeNameA: {pod1NodeA, pod3NodeA},
 				NodeNameB: {pod2NodeB},
 			},
-			want: map[string]*corev1.Pod{
-				NodeNameA: pod3NodeA,
-				NodeNameB: pod2NodeB,
+			want: map[*corev1.Node]*corev1.Pod{
+				nodeA: pod3NodeA,
+				nodeB: pod2NodeB,
 			},
 			want1: []*corev1.Pod{pod1NodeA},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1 := FilterPodsByNode(tt.podsByNodeName)
+			got, got1 := FilterPodsByNode(tt.podsByNodeName, tt.nodeMap)
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("FilterPodsByNode() got = %v, want %v", got, tt.want)
+				t.Errorf("FilterPodsByNode() got = %v,\n want %v", got, tt.want)
 			}
 			if !reflect.DeepEqual(got1, tt.want1) {
-				t.Errorf("FilterPodsByNode() got1 = %v, want %v", got1, tt.want1)
+				t.Errorf("FilterPodsByNode() got1 = %v,\n want %v", got1, tt.want1)
 			}
 		})
 	}
@@ -150,6 +164,7 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 	tests := []struct {
 		name                string
 		args                args
+		wantNodeByName      map[string]*corev1.Node
 		wantPodByNode       map[string]*corev1.Pod
 		wantPodToDelete     []*corev1.Pod
 		wantUnscheduledPods []*corev1.Pod
@@ -170,6 +185,11 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 					node2.Name,
 				},
 			},
+			wantNodeByName: map[string]*corev1.Node{
+				"node1": node1,
+				"node2": node2,
+				"node3": node3,
+			},
 			wantPodByNode: map[string]*corev1.Pod{
 				"node1": pod1Node1,
 				"node3": nil,
@@ -188,6 +208,11 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 					Items: []corev1.Pod{},
 				},
 				ignoreNodes: []string{"node2"},
+			},
+			wantNodeByName: map[string]*corev1.Node{
+				"node1": node1,
+				"node2": node2,
+				"node3": node3,
 			},
 			wantPodByNode: map[string]*corev1.Pod{
 				"node1": nil,
@@ -213,6 +238,11 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 				},
 				ignoreNodes: []string{},
 			},
+			wantNodeByName: map[string]*corev1.Node{
+				"node1": node1,
+				"node2": node2,
+				"node3": node3,
+			},
 			wantPodByNode: map[string]*corev1.Pod{
 				"node1": pod1Node1,
 				"node2": pod2Node2,
@@ -235,6 +265,9 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 				},
 				ignoreNodes: []string{},
 			},
+			wantNodeByName: map[string]*corev1.Node{
+				"node3": node3,
+			},
 			wantPodByNode: map[string]*corev1.Pod{
 				"node3": nil,
 			},
@@ -254,6 +287,9 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 					},
 				},
 				ignoreNodes: []string{},
+			},
+			wantNodeByName: map[string]*corev1.Node{
+				"node3": node3,
 			},
 			wantPodByNode: map[string]*corev1.Pod{
 				"node3": nil,
@@ -276,6 +312,9 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 				},
 				ignoreNodes: []string{},
 			},
+			wantNodeByName: map[string]*corev1.Node{
+				"node1": node1,
+			},
 			wantPodByNode: map[string]*corev1.Pod{
 				"node1": pod1Node1,
 			},
@@ -297,6 +336,10 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 				},
 				ignoreNodes: []string{},
 			},
+			wantNodeByName: map[string]*corev1.Node{
+				"node1": node1,
+				"node4": node4,
+			},
 			wantPodByNode: map[string]*corev1.Pod{
 				"node1": pod1Node1,
 				"node4": nil,
@@ -308,15 +351,22 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			reqLogger := log.WithValues("test:", tt.name)
-			gotPodByNode, gotPodToDelete, gotUnscheduledPods := FilterAndMapPodsByNode(reqLogger, tt.args.replicaset, tt.args.nodeList, tt.args.podList, tt.args.ignoreNodes)
-			if !apiequality.Semantic.DeepEqual(gotPodByNode, tt.wantPodByNode) {
-				t.Errorf("FilterAndMapPodsByNode() gotPodByNode = %v, want %v", gotPodByNode, tt.wantPodByNode)
+			gotNodeByName, gotPodByNode, gotPodToDelete, gotUnscheduledPods := FilterAndMapPodsByNode(reqLogger, tt.args.replicaset, tt.args.nodeList, tt.args.podList, tt.args.ignoreNodes)
+			if diff := cmp.Diff(tt.wantNodeByName, gotNodeByName); diff != "" {
+				t.Errorf("FilterAndMapPodsByNode() gotNodeByName mismatch (-want +got):\n%s", diff)
 			}
-			if !apiequality.Semantic.DeepEqual(gotPodToDelete, tt.wantPodToDelete) {
-				t.Errorf("FilterAndMapPodsByNode() gotPodToDelete = %#v, want %#v", gotPodToDelete, tt.wantPodToDelete)
+			gotPodbyNodeName := make(map[string]*corev1.Pod)
+			for node, pod := range gotPodByNode {
+				gotPodbyNodeName[node.Name] = pod
 			}
-			if !apiequality.Semantic.DeepEqual(gotUnscheduledPods, tt.wantUnscheduledPods) {
-				t.Errorf("FilterAndMapPodsByNode() gotUnscheduledPods = %#v, want %#v", gotUnscheduledPods, tt.wantUnscheduledPods)
+			if diff := cmp.Diff(tt.wantPodByNode, gotPodbyNodeName); diff != "" {
+				t.Errorf("FilterAndMapPodsByNode() gotPodByNode mismatch (-want +got):\n%s", diff)
+			}
+			if diff := cmp.Diff(tt.wantPodToDelete, gotPodToDelete); diff != "" {
+				t.Errorf("FilterAndMapPodsByNode() gotPodToDelete mismatch (-want +got):\n%s", diff)
+			}
+			if diff := cmp.Diff(tt.wantUnscheduledPods, gotUnscheduledPods); diff != "" {
+				t.Errorf("FilterAndMapPodsByNode() gotUnscheduledPods mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}

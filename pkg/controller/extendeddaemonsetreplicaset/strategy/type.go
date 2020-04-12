@@ -38,7 +38,8 @@ type Parameters struct {
 
 	CanaryNodes []string
 
-	PodByNodeName   map[string]*corev1.Pod
+	NodeByName      map[string]*corev1.Node
+	PodByNodeName   map[*corev1.Node]*corev1.Pod
 	PodToCleanUp    []*corev1.Pod
 	UnscheduledPods []*corev1.Pod
 
@@ -48,9 +49,9 @@ type Parameters struct {
 // Result information returns by a strategy
 type Result struct {
 	// PodsToCreate list of node name where Pods need to be created
-	PodsToCreate []string
+	PodsToCreate []*corev1.Node
 	// PodsToDelete list of node name where Pods need to be deleted
-	PodsToDelete []string
+	PodsToDelete []*corev1.Node
 
 	UnscheduledNodesDueToResourcesConstraints []string
 

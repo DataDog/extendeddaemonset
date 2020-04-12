@@ -20,7 +20,7 @@ func ManageUnknow(client client.Client, params *Parameters) (*Result, error) {
 	result := &Result{}
 	// remove canary node if define
 	for _, nodeName := range params.CanaryNodes {
-		delete(params.PodByNodeName, nodeName)
+		delete(params.PodByNodeName, params.NodeByName[nodeName])
 	}
 	now := time.Now()
 	metaNow := metav1.NewTime(now)

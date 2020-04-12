@@ -18,7 +18,7 @@ import (
 )
 
 // CreatePodFromDaemonSetReplicaSet use to create a Pod from a ReplicaSet instance and a specific Node name.
-func CreatePodFromDaemonSetReplicaSet(scheme *runtime.Scheme, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, nodeName string, addNodeAffinity bool) *corev1.Pod {
+func CreatePodFromDaemonSetReplicaSet(scheme *runtime.Scheme, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, node *corev1.Node, addNodeAffinity bool) *corev1.Pod {
 
 	templateCopy := replicaset.Spec.Template.DeepCopy()
 	{
@@ -42,11 +42,11 @@ func CreatePodFromDaemonSetReplicaSet(scheme *runtime.Scheme, replicaset *datado
 		ObjectMeta: templateCopy.ObjectMeta,
 		Spec:       templateCopy.Spec,
 	}
-	if nodeName != "" {
-		pod.Spec.NodeName = nodeName
+	if node != nil {
+		pod.Spec.NodeName = node.Name
 
 		if addNodeAffinity {
-			pod.Spec.Affinity = ReplaceNodeNameNodeAffinity(pod.Spec.Affinity, nodeName)
+			pod.Spec.Affinity = ReplaceNodeNameNodeAffinity(pod.Spec.Affinity, node.Name)
 		}
 	}
 

@@ -19,7 +19,7 @@ import (
 // FilterAndMapPodsByNode used to map pods by associated node. It also return the list of pods that
 // should be deleted (not needed anymore), and pods that are not scheduled yet (created but not scheduled)
 func FilterAndMapPodsByNode(logger logr.Logger, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet,
-	nodeList *corev1.NodeList, podList *corev1.PodList, ignoreNodes []string) (podByNode map[string]*corev1.Pod,
+	nodeList *corev1.NodeList, podList *corev1.PodList, ignoreNodes []string) (nodesByName map[string]*corev1.Node, podByNode map[*corev1.Node]*corev1.Pod,
 	podToDelete, unscheduledPods []*corev1.Pod) {
 	// For faster search convert slice to map
 	ignoreMapNode := make(map[string]bool)
@@ -28,11 +28,13 @@ func FilterAndMapPodsByNode(logger logr.Logger, replicaset *datadoghqv1alpha1.Ex
 	}
 
 	// create a Fake pod from the current replicaset.spec.template
-	newPod := podutils.CreatePodFromDaemonSetReplicaSet(nil, replicaset, "", false)
+	newPod := podutils.CreatePodFromDaemonSetReplicaSet(nil, replicaset, nil, false)
 	// var unschedulabledNodes []*corev1.Node
 	// Associate Pods to Nodes
 	podsByNodeName := make(map[string][]*corev1.Pod)
-	for _, node := range nodeList.Items {
+	nodesByName = make(map[string]*corev1.Node)
+	for id, node := range nodeList.Items {
+		nodesByName[node.Name] = &nodeList.Items[id]
 		if _, ok := ignoreMapNode[node.Name]; ok {
 			continue
 		}
@@ -79,7 +81,7 @@ func FilterAndMapPodsByNode(logger logr.Logger, replicaset *datadoghqv1alpha1.Ex
 
 	// filter pod node, remove duplicated
 	var duplicatedPods []*corev1.Pod
-	podByNode, duplicatedPods = FilterPodsByNode(podsByNodeName)
+	podByNode, duplicatedPods = FilterPodsByNode(podsByNodeName, nodesByName)
 
 	// add duplicated pods to the pod deletion slice
 	for _, pod := range duplicatedPods {
@@ -88,21 +90,21 @@ func FilterAndMapPodsByNode(logger logr.Logger, replicaset *datadoghqv1alpha1.Ex
 	podToDelete = append(podToDelete, duplicatedPods...)
 
 	// Filter Pods in Terminated state
-	return podByNode, podToDelete, unscheduledPods
+	return nodesByName, podByNode, podToDelete, unscheduledPods
 }
 
 // FilterPodsByNode if several Pods are listed for the same Node select "best" Pod one, and add other pod to
 // the deletion pod slice
-func FilterPodsByNode(podsByNodeName map[string][]*corev1.Pod) (map[string]*corev1.Pod, []*corev1.Pod) {
+func FilterPodsByNode(podsByNodeName map[string][]*corev1.Pod, nodesMap map[string]*corev1.Node) (map[*corev1.Node]*corev1.Pod, []*corev1.Pod) {
 	// filter pod node, remove duplicated
-	podByNodeName := map[string]*corev1.Pod{}
+	podByNodeName := map[*corev1.Node]*corev1.Pod{}
 	duplicatedPods := []*corev1.Pod{}
-	for nodeName, pods := range podsByNodeName {
-		podByNodeName[nodeName] = nil
+	for node, pods := range podsByNodeName {
+		podByNodeName[nodesMap[node]] = nil
 		sort.Sort(podByCreationTimestampAndPhase(pods))
 		for id := range pods {
 			if id == 0 {
-				podByNodeName[nodeName] = pods[id]
+				podByNodeName[nodesMap[node]] = pods[id]
 			} else {
 				duplicatedPods = append(duplicatedPods, pods[id])
 			}
