@@ -146,7 +146,7 @@ func (o *ValidateOptions) Run() error {
 		return fmt.Errorf("unable to valide the canary replicaset, err: %v", err)
 	}
 
-	fmt.Fprintf(o.Out, "Canary replicaset '%s' was validated properly for extendeddaemonset %s/%s.", rsName, o.userNamespace, o.userExtendedDaemonSetName)
+	fmt.Fprintf(o.Out, "Canary replicaset '%s' was validated properly for extendeddaemonset %s/%s.\n", rsName, o.userNamespace, o.userExtendedDaemonSetName)
 
 	return nil
 }

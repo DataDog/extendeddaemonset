@@ -21,11 +21,12 @@ var (
 
 // NewExtendedDaemonSetOptions set of option for the ExtendedDaemonset creation
 type NewExtendedDaemonSetOptions struct {
-	CreationTime *time.Time
-	Annotations  map[string]string
-	Labels       map[string]string
-	Canary       *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary
-	Status       *datadoghqv1alpha1.ExtendedDaemonSetStatus
+	CreationTime  *time.Time
+	Annotations   map[string]string
+	Labels        map[string]string
+	RollingUpdate *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate
+	Canary        *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary
+	Status        *datadoghqv1alpha1.ExtendedDaemonSetStatus
 }
 
 // NewExtendedDaemonSet return new ExtendedDDaemonset instance for test purpose
@@ -57,6 +58,9 @@ func NewExtendedDaemonSet(ns, name string, options *NewExtendedDaemonSetOptions)
 				dd.Labels[key] = value
 			}
 		}
+		if options.RollingUpdate != nil {
+			dd.Spec.Strategy.RollingUpdate = *options.RollingUpdate
+		}
 		if options.Canary != nil {
 			dd.Spec.Strategy.Canary = options.Canary
 		}
@@ -70,13 +74,12 @@ func NewExtendedDaemonSet(ns, name string, options *NewExtendedDaemonSetOptions)
 
 // NewExtendedDaemonSetReplicaSetOptions set of option for the ExtendedDaemonsetReplicaSet creation
 type NewExtendedDaemonSetReplicaSetOptions struct {
-	CreationTime  *time.Time
-	Annotations   map[string]string
-	Labels        map[string]string
-	GenerateName  string
-	OwnerRefName  string
-	RollingUpdate *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate
-	Status        *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus
+	CreationTime *time.Time
+	Annotations  map[string]string
+	Labels       map[string]string
+	GenerateName string
+	OwnerRefName string
+	Status       *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus
 }
 
 // NewExtendedDaemonSetReplicaSet returns new ExtendedDaemonSetReplicaSet instance for testing purpose
@@ -120,9 +123,6 @@ func NewExtendedDaemonSetReplicaSet(ns, name string, options *NewExtendedDaemonS
 		}
 		if options.Status != nil {
 			dd.Status = *options.Status
-		}
-		if options.RollingUpdate != nil {
-			options.RollingUpdate.DeepCopyInto(&dd.Spec.Strategy.RollingUpdate)
 		}
 	}
 

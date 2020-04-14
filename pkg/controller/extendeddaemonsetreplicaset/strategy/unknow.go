@@ -26,7 +26,7 @@ func ManageUnknow(client client.Client, params *Parameters) (*Result, error) {
 	metaNow := metav1.NewTime(now)
 	var desiredPods, currentPods, availablePods, readyPods, nbIgnoredUnresponsiveNodes int32
 
-	maxPodSchedulerFailure, err := intstrutil.GetValueFromIntOrPercent(params.Replicaset.Spec.Strategy.RollingUpdate.MaxPodSchedulerFailure, len(params.PodByNodeName), true)
+	maxPodSchedulerFailure, err := intstrutil.GetValueFromIntOrPercent(params.Strategy.RollingUpdate.MaxPodSchedulerFailure, len(params.PodByNodeName), true)
 	if err != nil {
 		params.Logger.Error(err, "unable to retrieve maxPodSchedulerFailure from the strategy.RollingUpdate.MaxPodSchedulerFailure parameter")
 		return result, err

@@ -38,7 +38,7 @@ func ManageDeployment(client client.Client, params *Parameters) (*Result, error)
 
 	nbNodes := len(params.PodByNodeName)
 
-	maxPodSchedulerFailure, err := intstrutil.GetValueFromIntOrPercent(params.Replicaset.Spec.Strategy.RollingUpdate.MaxPodSchedulerFailure, nbNodes, true)
+	maxPodSchedulerFailure, err := intstrutil.GetValueFromIntOrPercent(params.Strategy.RollingUpdate.MaxPodSchedulerFailure, nbNodes, true)
 	if err != nil {
 		params.Logger.Error(err, "unable to retrieve maxPodSchedulerFailure from the strategy.RollingUpdate.MaxPodSchedulerFailure parameter")
 		return result, err
@@ -76,7 +76,7 @@ func ManageDeployment(client client.Client, params *Parameters) (*Result, error)
 	}
 
 	// Retrieves parameters for calculation
-	maxUnavailable, err := intstrutil.GetValueFromIntOrPercent(params.Replicaset.Spec.Strategy.RollingUpdate.MaxUnavailable, nbNodes, true)
+	maxUnavailable, err := intstrutil.GetValueFromIntOrPercent(params.Strategy.RollingUpdate.MaxUnavailable, nbNodes, true)
 	if err != nil {
 		params.Logger.Error(err, "unable to retrieve maxUnavailable pod from the strategy.RollingUpdate.MaxUnavailable parameter")
 		return result, err
@@ -84,7 +84,7 @@ func ManageDeployment(client client.Client, params *Parameters) (*Result, error)
 	params.Logger.V(1).Info("Parameters", "nbNodes", nbNodes, "createdPod", currentPods, "nbPodReady", readyPods, "availablePods", availablePods, "oldAvailablePods", oldAvailablePods, "maxUnavailable", maxUnavailable, "nbPodToCreate", len(allPodToCreate), "nbPodToDelete", len(allPodToDelete), "podsTerminating", podsTerminating)
 
 	rollingUpdateStartTime := getRollingUpdateStartTime(&params.Replicaset.Status, now)
-	maxCreation, err := calculateMaxCreation(&params.Replicaset.Spec.Strategy.RollingUpdate, nbNodes, rollingUpdateStartTime, now)
+	maxCreation, err := calculateMaxCreation(&params.Strategy.RollingUpdate, nbNodes, rollingUpdateStartTime, now)
 	if err != nil {
 		params.Logger.Error(err, "error during calculateMaxCreation execution")
 		return result, err

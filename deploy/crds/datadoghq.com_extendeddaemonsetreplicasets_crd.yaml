@@ -105,56 +105,6 @@ spec:
                     are ANDed.
                   type: object
               type: object
-            strategy:
-              description: DaemonSetReplicaSet deployment strategy
-              properties:
-                reconcileFrequency:
-                  type: string
-                rollingUpdate:
-                  description: ExtendedDaemonSetSpecStrategyRollingUpdate defines
-                    the rolling update deployment strategy of ExtendedDaemonSet
-                  properties:
-                    maxParallelPodCreation:
-                      description: The maxium number of pods created in parallel.
-                        Default value is 250.
-                      format: int32
-                      type: integer
-                    maxPodSchedulerFailure:
-                      anyOf:
-                      - type: integer
-                      - type: string
-                      description: 'MaxPodSchedulerFailure the maxinum number of not
-                        scheduled on its Node due to a scheduler failure: resource
-                        constraints. Value can be an absolute number (ex: 5) or a
-                        percentage of total number of DaemonSet pods at the start
-                        of the update (ex: 10%). Absolute'
-                      x-kubernetes-int-or-string: true
-                    maxUnavailable:
-                      anyOf:
-                      - type: integer
-                      - type: string
-                      description: 'The maximum number of DaemonSet pods that can
-                        be unavailable during the update. Value can be an absolute
-                        number (ex: 5) or a percentage of total number of DaemonSet
-                        pods at the start of the update (ex: 10%). Absolute number
-                        is calculated from percentage by rounding up. This cannot
-                        be 0. Default value is 1.'
-                      x-kubernetes-int-or-string: true
-                    slowStartAdditiveIncrease:
-                      anyOf:
-                      - type: integer
-                      - type: string
-                      description: 'SlowStartAdditiveIncrease Value can be an absolute
-                        number (ex: 5) or a percentage of total number of DaemonSet
-                        pods at the start of the update (ex: 10%). Default value is
-                        5.'
-                      x-kubernetes-int-or-string: true
-                    slowStartIntervalDuration:
-                      description: SlowStartIntervalDuration the duration between
-                        to 2 Default value is 1min.
-                      type: string
-                  type: object
-              type: object
             template:
               description: An object that describes the pod that will be created.
                 The ExtendedDaemonSetReplicaSet will create exactly one copy of this
@@ -5880,7 +5830,6 @@ spec:
                 template. Populated by the system. It can be set only during the creation.
               type: string
           required:
-          - strategy
           - template
           type: object
         status:

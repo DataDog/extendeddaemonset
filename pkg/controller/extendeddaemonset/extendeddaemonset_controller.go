@@ -358,14 +358,9 @@ func newReplicaSetFromInstance(daemonset *datadoghqv1alpha1.ExtendedDaemonSet) (
 		Spec: datadoghqv1alpha1.ExtendedDaemonSetReplicaSetSpec{
 			Selector: daemonset.Spec.Selector.DeepCopy(),
 			Template: *daemonset.Spec.Template.DeepCopy(),
-			Strategy: datadoghqv1alpha1.ExtendedDaemonSetReplicaSetSpecStrategy{
-				RollingUpdate: *daemonset.Spec.Strategy.RollingUpdate.DeepCopy(),
-			},
 		},
 	}
-	if daemonset.Spec.Strategy.ReconcileFrequency != nil {
-		rs.Spec.Strategy.ReconcileFrequency = *daemonset.Spec.Strategy.ReconcileFrequency
-	}
+
 	hash, err := comparison.SetMD5PodTemplateSpecAnnotation(rs, daemonset)
 	rs.Spec.TemplateGeneration = hash
 	return rs, err
