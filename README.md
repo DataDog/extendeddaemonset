@@ -160,6 +160,17 @@ foo-xdj4b-rgtk9   1/1     Running   0          5m31s
 foo-xdj4b-zvss2   1/1     Running   0          10m
 ```
 
+#### Overwrite container's Pod resources for a specific Node
+
+The ExtendedDaemonset controller allows to overwrite the container's pod managed by an ExtendedDaemonset for a specific Node, thanks to an annotation that you can set on the Node: `resources.extendeddaemonset.datadoghq.com/<eds-namespace>.<eds-name>.<container-name>={...}`. the value corresponds to the Resources definition in JSON.
+
+For example, for the ExtendedDaemonset named `foo` in the `bar` namespace. The container `myapp` resources specification can be overwriten by adding the following annotation on a Node:
+
+```console
+$ kubectl annotate node <node-name> `resources.extendeddaemonset.datadoghq.com/bar.foo.myapp={"requests":{"cpu":"2.0","memory":"2G"}}`
+node/<node-name> annotated
+```
+
 ### Kubectl plugin
 
 To build the the kubectl ExtendedDaemonSet plugin, you can run the command: `make build-plugin`. This will create the `kubectl-eds` Go binary, corresponding to your local OS and architecture.

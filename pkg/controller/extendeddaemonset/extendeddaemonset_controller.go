@@ -284,7 +284,7 @@ func (r *ReconcileExtendedDaemonSet) updateStatusWithNewRS(logger logr.Logger, d
 
 func (r *ReconcileExtendedDaemonSet) selectNodes(logger logr.Logger, daemonsetSpec *datadoghqv1alpha1.ExtendedDaemonSetSpec, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, canaryStatus *datadoghqv1alpha1.ExtendedDaemonSetStatusCanary) error {
 	// create a Fake pod from the current replicaset.spec.template
-	newPod := podutils.CreatePodFromDaemonSetReplicaSet(r.scheme, replicaset, "", false)
+	newPod, _ := podutils.CreatePodFromDaemonSetReplicaSet(r.scheme, replicaset, nil, false)
 
 	nodeList := &corev1.NodeList{}
 	nodeSelector := labels.Set{}

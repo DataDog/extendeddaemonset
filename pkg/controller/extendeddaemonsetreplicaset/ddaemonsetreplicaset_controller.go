@@ -232,7 +232,7 @@ func (r *ReconcileExtendedDaemonSetReplicaSet) buildStrategyParams(logger logr.L
 	}
 
 	// Associate Pods to Nodes
-	strategyParams.PodByNodeName, strategyParams.PodToCleanUp, strategyParams.UnscheduledPods = FilterAndMapPodsByNode(logger.WithValues("status", string(rsStatus)), replicaset, nodeList, podList, nodesFilter)
+	strategyParams.NodeByName, strategyParams.PodByNodeName, strategyParams.PodToCleanUp, strategyParams.UnscheduledPods = FilterAndMapPodsByNode(logger.WithValues("status", string(rsStatus)), replicaset, nodeList, podList, nodesFilter)
 
 	return strategyParams, nil
 }

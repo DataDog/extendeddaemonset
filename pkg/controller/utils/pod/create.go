@@ -6,20 +6,23 @@
 package pod
 
 import (
+	"encoding/json"
 	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/errors"
 
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	datadoghqv1alpha1 "github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
+	"github.com/datadog/extendeddaemonset/pkg/controller/utils/affinity"
 )
 
 // CreatePodFromDaemonSetReplicaSet use to create a Pod from a ReplicaSet instance and a specific Node name.
-func CreatePodFromDaemonSetReplicaSet(scheme *runtime.Scheme, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, nodeName string, addNodeAffinity bool) *corev1.Pod {
-
+func CreatePodFromDaemonSetReplicaSet(scheme *runtime.Scheme, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, node *corev1.Node, addNodeAffinity bool) (*corev1.Pod, error) {
+	var err error
 	templateCopy := replicaset.Spec.Template.DeepCopy()
 	{
 		templateCopy.ObjectMeta.Namespace = replicaset.Namespace
@@ -30,7 +33,8 @@ func CreatePodFromDaemonSetReplicaSet(scheme *runtime.Scheme, replicaset *datado
 		templateCopy.ObjectMeta.Labels = map[string]string{}
 	}
 	templateCopy.ObjectMeta.Labels[datadoghqv1alpha1.ExtendedDaemonSetReplicaSetNameLabelKey] = replicaset.Name
-	templateCopy.ObjectMeta.Labels[datadoghqv1alpha1.ExtendedDaemonSetNameLabelKey] = replicaset.Labels[datadoghqv1alpha1.ExtendedDaemonSetNameLabelKey]
+	edsName := replicaset.Labels[datadoghqv1alpha1.ExtendedDaemonSetNameLabelKey]
+	templateCopy.ObjectMeta.Labels[datadoghqv1alpha1.ExtendedDaemonSetNameLabelKey] = edsName
 
 	if templateCopy.ObjectMeta.Annotations == nil {
 		templateCopy.ObjectMeta.Annotations = map[string]string{}
@@ -38,21 +42,44 @@ func CreatePodFromDaemonSetReplicaSet(scheme *runtime.Scheme, replicaset *datado
 	templateCopy.ObjectMeta.Annotations[datadoghqv1alpha1.MD5ExtendedDaemonSetAnnotationKey] = replicaset.Spec.TemplateGeneration
 	templateCopy.ObjectMeta.Annotations[DaemonsetClusterAutoscalerPodAnnotationKey] = "true"
 
+	err = overwriteResourcesFromNode(templateCopy, replicaset.Namespace, edsName, node)
+
 	pod := &corev1.Pod{
 		ObjectMeta: templateCopy.ObjectMeta,
 		Spec:       templateCopy.Spec,
 	}
-	if nodeName != "" {
-		pod.Spec.NodeName = nodeName
+	if node != nil {
+		pod.Spec.NodeName = node.Name
 
 		if addNodeAffinity {
-			pod.Spec.Affinity = ReplaceNodeNameNodeAffinity(pod.Spec.Affinity, nodeName)
+			pod.Spec.Affinity = affinity.ReplaceNodeNameNodeAffinity(pod.Spec.Affinity, node.Name)
 		}
 	}
 
 	if scheme != nil {
-		_ = controllerutil.SetControllerReference(replicaset, pod, scheme)
+		err = controllerutil.SetControllerReference(replicaset, pod, scheme)
 	}
 
-	return pod
+	return pod, err
+}
+
+func overwriteResourcesFromNode(template *corev1.PodTemplateSpec, edsNamespace, edsName string, node *corev1.Node) error {
+	if node == nil {
+		return nil
+	}
+
+	var errs []error
+	for id, container := range template.Spec.Containers {
+		ressourceAnnotationKey := fmt.Sprintf(datadoghqv1alpha1.ExtendedDaemonSetRessourceNodeAnnotationKey, edsNamespace, edsName, container.Name)
+		if val, ok := node.GetAnnotations()[ressourceAnnotationKey]; ok {
+			var newResources corev1.ResourceRequirements
+			if err := json.Unmarshal([]byte(val), &newResources); err != nil {
+				errWrap := fmt.Errorf("unable to decode %s annotation value, err: %v", ressourceAnnotationKey, err)
+				errs = append(errs, errWrap)
+				continue
+			}
+			template.Spec.Containers[id].Resources = newResources
+		}
+	}
+	return errors.NewAggregate(errs)
 }

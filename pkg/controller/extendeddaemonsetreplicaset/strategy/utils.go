@@ -22,6 +22,7 @@ import (
 
 	datadoghqv1alpha1 "github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
 	"github.com/datadog/extendeddaemonset/pkg/controller/extendeddaemonsetreplicaset/conditions"
+	podaffinity "github.com/datadog/extendeddaemonset/pkg/controller/utils/affinity"
 	podutils "github.com/datadog/extendeddaemonset/pkg/controller/utils/pod"
 )
 
@@ -78,7 +79,7 @@ func manageUnscheduledPodNodes(pods []*corev1.Pod) []string {
 		if condition.Status == corev1.ConditionFalse && condition.Reason == corev1.PodReasonUnschedulable {
 			nodeName := pod.Spec.NodeName
 			if nodeName == "" {
-				nodeName = podutils.GetNodeNameFromAffinity(pod.Spec.Affinity)
+				nodeName = podaffinity.GetNodeNameFromAffinity(pod.Spec.Affinity)
 			}
 			output = append(output, nodeName)
 		}

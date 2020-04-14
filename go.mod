@@ -6,6 +6,7 @@ require (
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/go-logr/logr v0.1.0
 	github.com/go-openapi/spec v0.19.4
+	github.com/google/go-cmp v0.3.1
 	github.com/hako/durafmt v0.0.0-20191009132224-3f39dc1ed9f4
 	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
 	github.com/olekukonko/tablewriter v0.0.2

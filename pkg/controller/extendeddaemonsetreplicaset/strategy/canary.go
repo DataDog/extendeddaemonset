@@ -26,17 +26,18 @@ func ManageCanaryDeployment(client client.Client, params *Parameters) (*Result, 
 	var needRequeue bool
 	// Canary mode
 	for _, nodeName := range params.CanaryNodes {
+		node := params.NodeByName[nodeName]
 		desiredPods++
-		if pod, ok := params.PodByNodeName[nodeName]; ok {
+		if pod, ok := params.PodByNodeName[node]; ok {
 			if pod == nil {
-				result.PodsToCreate = append(result.PodsToCreate, nodeName)
+				result.PodsToCreate = append(result.PodsToCreate, node)
 			} else {
 				if pod.DeletionTimestamp != nil {
 					needRequeue = true
 					continue
 				}
 				if !compareSpecTemplateMD5Hash(params.Replicaset.Spec.TemplateGeneration, pod) && pod.DeletionTimestamp == nil {
-					result.PodsToDelete = append(result.PodsToDelete, nodeName)
+					result.PodsToDelete = append(result.PodsToDelete, node)
 				} else {
 					currentPods++
 					if podUtils.IsPodAvailable(pod, 0, metaNow) {

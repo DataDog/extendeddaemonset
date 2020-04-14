@@ -16,7 +16,7 @@ import (
 
 	"github.com/go-logr/logr"
 
-	podutils "github.com/datadog/extendeddaemonset/pkg/controller/utils/pod"
+	podaffinity "github.com/datadog/extendeddaemonset/pkg/controller/utils/affinity"
 )
 
 // CheckNodeFitness runs a set of predicates that select candidate nodes for the DaemonSet;
@@ -93,7 +93,7 @@ func chechPodToleratesNodeTaints(pod *corev1.Pod, node *corev1.Node) bool {
 // terms are ORed, and an empty list of terms will match nothing.
 func nodeMatchesNodeSelectorTerms(node *corev1.Node, nodeSelectorTerms []corev1.NodeSelectorTerm) bool {
 	nodeFields := map[string]string{
-		podutils.NodeFieldSelectorKeyNodeName: node.Name,
+		podaffinity.NodeFieldSelectorKeyNodeName: node.Name,
 	}
 	return MatchNodeSelectorTerms(nodeSelectorTerms, labels.Set(node.Labels), fields.Set(nodeFields))
 }

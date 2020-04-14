@@ -27,14 +27,14 @@ func ManageDeployment(client client.Client, params *Parameters) (*Result, error)
 
 	// remove canary node if define
 	for _, nodeName := range params.CanaryNodes {
-		delete(params.PodByNodeName, nodeName)
+		delete(params.PodByNodeName, params.NodeByName[nodeName])
 	}
 	now := time.Now()
 	metaNow := metav1.NewTime(now)
 	var desiredPods, availablePods, readyPods, currentPods, oldAvailablePods, podsTerminating, nbIgnoredUnresponsiveNodes int32
 
-	allPodToCreate := []string{}
-	allPodToDelete := []string{}
+	allPodToCreate := []*corev1.Node{}
+	allPodToDelete := []*corev1.Node{}
 
 	nbNodes := len(params.PodByNodeName)
 
@@ -44,10 +44,10 @@ func ManageDeployment(client client.Client, params *Parameters) (*Result, error)
 		return result, err
 	}
 
-	for nodeName, pod := range params.PodByNodeName {
+	for node, pod := range params.PodByNodeName {
 		desiredPods++
 		if pod == nil {
-			allPodToCreate = append(allPodToCreate, nodeName)
+			allPodToCreate = append(allPodToCreate, node)
 		} else {
 			if podutils.HasPodSchedulerIssue(pod) && int(nbIgnoredUnresponsiveNodes) < maxPodSchedulerFailure {
 				nbIgnoredUnresponsiveNodes++
@@ -55,7 +55,7 @@ func ManageDeployment(client client.Client, params *Parameters) (*Result, error)
 			}
 			if !compareSpecTemplateMD5Hash(params.Replicaset.Spec.TemplateGeneration, pod) {
 				if pod.DeletionTimestamp == nil {
-					allPodToDelete = append(allPodToDelete, nodeName)
+					allPodToDelete = append(allPodToDelete, node)
 				} else {
 					podsTerminating++
 					continue
