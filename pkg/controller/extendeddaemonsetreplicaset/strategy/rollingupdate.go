@@ -53,7 +53,7 @@ func ManageDeployment(client client.Client, params *Parameters) (*Result, error)
 				nbIgnoredUnresponsiveNodes++
 				continue
 			}
-			if !compareSpecTemplateMD5Hash(params.Replicaset.Spec.TemplateGeneration, pod) {
+			if !compareCurrentPodWithNewPod(params.EDSName, params.Replicaset, pod, node) {
 				if pod.DeletionTimestamp == nil {
 					allPodToDelete = append(allPodToDelete, node)
 				} else {

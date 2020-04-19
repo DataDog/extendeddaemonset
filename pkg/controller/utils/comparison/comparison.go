@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 
@@ -72,4 +73,27 @@ func StringsContains(a []string, x string) bool {
 		}
 	}
 	return false
+}
+
+// GenerateHashFromNodeAnnotation use to generate the MD5 hash from Node annotations
+func GenerateHashFromNodeAnnotation(edsNamespace, edsName string, nodeAnnotations map[string]string) string {
+	// build prefix for this specific eds
+	prefixKey := fmt.Sprintf(datadoghqv1alpha1.ExtendedDaemonSetRessourceNodeAnnotationKey, edsNamespace, edsName, "")
+
+	resourcesAnnotations := []string{}
+	for key, value := range nodeAnnotations {
+		if strings.HasPrefix(key, prefixKey) {
+			resourcesAnnotations = append(resourcesAnnotations, fmt.Sprintf("%s=%s", key, value))
+		}
+	}
+	if len(resourcesAnnotations) == 0 {
+		// no annotation == no hash
+		return ""
+	}
+	/* #nosec */
+	hash := md5.New()
+	for _, val := range resourcesAnnotations {
+		_, _ = hash.Write([]byte(val))
+	}
+	return hex.EncodeToString(hash.Sum(nil))
 }

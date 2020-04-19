@@ -31,6 +31,7 @@ type Parameters struct {
 	MinPodUpdate int32
 	MaxPodUpdate int32
 
+	EDSName          string
 	Strategy         *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategy
 	Replicaset       *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet
 	ReplicaSetStatus string
