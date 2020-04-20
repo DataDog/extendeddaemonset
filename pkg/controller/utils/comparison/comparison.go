@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -75,8 +76,9 @@ func StringsContains(a []string, x string) bool {
 	return false
 }
 
-// GenerateHashFromNodeAnnotation use to generate the MD5 hash from Node annotations
-func GenerateHashFromNodeAnnotation(edsNamespace, edsName string, nodeAnnotations map[string]string) string {
+// GenerateHashFromEDSResourceNodeAnnotation is used to generate the MD5 hash from EDS Node annotations that allow a user
+// to overwrites the containers resources specification for a specific Node.
+func GenerateHashFromEDSResourceNodeAnnotation(edsNamespace, edsName string, nodeAnnotations map[string]string) string {
 	// build prefix for this specific eds
 	prefixKey := fmt.Sprintf(datadoghqv1alpha1.ExtendedDaemonSetRessourceNodeAnnotationKey, edsNamespace, edsName, "")
 
@@ -90,6 +92,7 @@ func GenerateHashFromNodeAnnotation(edsNamespace, edsName string, nodeAnnotation
 		// no annotation == no hash
 		return ""
 	}
+	sort.Strings(resourcesAnnotations)
 	/* #nosec */
 	hash := md5.New()
 	for _, val := range resourcesAnnotations {

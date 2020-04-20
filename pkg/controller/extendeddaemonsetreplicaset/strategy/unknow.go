@@ -40,7 +40,7 @@ func ManageUnknow(client client.Client, params *Parameters) (*Result, error) {
 				nbIgnoredUnresponsiveNodes++
 				continue
 			}
-			if !compareCurrentPodWithNewPod(params.EDSName, params.Replicaset, pod, node) {
+			if !compareCurrentPodWithNewPod(params, pod, node) {
 				currentPods++
 				if podutils.IsPodAvailable(pod, 0, metaNow) {
 					availablePods++
