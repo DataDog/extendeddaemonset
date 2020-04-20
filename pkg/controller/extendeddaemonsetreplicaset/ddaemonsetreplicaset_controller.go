@@ -217,6 +217,7 @@ func (r *ReconcileExtendedDaemonSetReplicaSet) buildStrategyParams(logger logr.L
 	}
 
 	strategyParams := &strategy.Parameters{
+		EDSName:          daemonset.Name,
 		Strategy:         &daemonset.Spec.Strategy,
 		Replicaset:       replicaset,
 		ReplicaSetStatus: string(rsStatus),

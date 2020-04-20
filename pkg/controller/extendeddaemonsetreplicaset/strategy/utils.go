@@ -23,8 +23,28 @@ import (
 	datadoghqv1alpha1 "github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
 	"github.com/datadog/extendeddaemonset/pkg/controller/extendeddaemonsetreplicaset/conditions"
 	podaffinity "github.com/datadog/extendeddaemonset/pkg/controller/utils/affinity"
+	"github.com/datadog/extendeddaemonset/pkg/controller/utils/comparison"
 	podutils "github.com/datadog/extendeddaemonset/pkg/controller/utils/pod"
 )
+
+func compareCurrentPodWithNewPod(params *Parameters, pod *corev1.Pod, node *corev1.Node) bool {
+	// check that the pod corresponds to the replicaset. if not return false
+	if !compareSpecTemplateMD5Hash(params.Replicaset.Spec.TemplateGeneration, pod) {
+		return false
+	}
+	if !compareNodeResourcesAnnotationsMD5Hash(params.EDSName, params.Replicaset, pod, node) {
+		return false
+	}
+	return true
+}
+
+func compareNodeResourcesAnnotationsMD5Hash(edsName string, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, pod *corev1.Pod, node *corev1.Node) bool {
+	nodeHash := comparison.GenerateHashFromEDSResourceNodeAnnotation(replicaset.Namespace, edsName, node.GetAnnotations())
+	if val, ok := pod.Annotations[datadoghqv1alpha1.MD5NodeExtendedDaemonSetAnnotationKey]; ok && val == nodeHash {
+		return true
+	}
+	return false
+}
 
 func compareSpecTemplateMD5Hash(hash string, pod *corev1.Pod) bool {
 	if val, ok := pod.Annotations[datadoghqv1alpha1.MD5ExtendedDaemonSetAnnotationKey]; ok && val == hash {

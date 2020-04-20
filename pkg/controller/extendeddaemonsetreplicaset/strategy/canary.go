@@ -36,7 +36,7 @@ func ManageCanaryDeployment(client client.Client, params *Parameters) (*Result, 
 					needRequeue = true
 					continue
 				}
-				if !compareSpecTemplateMD5Hash(params.Replicaset.Spec.TemplateGeneration, pod) && pod.DeletionTimestamp == nil {
+				if !compareCurrentPodWithNewPod(params, pod, node) && pod.DeletionTimestamp == nil {
 					result.PodsToDelete = append(result.PodsToDelete, node)
 				} else {
 					currentPods++

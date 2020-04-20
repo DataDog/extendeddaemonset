@@ -32,7 +32,7 @@ func ManageUnknow(client client.Client, params *Parameters) (*Result, error) {
 		return result, err
 	}
 
-	for _, pod := range params.PodByNodeName {
+	for node, pod := range params.PodByNodeName {
 		desiredPods++
 		if pod == nil {
 		} else {
@@ -40,7 +40,7 @@ func ManageUnknow(client client.Client, params *Parameters) (*Result, error) {
 				nbIgnoredUnresponsiveNodes++
 				continue
 			}
-			if compareSpecTemplateMD5Hash(params.Replicaset.Spec.TemplateGeneration, pod) {
+			if !compareCurrentPodWithNewPod(params, pod, node) {
 				currentPods++
 				if podutils.IsPodAvailable(pod, 0, metaNow) {
 					availablePods++

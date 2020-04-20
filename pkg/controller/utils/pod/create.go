@@ -18,6 +18,7 @@ import (
 
 	datadoghqv1alpha1 "github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
 	"github.com/datadog/extendeddaemonset/pkg/controller/utils/affinity"
+	"github.com/datadog/extendeddaemonset/pkg/controller/utils/comparison"
 )
 
 // CreatePodFromDaemonSetReplicaSet use to create a Pod from a ReplicaSet instance and a specific Node name.
@@ -42,7 +43,10 @@ func CreatePodFromDaemonSetReplicaSet(scheme *runtime.Scheme, replicaset *datado
 	templateCopy.ObjectMeta.Annotations[datadoghqv1alpha1.MD5ExtendedDaemonSetAnnotationKey] = replicaset.Spec.TemplateGeneration
 	templateCopy.ObjectMeta.Annotations[DaemonsetClusterAutoscalerPodAnnotationKey] = "true"
 
-	err = overwriteResourcesFromNode(templateCopy, replicaset.Namespace, edsName, node)
+	if node != nil {
+		err = overwriteResourcesFromNode(templateCopy, replicaset.Namespace, edsName, node)
+		templateCopy.ObjectMeta.Annotations[datadoghqv1alpha1.MD5NodeExtendedDaemonSetAnnotationKey] = comparison.GenerateHashFromEDSResourceNodeAnnotation(replicaset.Namespace, edsName, node.Annotations)
+	}
 
 	pod := &corev1.Pod{
 		ObjectMeta: templateCopy.ObjectMeta,
