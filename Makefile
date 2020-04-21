@@ -68,6 +68,7 @@ validate: bin/golangci-lint bin/wwhrd
 generate: bin/operator-sdk bin/openapi-gen bin/client-gen bin/informer-gen bin/lister-gen
 	./bin/operator-sdk generate k8s
 	./bin/operator-sdk generate crds
+	cp -f deploy/crds/*_crd.yaml chart/extendeddaemonset/templates/
 	./bin/openapi-gen --logtostderr=true -o "" -i ./pkg/apis/datadoghq/v1alpha1 -O zz_generated.openapi -p ./pkg/apis/datadoghq/v1alpha1 -h ./hack/boilerplate.go.txt -r "-"
 	./hack/generate-groups.sh client,lister,informer \
   github.com/datadog/extendeddaemonset/pkg/generated github.com/datadog/extendeddaemonset/pkg/apis datadoghq:v1alpha1 \
