@@ -8,6 +8,7 @@ package strategy
 import (
 	"testing"
 
+	datadoghqv1alpha1 "github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -27,6 +28,29 @@ func Test_compareSpecTemplateMD5Hash(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := compareSpecTemplateMD5Hash(tt.args.hash, tt.args.pod); got != tt.want {
 				t.Errorf("compareSpecTemplateMD5Hash() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_compareNodeResourcesOverwriteMD5Hash(t *testing.T) {
+	type args struct {
+		edsName    string
+		replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet
+		pod        *corev1.Pod
+		node       *NodeItem
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := compareNodeResourcesOverwriteMD5Hash(tt.args.edsName, tt.args.replicaset, tt.args.pod, tt.args.node); got != tt.want {
+				t.Errorf("compareNodeResourcesOverwriteMD5Hash() = %v, want %v", got, tt.want)
 			}
 		})
 	}

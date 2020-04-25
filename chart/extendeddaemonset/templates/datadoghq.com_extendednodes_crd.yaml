@@ -1,0 +1,123 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: extendednodes.datadoghq.com
+  labels:
+{{ include "extendeddaemonset.labels" . | indent 4 }}
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.status
+    name: status
+    type: string
+  - JSONPath: .spec.nodeSelector
+    name: node selector
+    type: string
+  - JSONPath: .status.error
+    name: error
+    type: string
+  - JSONPath: .metadata.creationTimestamp
+    name: age
+    type: date
+  group: datadoghq.com
+  names:
+    kind: ExtendedNode
+    listKind: ExtendedNodeList
+    plural: extendednodes
+    singular: extendednode
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: ExtendedNode is the Schema for the extendednodes API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: ExtendedNodeSpec is the Schema for the extendednode API
+          properties:
+            containers:
+              description: ContainersResources contains list of Container spec overwrite.
+              items:
+                description: ExtendedNodeContainerSpec defines the resources overwrite
+                  for a container identified by its name
+                properties:
+                  name:
+                    type: string
+                  resources:
+                    description: ResourceRequirements describes the compute resource
+                      requirements.
+                    properties:
+                      limits:
+                        additionalProperties:
+                          type: string
+                        description: 'Limits describes the maximum amount of compute
+                          resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                        type: object
+                      requests:
+                        additionalProperties:
+                          type: string
+                        description: 'Requests describes the minimum amount of compute
+                          resources required. If Requests is omitted for a container,
+                          it defaults to Limits if that is explicitly specified, otherwise
+                          to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                        type: object
+                    type: object
+                required:
+                - name
+                - resources
+                type: object
+              type: array
+            nodeSelector:
+              additionalProperties:
+                type: string
+              description: NodeSelector lists labels that must be present on nodes
+                to trigger the usage of this resource.
+              type: object
+            reference:
+              description: Reference contains enough information to let you identify
+                the referred resource.
+              properties:
+                apiVersion:
+                  description: API version of the referent
+                  type: string
+                kind:
+                  description: 'Kind of the referent; More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"'
+                  type: string
+                name:
+                  description: 'Name of the referent; More info: http://kubernetes.io/docs/user-guide/identifiers#names'
+                  type: string
+              required:
+              - kind
+              - name
+              type: object
+          required:
+          - nodeSelector
+          - reference
+          type: object
+        status:
+          description: ExtendedNodeStatus defines the observed state of ExtendedNode
+          properties:
+            error:
+              type: string
+            status:
+              type: string
+          required:
+          - status
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true

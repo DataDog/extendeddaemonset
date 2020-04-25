@@ -14,6 +14,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
+	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilserrors "k8s.io/apimachinery/pkg/util/errors"
 
@@ -27,19 +28,39 @@ import (
 	podutils "github.com/datadog/extendeddaemonset/pkg/controller/utils/pod"
 )
 
-func compareCurrentPodWithNewPod(params *Parameters, pod *corev1.Pod, node *corev1.Node) bool {
+func compareCurrentPodWithNewPod(params *Parameters, pod *corev1.Pod, node *NodeItem) bool {
 	// check that the pod corresponds to the replicaset. if not return false
 	if !compareSpecTemplateMD5Hash(params.Replicaset.Spec.TemplateGeneration, pod) {
 		return false
 	}
-	if !compareNodeResourcesAnnotationsMD5Hash(params.EDSName, params.Replicaset, pod, node) {
+	if !compareNodeResourcesOverwriteMD5Hash(params.EDSName, params.Replicaset, pod, node) {
 		return false
 	}
 	return true
 }
 
-func compareNodeResourcesAnnotationsMD5Hash(edsName string, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, pod *corev1.Pod, node *corev1.Node) bool {
-	nodeHash := comparison.GenerateHashFromEDSResourceNodeAnnotation(replicaset.Namespace, edsName, node.GetAnnotations())
+func compareNodeResourcesOverwriteMD5Hash(edsName string, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, pod *corev1.Pod, node *NodeItem) bool {
+	if node.ExtendedNode != nil {
+		specCopy := pod.Spec.DeepCopy()
+		for id, container := range specCopy.Containers {
+			for _, container2 := range node.ExtendedNode.Spec.Containers {
+				if container.Name == container2.Name {
+					for key, val := range container2.Resources.Limits {
+						specCopy.Containers[id].Resources.Limits[key] = val
+					}
+					for key, val := range container2.Resources.Requests {
+						specCopy.Containers[id].Resources.Requests[key] = val
+					}
+					break
+				}
+			}
+		}
+		if !apiequality.Semantic.DeepEqual(&pod.Spec, specCopy) {
+			return false
+		}
+	}
+
+	nodeHash := comparison.GenerateHashFromEDSResourceNodeAnnotation(replicaset.Namespace, edsName, node.Node.GetAnnotations())
 	if val, ok := pod.Annotations[datadoghqv1alpha1.MD5NodeExtendedDaemonSetAnnotationKey]; ok && val == nodeHash {
 		return true
 	}

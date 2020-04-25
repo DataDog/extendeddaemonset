@@ -6,6 +6,7 @@
 package utils
 
 import (
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -79,6 +80,30 @@ func NewExtendedDaemonset(ns, name, image string, options *NewExtendedDaemonsetO
 		}
 	}
 	return newDaemonset
+}
+
+// NewExtendedNodeOptions used to provide creation options to the NewExtendedNode function
+type NewExtendedNodeOptions struct {
+	Selector  map[string]string
+	Resources map[string]corev1.ResourceRequirements
+}
+
+// NewExtendedNode returns new ExtendedNode instance
+func NewExtendedNode(ns, name, reference string, options *NewExtendedNodeOptions) *datadoghqv1alpha1.ExtendedNode {
+	edsNode := &datadoghqv1alpha1.ExtendedNode{}
+	edsNode.Name = name
+	edsNode.Namespace = ns
+	edsNode.Spec.Reference = &autoscalingv1.CrossVersionObjectReference{
+		Name: reference,
+		Kind: "ExtendedDaemonset",
+	}
+	if options != nil {
+		edsNode.Spec.NodeSelector = options.Selector
+		for key, val := range options.Resources {
+			edsNode.Spec.Containers = append(edsNode.Spec.Containers, datadoghqv1alpha1.ExtendedNodeContainerSpec{Name: key, Resources: val})
+		}
+	}
+	return edsNode
 }
 
 // NewDaemonsetOptions used to provide creation options to the NewdDaemonset function

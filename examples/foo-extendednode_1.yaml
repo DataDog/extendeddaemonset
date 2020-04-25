@@ -1,0 +1,16 @@
+apiVersion: datadoghq.com/v1alpha1
+kind: ExtendedNode
+metadata:
+  name: example-extendednode
+spec:
+  nodeSelector: 
+    overwrite: foo-daemon
+  reference:
+    kind: ExtendedDaemonset
+    name: foo
+  containers:
+  - name: daemon
+    resources:
+      requests:
+        cpu: "0.1"
+        memory: "30m"

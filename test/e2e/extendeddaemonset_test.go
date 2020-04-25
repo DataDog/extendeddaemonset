@@ -16,13 +16,16 @@ import (
 
 	apis "github.com/datadog/extendeddaemonset/pkg/apis"
 	datadoghqv1alpha1 "github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
+	"github.com/google/go-cmp/cmp"
 
 	"github.com/prometheus/common/log"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes/scheme"
 	dynclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -76,6 +79,7 @@ func TestEDS(t *testing.T) {
 	t.Run("extendeddaemonset-group", func(t *testing.T) {
 		t.Run("Initial-Deployment", InitialDeployment)
 		//t.Run("MigrationFromDaemonSet", MigrationFromDaemonSet)
+		t.Run("Use ExtendedNode", UseExtendedNode)
 	})
 }
 
@@ -249,6 +253,90 @@ func MigrationFromDaemonSet(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func UseExtendedNode(t *testing.T) {
+	namespace, ctx, f := initTestFwkResources(t, "extendeddaemonset")
+	defer ctx.Cleanup()
+	edsName := "eds"
+
+	resouresRef := corev1.ResourceList{
+		"cpu":    resource.MustParse("0.1"),
+		"memory": resource.MustParse("20M"),
+	}
+	edsNode := utils.NewExtendedNode(namespace, "test-eds", edsName, &utils.NewExtendedNodeOptions{
+		Selector: map[string]string{"overwrite": "test-eds"},
+		Resources: map[string]corev1.ResourceRequirements{
+			"main": {
+				Requests: resouresRef,
+			},
+		},
+	})
+	err := f.Client.Create(goctx.TODO(), edsNode, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	nodeName := "kind-worker2"
+	nodeWorker2 := &corev1.Node{}
+	nodeKey := dynclient.ObjectKey{
+		Name: nodeName,
+	}
+	err = f.Client.Get(goctx.TODO(), nodeKey, nodeWorker2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if nodeWorker2.Labels == nil {
+		nodeWorker2.Labels = make(map[string]string)
+	}
+	nodeWorker2.Labels["overwrite"] = "test-eds"
+	err = f.Client.Update(goctx.TODO(), nodeWorker2)
+
+	daemonset := utils.NewExtendedDaemonset(namespace, edsName, fmt.Sprintf("k8s.gcr.io/pause:%s", "3.1"), nil)
+	err = f.Client.Create(goctx.TODO(), daemonset, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	isDSOK := func(ds *datadoghqv1alpha1.ExtendedDaemonSet) (bool, error) {
+		if ds.Status.Ready == 3 {
+			return true, nil
+		}
+		return false, nil
+	}
+	err = utils.WaitForFuncOnExtendedDaemonset(t, f.Client, namespace, edsName, isDSOK, retryInterval, timeout)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	podList := &corev1.PodList{}
+	err = f.Client.List(goctx.TODO(), podList, &dynclient.ListOptions{
+		Namespace:     namespace,
+		LabelSelector: labels.Set(map[string]string{"extendeddaemonset.datadoghq.com/name": edsName}).AsSelector(),
+	})
+	var podOK bool
+	for _, pod := range podList.Items {
+		if pod.Spec.NodeName == nodeName {
+			for _, container := range pod.Spec.Containers {
+				if container.Name != "main" {
+					continue
+				}
+				if diff := cmp.Diff(resouresRef, container.Resources.Requests); diff == "" {
+					podOK = true
+					break
+				} else {
+					t.Logf("diff pods resources: %s", diff)
+				}
+			}
+		}
+		if podOK {
+			break
+		}
+	}
+	if !podOK {
+		t.Fatalf("unable to find updated pod")
+	}
+
 }
 
 func initTestFwkResources(t *testing.T, deploymentName string) (string, *framework.TestCtx, *framework.Framework) {

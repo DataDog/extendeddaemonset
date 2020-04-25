@@ -40,6 +40,8 @@ func TestReconcileExtendedDaemonSetReplicaSet_Reconcile(t *testing.T) {
 	s.AddKnownTypes(datadoghqv1alpha1.SchemeGroupVersion, &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{})
 	s.AddKnownTypes(datadoghqv1alpha1.SchemeGroupVersion, &datadoghqv1alpha1.ExtendedDaemonSetList{})
 	s.AddKnownTypes(datadoghqv1alpha1.SchemeGroupVersion, &datadoghqv1alpha1.ExtendedDaemonSet{})
+	s.AddKnownTypes(datadoghqv1alpha1.SchemeGroupVersion, &datadoghqv1alpha1.ExtendedNodeList{})
+	s.AddKnownTypes(datadoghqv1alpha1.SchemeGroupVersion, &datadoghqv1alpha1.ExtendedNode{})
 	s.AddKnownTypes(corev1.SchemeGroupVersion, &corev1.PodList{})
 	s.AddKnownTypes(corev1.SchemeGroupVersion, &corev1.Pod{})
 	s.AddKnownTypes(corev1.SchemeGroupVersion, &corev1.NodeList{})
@@ -356,7 +358,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_getNodeList(t *testing.T) {
 	s := scheme.Scheme
 	s.AddKnownTypes(corev1.SchemeGroupVersion, &corev1.Node{})
 	s.AddKnownTypes(corev1.SchemeGroupVersion, &corev1.NodeList{})
-
+	eds := test.NewExtendedDaemonSet("bar", "foo", nil)
 	replicasset := test.NewExtendedDaemonSetReplicaSet("bar", "foo-1", &test.NewExtendedDaemonSetReplicaSetOptions{
 		Labels: map[string]string{"foo-key": "bar-value"}})
 
@@ -377,13 +379,14 @@ func TestReconcileExtendedDaemonSetReplicaSet_getNodeList(t *testing.T) {
 		recorder record.EventRecorder
 	}
 	type args struct {
+		eds        *datadoghqv1alpha1.ExtendedDaemonSet
 		replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet
 	}
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
-		want    *corev1.NodeList
+		want    *strategy.NodeList
 		wantErr bool
 	}{
 		{
@@ -393,14 +396,14 @@ func TestReconcileExtendedDaemonSetReplicaSet_getNodeList(t *testing.T) {
 				scheme: s,
 			},
 			args: args{
+				eds:        eds,
 				replicaset: replicasset,
 			},
-			want: &corev1.NodeList{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       "NodeList",
-					APIVersion: "v1",
+			want: &strategy.NodeList{
+				Items: []*strategy.NodeItem{
+					{Node: node1},
+					{Node: node2},
 				},
-				Items: []corev1.Node{*node1, *node2},
 			},
 			wantErr: false,
 		},
@@ -412,7 +415,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_getNodeList(t *testing.T) {
 				scheme:   tt.fields.scheme,
 				recorder: tt.fields.recorder,
 			}
-			got, err := r.getNodeList(tt.args.replicaset)
+			got, err := r.getNodeList(eds, tt.args.replicaset)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ReconcileExtendedDaemonSetReplicaSet.getNodeList() error = %v, wantErr %v", err, tt.wantErr)
 				return

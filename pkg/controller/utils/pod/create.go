@@ -22,7 +22,7 @@ import (
 )
 
 // CreatePodFromDaemonSetReplicaSet use to create a Pod from a ReplicaSet instance and a specific Node name.
-func CreatePodFromDaemonSetReplicaSet(scheme *runtime.Scheme, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, node *corev1.Node, addNodeAffinity bool) (*corev1.Pod, error) {
+func CreatePodFromDaemonSetReplicaSet(scheme *runtime.Scheme, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, node *corev1.Node, edsNode *datadoghqv1alpha1.ExtendedNode, addNodeAffinity bool) (*corev1.Pod, error) {
 	var err error
 	templateCopy := replicaset.Spec.Template.DeepCopy()
 	{
@@ -42,6 +42,8 @@ func CreatePodFromDaemonSetReplicaSet(scheme *runtime.Scheme, replicaset *datado
 	}
 	templateCopy.ObjectMeta.Annotations[datadoghqv1alpha1.MD5ExtendedDaemonSetAnnotationKey] = replicaset.Spec.TemplateGeneration
 	templateCopy.ObjectMeta.Annotations[DaemonsetClusterAutoscalerPodAnnotationKey] = "true"
+
+	overwriteResourcesFromEdsNode(templateCopy, edsNode)
 
 	if node != nil {
 		err = overwriteResourcesFromNode(templateCopy, replicaset.Namespace, edsName, node)
@@ -65,6 +67,20 @@ func CreatePodFromDaemonSetReplicaSet(scheme *runtime.Scheme, replicaset *datado
 	}
 
 	return pod, err
+}
+
+func overwriteResourcesFromEdsNode(template *corev1.PodTemplateSpec, edsNode *datadoghqv1alpha1.ExtendedNode) {
+	if edsNode == nil {
+		return
+	}
+	for _, extraConfig := range edsNode.Spec.Containers {
+		for id, container := range template.Spec.Containers {
+			if extraConfig.Name == container.Name {
+				template.Spec.Containers[id].Resources = extraConfig.Resources
+				break
+			}
+		}
+	}
 }
 
 func overwriteResourcesFromNode(template *corev1.PodTemplateSpec, edsNamespace, edsName string, node *corev1.Node) error {

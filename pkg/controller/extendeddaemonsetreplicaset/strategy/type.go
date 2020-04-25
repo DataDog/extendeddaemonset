@@ -40,8 +40,8 @@ type Parameters struct {
 
 	CanaryNodes []string
 
-	NodeByName      map[string]*corev1.Node
-	PodByNodeName   map[*corev1.Node]*corev1.Pod
+	NodeByName      map[string]*NodeItem
+	PodByNodeName   map[*NodeItem]*corev1.Pod
 	PodToCleanUp    []*corev1.Pod
 	UnscheduledPods []*corev1.Pod
 
@@ -50,13 +50,32 @@ type Parameters struct {
 
 // Result information returns by a strategy
 type Result struct {
-	// PodsToCreate list of node name where Pods need to be created
-	PodsToCreate []*corev1.Node
-	// PodsToDelete list of node name where Pods need to be deleted
-	PodsToDelete []*corev1.Node
+	// PodsToCreate list of NodeItem for Pods creation
+	PodsToCreate []*NodeItem
+	// PodsToDelete list of NodeItem for Pods deletion
+	PodsToDelete []*NodeItem
 
 	UnscheduledNodesDueToResourcesConstraints []string
 
 	NewStatus *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus
 	Result    reconcile.Result
+}
+
+// NodeList list of NodeItem
+type NodeList struct {
+	Items []*NodeItem
+}
+
+// NodeItem used to store all informations needs to create or delete a pod
+type NodeItem struct {
+	Node         *corev1.Node
+	ExtendedNode *datadoghqv1alpha1.ExtendedNode
+}
+
+// NewNodeItem used to create new NodeItem instance
+func NewNodeItem(node *corev1.Node, edsNode *datadoghqv1alpha1.ExtendedNode) *NodeItem {
+	return &NodeItem{
+		Node:         node,
+		ExtendedNode: edsNode,
+	}
 }
