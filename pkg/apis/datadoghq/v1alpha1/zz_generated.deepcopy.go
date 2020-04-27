@@ -464,13 +464,7 @@ func (in *ExtendedNodeSpec) DeepCopyInto(out *ExtendedNodeSpec) {
 		*out = new(autoscalingv1.CrossVersionObjectReference)
 		**out = **in
 	}
-	if in.NodeSelector != nil {
-		in, out := &in.NodeSelector, &out.NodeSelector
-		*out = make(map[string]string, len(*in))
-		for key, val := range *in {
-			(*out)[key] = val
-		}
-	}
+	in.NodeSelector.DeepCopyInto(&out.NodeSelector)
 	if in.Containers != nil {
 		in, out := &in.Containers, &out.Containers
 		*out = make([]ExtendedNodeContainerSpec, len(*in))

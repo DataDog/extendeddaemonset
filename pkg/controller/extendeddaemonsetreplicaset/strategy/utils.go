@@ -33,6 +33,9 @@ func compareCurrentPodWithNewPod(params *Parameters, pod *corev1.Pod, node *Node
 	if !compareSpecTemplateMD5Hash(params.Replicaset.Spec.TemplateGeneration, pod) {
 		return false
 	}
+	if !compareWithExtendedNodeOverwrite(pod, node) {
+		return false
+	}
 	if !compareNodeResourcesOverwriteMD5Hash(params.EDSName, params.Replicaset, pod, node) {
 		return false
 	}
@@ -40,6 +43,14 @@ func compareCurrentPodWithNewPod(params *Parameters, pod *corev1.Pod, node *Node
 }
 
 func compareNodeResourcesOverwriteMD5Hash(edsName string, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, pod *corev1.Pod, node *NodeItem) bool {
+	nodeHash := comparison.GenerateHashFromEDSResourceNodeAnnotation(replicaset.Namespace, edsName, node.Node.GetAnnotations())
+	if val, ok := pod.Annotations[datadoghqv1alpha1.MD5NodeExtendedDaemonSetAnnotationKey]; ok && val == nodeHash {
+		return true
+	}
+	return false
+}
+
+func compareWithExtendedNodeOverwrite(pod *corev1.Pod, node *NodeItem) bool {
 	if node.ExtendedNode != nil {
 		specCopy := pod.Spec.DeepCopy()
 		for id, container := range specCopy.Containers {
@@ -60,11 +71,7 @@ func compareNodeResourcesOverwriteMD5Hash(edsName string, replicaset *datadoghqv
 		}
 	}
 
-	nodeHash := comparison.GenerateHashFromEDSResourceNodeAnnotation(replicaset.Namespace, edsName, node.Node.GetAnnotations())
-	if val, ok := pod.Annotations[datadoghqv1alpha1.MD5NodeExtendedDaemonSetAnnotationKey]; ok && val == nodeHash {
-		return true
-	}
-	return false
+	return true
 }
 
 func compareSpecTemplateMD5Hash(hash string, pod *corev1.Pod) bool {

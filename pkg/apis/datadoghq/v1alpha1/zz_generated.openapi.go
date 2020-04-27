@@ -564,16 +564,7 @@ func schema_pkg_apis_datadoghq_v1alpha1_ExtendedNodeSpec(ref common.ReferenceCal
 					"nodeSelector": {
 						SchemaProps: spec.SchemaProps{
 							Description: "NodeSelector lists labels that must be present on nodes to trigger the usage of this resource.",
-							Type:        []string{"object"},
-							AdditionalProperties: &spec.SchemaOrBool{
-								Allows: true,
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Type:   []string{"string"},
-										Format: "",
-									},
-								},
-							},
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
 						},
 					},
 					"containers": {
@@ -583,7 +574,7 @@ func schema_pkg_apis_datadoghq_v1alpha1_ExtendedNodeSpec(ref common.ReferenceCal
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "ContainersResources contains list of Container spec overwrite.",
+							Description: "Containers contains a list of container spec overwrite.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -599,6 +590,6 @@ func schema_pkg_apis_datadoghq_v1alpha1_ExtendedNodeSpec(ref common.ReferenceCal
 			},
 		},
 		Dependencies: []string{
-			"./pkg/apis/datadoghq/v1alpha1.ExtendedNodeContainerSpec", "k8s.io/api/autoscaling/v1.CrossVersionObjectReference"},
+			"./pkg/apis/datadoghq/v1alpha1.ExtendedNodeContainerSpec", "k8s.io/api/autoscaling/v1.CrossVersionObjectReference", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"},
 	}
 }

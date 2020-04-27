@@ -18,13 +18,10 @@ type ExtendedNodeSpec struct {
 	// Reference contains enough information to let you identify the referred resource.
 	Reference *autoscalingv1.CrossVersionObjectReference `json:"reference"`
 	// NodeSelector lists labels that must be present on nodes to trigger the usage of this resource.
-	NodeSelector map[string]string `json:"nodeSelector"`
-	// ContainersResources contains list of Container spec overwrite.
+	NodeSelector metav1.LabelSelector `json:"nodeSelector"`
+	// Containers contains a list of container spec overwrite.
 	// +listType=set
 	Containers []ExtendedNodeContainerSpec `json:"containers,omitempty"`
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 }
 
 // ExtendedNodeContainerSpec defines the resources overwrite for a container identified by its name

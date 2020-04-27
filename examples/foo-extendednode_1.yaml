@@ -4,7 +4,8 @@ metadata:
   name: example-extendednode
 spec:
   nodeSelector: 
-    overwrite: foo-daemon
+    matchLabels:
+      overwrite: foo-daemon
   reference:
     kind: ExtendedDaemonset
     name: foo

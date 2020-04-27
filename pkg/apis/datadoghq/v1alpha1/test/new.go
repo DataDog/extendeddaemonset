@@ -11,6 +11,9 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
+	corev1 "k8s.io/api/core/v1"
+
 	datadoghqv1alpha1 "github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
 )
 
@@ -127,4 +130,35 @@ func NewExtendedDaemonSetReplicaSet(ns, name string, options *NewExtendedDaemonS
 	}
 
 	return dd
+}
+
+// NewExtendedNodeOptions used to provide creation options to the NewExtendedNode function
+type NewExtendedNodeOptions struct {
+	CreationTime time.Time
+	Selector     map[string]string
+	Resources    map[string]corev1.ResourceRequirements
+}
+
+// NewExtendedNode returns new ExtendedNode instance
+func NewExtendedNode(ns, name, reference string, options *NewExtendedNodeOptions) *datadoghqv1alpha1.ExtendedNode {
+	edsNode := &datadoghqv1alpha1.ExtendedNode{}
+	edsNode.Name = name
+	edsNode.Namespace = ns
+	edsNode.Spec.Reference = &autoscalingv1.CrossVersionObjectReference{
+		Name: reference,
+		Kind: "ExtendedDaemonset",
+	}
+	if options != nil {
+		edsNode.ObjectMeta.CreationTimestamp = metav1.Time{Time: options.CreationTime}
+		if options.Selector != nil {
+			edsNode.Spec.NodeSelector = metav1.LabelSelector{
+				MatchLabels: options.Selector,
+			}
+		}
+
+		for key, val := range options.Resources {
+			edsNode.Spec.Containers = append(edsNode.Spec.Containers, datadoghqv1alpha1.ExtendedNodeContainerSpec{Name: key, Resources: val})
+		}
+	}
+	return edsNode
 }

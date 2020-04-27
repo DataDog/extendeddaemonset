@@ -336,9 +336,12 @@ func (r *ReconcileExtendedDaemonSetReplicaSet) getExtendedNodes(eds *datadoghqv1
 		return nil, err
 	}
 	var outputList []*datadoghqv1alpha1.ExtendedNode
-	for id, edsNode := range edsNodeList.Items {
+	for index, edsNode := range edsNodeList.Items {
+		if edsNode.Spec.Reference == nil {
+			continue
+		}
 		if edsNode.Spec.Reference.Name == eds.Name {
-			outputList = append(outputList, &edsNodeList.Items[id])
+			outputList = append(outputList, &edsNodeList.Items[index])
 		}
 	}
 	return outputList, nil
@@ -379,19 +382,22 @@ func (r *ReconcileExtendedDaemonSetReplicaSet) getNodeList(eds *datadoghqv1alpha
 		return nil, err
 	}
 
-	for id, node := range nodeList.Items {
+	for index, node := range nodeList.Items {
 		var edsNodeSelected *datadoghqv1alpha1.ExtendedNode
 		for _, edsNode := range extendedNodes {
 			if edsNode.Status.Status != datadoghqv1alpha1.ExtendedNodeStatusValid {
 				continue
 			}
-			selector := labels.SelectorFromSet(edsNode.Spec.NodeSelector)
+			selector, err2 := metav1.LabelSelectorAsSelector(&edsNode.Spec.NodeSelector)
+			if err2 != nil {
+				return nil, err2
+			}
 			if selector.Matches(labels.Set(node.Labels)) {
 				edsNodeSelected = edsNode
 				break
 			}
 		}
-		nodeItemList.Items = append(nodeItemList.Items, strategy.NewNodeItem(&nodeList.Items[id], edsNodeSelected))
+		nodeItemList.Items = append(nodeItemList.Items, strategy.NewNodeItem(&nodeList.Items[index], edsNodeSelected))
 	}
 	return nodeItemList, nil
 }

@@ -14,6 +14,7 @@ import (
 
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 
@@ -101,9 +102,11 @@ func (r *ReconcileExtendedNode) Reconcile(request reconcile.Request) (reconcile.
 
 	newStatus := instance.Status.DeepCopy()
 	newStatus.Error = ""
-	if instance.Spec.Reference.Name == "" {
+	if instance.Spec.Reference == nil || instance.Spec.Reference.Name == "" {
 		newStatus.Error = "missing reference"
 
+		newStatus.Error = fmt.Sprintf("missing reference in spec")
+		newStatus.Status = datadoghqv1alpha1.ExtendedNodeStatusError
 		return r.updateExtendedNode(instance, newStatus)
 	}
 
@@ -153,8 +156,11 @@ func searchPossibleConflict(instance *datadoghqv1alpha1.ExtendedNode, nodeList *
 	nodesAlreadySelected := map[string]string{}
 	for _, node := range nodeList.Items {
 		for _, edsNode := range edsNodes {
-			selector := labels.SelectorFromSet(edsNode.Spec.NodeSelector)
-			if !selector.Matches(labels.Set(node.Labels)) {
+			selector, err2 := metav1.LabelSelectorAsSelector(&edsNode.Spec.NodeSelector)
+			if err2 != nil {
+				return "", err2
+			}
+			if selector.Matches(labels.Set(node.Labels)) {
 				if edsNode.Name == instance.Name {
 					if previousEdsNode, found := nodesAlreadySelected[node.Name]; found {
 						return previousEdsNode, fmt.Errorf("extendedNode already assigned to the node %s", node.Name)
