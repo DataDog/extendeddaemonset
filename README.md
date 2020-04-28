@@ -1,5 +1,9 @@
 # ExtendedDaemonSet
 
+![badge](https://action-badges.now.sh/datadog/extendeddaemonset)
+[![Go Report Card](https://goreportcard.com/badge/github.com/datadog/extendeddaemonset)](https://goreportcard.com/report/github.com/datadog/extendeddaemonset)
+[![codecov](https://codecov.io/gh/datadog/extendeddaemonset/branch/master/graph/badge.svg)](https://codecov.io/gh/datadog/extendeddaemonset)
+
 > **!!! Alpha version !!!**
 
 **ExtendedDaemonSet** aims to provide a new implementation of the Kubernetes `DaemonSet` resource with key features:
