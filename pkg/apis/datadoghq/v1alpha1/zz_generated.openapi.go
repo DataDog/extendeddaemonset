@@ -30,6 +30,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"./pkg/apis/datadoghq/v1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate": schema_pkg_apis_datadoghq_v1alpha1_ExtendedDaemonSetSpecStrategyRollingUpdate(ref),
 		"./pkg/apis/datadoghq/v1alpha1.ExtendedDaemonSetStatus":                    schema_pkg_apis_datadoghq_v1alpha1_ExtendedDaemonSetStatus(ref),
 		"./pkg/apis/datadoghq/v1alpha1.ExtendedDaemonSetStatusCanary":              schema_pkg_apis_datadoghq_v1alpha1_ExtendedDaemonSetStatusCanary(ref),
+		"./pkg/apis/datadoghq/v1alpha1.ExtendedNodeSpec":                           schema_pkg_apis_datadoghq_v1alpha1_ExtendedNodeSpec(ref),
 	}
 }
 
@@ -544,5 +545,51 @@ func schema_pkg_apis_datadoghq_v1alpha1_ExtendedDaemonSetStatusCanary(ref common
 				Required: []string{"replicaSet"},
 			},
 		},
+	}
+}
+
+func schema_pkg_apis_datadoghq_v1alpha1_ExtendedNodeSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ExtendedNodeSpec is the Schema for the extendednode API",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"reference": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Reference contains enough information to let you identify the referred resource.",
+							Ref:         ref("k8s.io/api/autoscaling/v1.CrossVersionObjectReference"),
+						},
+					},
+					"nodeSelector": {
+						SchemaProps: spec.SchemaProps{
+							Description: "NodeSelector lists labels that must be present on nodes to trigger the usage of this resource.",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
+						},
+					},
+					"containers": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Containers contains a list of container spec overwrite.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("./pkg/apis/datadoghq/v1alpha1.ExtendedNodeContainerSpec"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"reference", "nodeSelector"},
+			},
+		},
+		Dependencies: []string{
+			"./pkg/apis/datadoghq/v1alpha1.ExtendedNodeContainerSpec", "k8s.io/api/autoscaling/v1.CrossVersionObjectReference", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"},
 	}
 }

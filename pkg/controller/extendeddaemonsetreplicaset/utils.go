@@ -16,11 +16,12 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 
 	datadoghqv1alpha1 "github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
+	"github.com/datadog/extendeddaemonset/pkg/controller/extendeddaemonsetreplicaset/strategy"
 	podutils "github.com/datadog/extendeddaemonset/pkg/controller/utils/pod"
 	"github.com/go-logr/logr"
 )
 
-func createPods(logger logr.Logger, client client.Client, scheme *runtime.Scheme, podAffinitySupported bool, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, podsToCreate []*corev1.Node) []error {
+func createPods(logger logr.Logger, client client.Client, scheme *runtime.Scheme, podAffinitySupported bool, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, podsToCreate []*strategy.NodeItem) []error {
 	var errs []error
 	var wg sync.WaitGroup
 	errsChan := make(chan error, len(podsToCreate))
@@ -28,7 +29,8 @@ func createPods(logger logr.Logger, client client.Client, scheme *runtime.Scheme
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
-			newPod, err := podutils.CreatePodFromDaemonSetReplicaSet(scheme, replicaset, podsToCreate[id], podAffinitySupported)
+			nodeItem := podsToCreate[id]
+			newPod, err := podutils.CreatePodFromDaemonSetReplicaSet(scheme, replicaset, nodeItem.Node, nodeItem.ExtendedNode, podAffinitySupported)
 			if err != nil {
 				logger.Error(err, "Generate pod template failed", "name", newPod.GenerateName)
 				errsChan <- err
@@ -54,15 +56,15 @@ func createPods(logger logr.Logger, client client.Client, scheme *runtime.Scheme
 	return errs
 }
 
-func deletePods(logger logr.Logger, c client.Client, podByNodeName map[*corev1.Node]*corev1.Pod, nodes []*corev1.Node) []error {
+func deletePods(logger logr.Logger, c client.Client, podByNodeName map[*strategy.NodeItem]*corev1.Pod, nodes []*strategy.NodeItem) []error {
 	var errs []error
 	var wg sync.WaitGroup
 	errsChan := make(chan error, len(nodes))
 	for _, node := range nodes {
 		wg.Add(1)
-		go func(n *corev1.Node) {
+		go func(n *strategy.NodeItem) {
 			defer wg.Done()
-			logger.V(1).Info("Delete pod", "name", podByNodeName[n].Name, "node", n.Name)
+			logger.V(1).Info("Delete pod", "name", podByNodeName[n].Name, "node", n.Node.Name)
 			err := c.Delete(context.TODO(), podByNodeName[n])
 			if err != nil {
 				errsChan <- err

@@ -171,6 +171,39 @@ $ kubectl annotate node <node-name> `resources.extendeddaemonset.datadoghq.com/b
 node/<node-name> annotated
 ```
 
+#### Overwrite container's Pod resources for a set of Nodes with `ExtendedNodes`
+
+In some cases (for example with different nodes type), it can be useful to have different resource configurations for a Daemonset to handle the Node's workload specificity.
+
+To do so you can create an instance of `ExtendedNode` resource that aims to overwrite the resources
+definition of the container(s) present in ExtendedDaemonset Pods.
+
+the information needed is:
+
+* `spec.nodeSelector`: a NodeLabels selector that matches with the nodes where it must trigger the usage of this resource.
+* `spec.reference`: contains enough information to let you identify the referred resource.
+* `spec.containers`: contains a list of Container spec overwrites.
+
+```yaml
+apiVersion: datadoghq.com/v1alpha1
+kind: ExtendedNode
+metadata:
+  name: foo-xxl-node
+spec:
+  nodeSelector:
+    matchLabels:
+      node-type: xxl
+  reference:
+    kind: ExtendedDaemonset
+    name: foo
+  containers:
+   - name: daemon
+    resources:
+      requests:
+        cpu: "0.5"
+        memory: "300m"
+```
+
 ### Kubectl plugin
 
 To build the the kubectl ExtendedDaemonSet plugin, you can run the command: `make build-plugin`. This will create the `kubectl-eds` Go binary, corresponding to your local OS and architecture.

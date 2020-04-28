@@ -17,6 +17,7 @@ type DatadoghqV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	ExtendedDaemonSetsGetter
 	ExtendedDaemonSetReplicaSetsGetter
+	ExtendedNodesGetter
 }
 
 // DatadoghqV1alpha1Client is used to interact with features provided by the datadoghq.com group.
@@ -30,6 +31,10 @@ func (c *DatadoghqV1alpha1Client) ExtendedDaemonSets(namespace string) ExtendedD
 
 func (c *DatadoghqV1alpha1Client) ExtendedDaemonSetReplicaSets(namespace string) ExtendedDaemonSetReplicaSetInterface {
 	return newExtendedDaemonSetReplicaSets(c, namespace)
+}
+
+func (c *DatadoghqV1alpha1Client) ExtendedNodes(namespace string) ExtendedNodeInterface {
+	return newExtendedNodes(c, namespace)
 }
 
 // NewForConfig creates a new DatadoghqV1alpha1Client for the given config.

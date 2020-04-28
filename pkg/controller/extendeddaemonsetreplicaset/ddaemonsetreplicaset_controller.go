@@ -262,11 +262,11 @@ func (r *ReconcileExtendedDaemonSetReplicaSet) applyStrategy(logger logr.Logger,
 	return strategyResult, err
 }
 
-func (r *ReconcileExtendedDaemonSetReplicaSet) getPodAndNodeList(logger logr.Logger, daemonset *datadoghqv1alpha1.ExtendedDaemonSet, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) (*corev1.NodeList, *corev1.PodList, error) {
-	var nodeList *corev1.NodeList
+func (r *ReconcileExtendedDaemonSetReplicaSet) getPodAndNodeList(logger logr.Logger, daemonset *datadoghqv1alpha1.ExtendedDaemonSet, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) (*strategy.NodeList, *corev1.PodList, error) {
+	var nodeList *strategy.NodeList
 	var podList *corev1.PodList
 	var err error
-	nodeList, err = r.getNodeList(replicaset)
+	nodeList, err = r.getNodeList(daemonset, replicaset)
 	if err != nil {
 		logger.Error(err, "unable to list associated pods")
 		return nodeList, podList, err
@@ -329,6 +329,24 @@ func (r *ReconcileExtendedDaemonSetReplicaSet) getDaemonsetOwner(replicaset *dat
 	return daemonsetInstance, nil
 }
 
+func (r *ReconcileExtendedDaemonSetReplicaSet) getExtendedNodes(eds *datadoghqv1alpha1.ExtendedDaemonSet) ([]*datadoghqv1alpha1.ExtendedNode, error) {
+	edsNodeList := &datadoghqv1alpha1.ExtendedNodeList{}
+	err := r.client.List(context.TODO(), edsNodeList, &client.ListOptions{Namespace: eds.Namespace})
+	if err != nil {
+		return nil, err
+	}
+	var outputList []*datadoghqv1alpha1.ExtendedNode
+	for index, edsNode := range edsNodeList.Items {
+		if edsNode.Spec.Reference == nil {
+			continue
+		}
+		if edsNode.Spec.Reference.Name == eds.Name {
+			outputList = append(outputList, &edsNodeList.Items[index])
+		}
+	}
+	return outputList, nil
+}
+
 func (r *ReconcileExtendedDaemonSetReplicaSet) getPodList(ds *datadoghqv1alpha1.ExtendedDaemonSet) (*corev1.PodList, error) {
 	podList := &corev1.PodList{}
 	podSelector := labels.Set{datadoghqv1alpha1.ExtendedDaemonSetNameLabelKey: ds.Name}
@@ -343,8 +361,8 @@ func (r *ReconcileExtendedDaemonSetReplicaSet) getPodList(ds *datadoghqv1alpha1.
 	return podList, nil
 }
 
-func (r *ReconcileExtendedDaemonSetReplicaSet) getNodeList(replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) (*corev1.NodeList, error) {
-	nodeList := &corev1.NodeList{}
+func (r *ReconcileExtendedDaemonSetReplicaSet) getNodeList(eds *datadoghqv1alpha1.ExtendedDaemonSet, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) (*strategy.NodeList, error) {
+	nodeItemList := &strategy.NodeList{}
 	nodeSelector := labels.Set{}
 	if replicaset.Spec.Selector != nil {
 		nodeSelector = labels.Set(replicaset.Spec.Selector.MatchLabels)
@@ -354,10 +372,34 @@ func (r *ReconcileExtendedDaemonSetReplicaSet) getNodeList(replicaset *datadoghq
 			Selector: nodeSelector.AsSelectorPreValidated(),
 		},
 	}
+	nodeList := &corev1.NodeList{}
 	if err := r.client.List(context.TODO(), nodeList, listOptions...); err != nil {
 		return nil, err
 	}
-	return nodeList, nil
+
+	extendedNodes, err := r.getExtendedNodes(eds)
+	if err != nil {
+		return nil, err
+	}
+
+	for index, node := range nodeList.Items {
+		var edsNodeSelected *datadoghqv1alpha1.ExtendedNode
+		for _, edsNode := range extendedNodes {
+			if edsNode.Status.Status != datadoghqv1alpha1.ExtendedNodeStatusValid {
+				continue
+			}
+			selector, err2 := metav1.LabelSelectorAsSelector(&edsNode.Spec.NodeSelector)
+			if err2 != nil {
+				return nil, err2
+			}
+			if selector.Matches(labels.Set(node.Labels)) {
+				edsNodeSelected = edsNode
+				break
+			}
+		}
+		nodeItemList.Items = append(nodeItemList.Items, strategy.NewNodeItem(&nodeList.Items[index], edsNodeSelected))
+	}
+	return nodeItemList, nil
 }
 
 func (r *ReconcileExtendedDaemonSetReplicaSet) getOldDaemonsetPodList(ds *datadoghqv1alpha1.ExtendedDaemonSet) (*corev1.PodList, error) {

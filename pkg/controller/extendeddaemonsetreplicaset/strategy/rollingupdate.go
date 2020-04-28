@@ -33,8 +33,8 @@ func ManageDeployment(client client.Client, params *Parameters) (*Result, error)
 	metaNow := metav1.NewTime(now)
 	var desiredPods, availablePods, readyPods, currentPods, oldAvailablePods, podsTerminating, nbIgnoredUnresponsiveNodes int32
 
-	allPodToCreate := []*corev1.Node{}
-	allPodToDelete := []*corev1.Node{}
+	allPodToCreate := []*NodeItem{}
+	allPodToDelete := []*NodeItem{}
 
 	nbNodes := len(params.PodByNodeName)
 

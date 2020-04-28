@@ -55,6 +55,7 @@ type NewPodOptions struct {
 	Annotations       map[string]string
 	Labels            map[string]string
 	Phase             corev1.PodPhase
+	Resources         corev1.ResourceRequirements
 }
 
 // NewPod used to return new pod instance
@@ -73,10 +74,17 @@ func NewPod(namespace, name, nodeName string, opts *NewPodOptions) *corev1.Pod {
 		Spec: corev1.PodSpec{
 			NodeName: nodeName,
 			Affinity: &corev1.Affinity{},
+			Containers: []corev1.Container{
+				{
+					Name: name,
+				},
+			},
 		},
 	}
 	if opts != nil {
 		pod.CreationTimestamp = opts.CreationTimestamp
+
+		pod.Spec.Containers[0].Resources = opts.Resources
 
 		if opts.Annotations != nil {
 			for key, value := range opts.Annotations {

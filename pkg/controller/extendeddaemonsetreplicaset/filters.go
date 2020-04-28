@@ -13,13 +13,14 @@ import (
 
 	datadoghqv1alpha1 "github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
 	"github.com/datadog/extendeddaemonset/pkg/controller/extendeddaemonsetreplicaset/scheduler"
+	"github.com/datadog/extendeddaemonset/pkg/controller/extendeddaemonsetreplicaset/strategy"
 	podutils "github.com/datadog/extendeddaemonset/pkg/controller/utils/pod"
 )
 
 // FilterAndMapPodsByNode used to map pods by associated node. It also return the list of pods that
 // should be deleted (not needed anymore), and pods that are not scheduled yet (created but not scheduled)
 func FilterAndMapPodsByNode(logger logr.Logger, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet,
-	nodeList *corev1.NodeList, podList *corev1.PodList, ignoreNodes []string) (nodesByName map[string]*corev1.Node, podByNode map[*corev1.Node]*corev1.Pod,
+	nodeList *strategy.NodeList, podList *corev1.PodList, ignoreNodes []string) (nodesByName map[string]*strategy.NodeItem, podByNode map[*strategy.NodeItem]*corev1.Pod,
 	podToDelete, unscheduledPods []*corev1.Pod) {
 	// For faster search convert slice to map
 	ignoreMapNode := make(map[string]bool)
@@ -28,21 +29,22 @@ func FilterAndMapPodsByNode(logger logr.Logger, replicaset *datadoghqv1alpha1.Ex
 	}
 
 	// create a Fake pod from the current replicaset.spec.template
-	newPod, _ := podutils.CreatePodFromDaemonSetReplicaSet(nil, replicaset, nil, false)
+	newPod, _ := podutils.CreatePodFromDaemonSetReplicaSet(nil, replicaset, nil, nil, false)
 	// var unschedulabledNodes []*corev1.Node
 	// Associate Pods to Nodes
 	podsByNodeName := make(map[string][]*corev1.Pod)
-	nodesByName = make(map[string]*corev1.Node)
-	for id, node := range nodeList.Items {
-		nodesByName[node.Name] = &nodeList.Items[id]
-		if _, ok := ignoreMapNode[node.Name]; ok {
+	nodesByName = make(map[string]*strategy.NodeItem)
+	for id := range nodeList.Items {
+		nodeItem := nodeList.Items[id]
+		nodesByName[nodeItem.Node.Name] = nodeItem
+		if _, ok := ignoreMapNode[nodeItem.Node.Name]; ok {
 			continue
 		}
 		// Filter Nodes Unschedulabled
-		if scheduler.CheckNodeFitness(logger.WithValues("filter", "FilterAndMapPodsByNode"), newPod, &node, false) {
-			podsByNodeName[node.Name] = nil
+		if scheduler.CheckNodeFitness(logger.WithValues("filter", "FilterAndMapPodsByNode"), newPod, nodeItem.Node, false) {
+			podsByNodeName[nodeItem.Node.Name] = nil
 		} else {
-			logger.V(1).Info("CheckNodeFitness not ok", "reason", "DeletionTimestamp==nil", "node.Name", node.Name)
+			logger.V(1).Info("CheckNodeFitness not ok", "reason", "DeletionTimestamp==nil", "node.Name", nodeItem.Node.Name)
 		}
 	}
 
@@ -95,13 +97,13 @@ func FilterAndMapPodsByNode(logger logr.Logger, replicaset *datadoghqv1alpha1.Ex
 
 // FilterPodsByNode if several Pods are listed for the same Node select "best" Pod one, and add other pod to
 // the deletion pod slice
-func FilterPodsByNode(podsByNodeName map[string][]*corev1.Pod, nodesMap map[string]*corev1.Node) (map[*corev1.Node]*corev1.Pod, []*corev1.Pod) {
+func FilterPodsByNode(podsByNodeName map[string][]*corev1.Pod, nodesMap map[string]*strategy.NodeItem) (map[*strategy.NodeItem]*corev1.Pod, []*corev1.Pod) {
 	// filter pod node, remove duplicated
-	podByNodeName := map[*corev1.Node]*corev1.Pod{}
+	podByNodeName := map[*strategy.NodeItem]*corev1.Pod{}
 	duplicatedPods := []*corev1.Pod{}
 	for node, pods := range podsByNodeName {
 		podByNodeName[nodesMap[node]] = nil
-		sort.Sort(podByCreationTimestampAndPhase(pods))
+		sort.Sort(sortPodByNodeName(pods))
 		for id := range pods {
 			if id == 0 {
 				podByNodeName[nodesMap[node]] = pods[id]
@@ -114,12 +116,12 @@ func FilterPodsByNode(podsByNodeName map[string][]*corev1.Pod, nodesMap map[stri
 	return podByNodeName, duplicatedPods
 }
 
-type podByCreationTimestampAndPhase []*corev1.Pod
+type sortPodByNodeName []*corev1.Pod
 
-func (o podByCreationTimestampAndPhase) Len() int      { return len(o) }
-func (o podByCreationTimestampAndPhase) Swap(i, j int) { o[i], o[j] = o[j], o[i] }
+func (o sortPodByNodeName) Len() int      { return len(o) }
+func (o sortPodByNodeName) Swap(i, j int) { o[i], o[j] = o[j], o[i] }
 
-func (o podByCreationTimestampAndPhase) Less(i, j int) bool {
+func (o sortPodByNodeName) Less(i, j int) bool {
 	// Scheduled Pod first
 	if len(o[i].Spec.NodeName) != 0 && len(o[j].Spec.NodeName) == 0 {
 		return true

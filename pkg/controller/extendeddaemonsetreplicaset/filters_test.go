@@ -6,7 +6,6 @@
 package extendeddaemonsetreplicaset
 
 import (
-	"reflect"
 	"testing"
 	"time"
 
@@ -18,6 +17,7 @@ import (
 
 	datadoghqv1alpha1 "github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
 	datadoghqv1alpha1test "github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1/test"
+	"github.com/datadog/extendeddaemonset/pkg/controller/extendeddaemonsetreplicaset/strategy"
 	ctrltest "github.com/datadog/extendeddaemonset/pkg/controller/test"
 )
 
@@ -39,53 +39,53 @@ func TestFilterPodsByNode(t *testing.T) {
 	})
 	tests := []struct {
 		name           string
-		nodeMap        map[string]*corev1.Node
+		nodeMap        map[string]*strategy.NodeItem
 		podsByNodeName map[string][]*corev1.Pod
-		want           map[*corev1.Node]*corev1.Pod
+		want           map[string]*corev1.Pod
 		want1          []*corev1.Pod
 	}{
 		{
 			name: "one node, one pod",
-			nodeMap: map[string]*corev1.Node{
-				NodeNameA: nodeA,
+			nodeMap: map[string]*strategy.NodeItem{
+				NodeNameA: {Node: nodeA},
 			},
 			podsByNodeName: map[string][]*corev1.Pod{
 				NodeNameA: {pod1NodeA},
 			},
-			want: map[*corev1.Node]*corev1.Pod{
-				nodeA: pod1NodeA,
+			want: map[string]*corev1.Pod{
+				"nodeA": pod1NodeA,
 			},
 			want1: []*corev1.Pod{},
 		},
 		{
 			name: "2 nodes, 2 pods",
-			nodeMap: map[string]*corev1.Node{
-				NodeNameA: nodeA,
-				NodeNameB: nodeB,
+			nodeMap: map[string]*strategy.NodeItem{
+				NodeNameA: {Node: nodeA},
+				NodeNameB: {Node: nodeB},
 			},
 			podsByNodeName: map[string][]*corev1.Pod{
 				NodeNameA: {pod1NodeA},
 				NodeNameB: {pod2NodeB},
 			},
-			want: map[*corev1.Node]*corev1.Pod{
-				nodeA: pod1NodeA,
-				nodeB: pod2NodeB,
+			want: map[string]*corev1.Pod{
+				"nodeA": pod1NodeA,
+				"nodeB": pod2NodeB,
 			},
 			want1: []*corev1.Pod{},
 		},
 		{
 			name: "2 nodes, 3 pods",
-			nodeMap: map[string]*corev1.Node{
-				NodeNameA: nodeA,
-				NodeNameB: nodeB,
+			nodeMap: map[string]*strategy.NodeItem{
+				NodeNameA: {Node: nodeA},
+				NodeNameB: {Node: nodeB},
 			},
 			podsByNodeName: map[string][]*corev1.Pod{
 				NodeNameA: {pod1NodeA, pod3NodeA},
 				NodeNameB: {pod2NodeB},
 			},
-			want: map[*corev1.Node]*corev1.Pod{
-				nodeA: pod3NodeA,
-				nodeB: pod2NodeB,
+			want: map[string]*corev1.Pod{
+				"nodeA": pod3NodeA,
+				"nodeB": pod2NodeB,
 			},
 			want1: []*corev1.Pod{pod1NodeA},
 		},
@@ -93,11 +93,15 @@ func TestFilterPodsByNode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, got1 := FilterPodsByNode(tt.podsByNodeName, tt.nodeMap)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("FilterPodsByNode() got = %v,\n want %v", got, tt.want)
+			gotPodbyNodeName := make(map[string]*corev1.Pod)
+			for node := range got {
+				gotPodbyNodeName[node.Node.Name] = got[node]
 			}
-			if !reflect.DeepEqual(got1, tt.want1) {
-				t.Errorf("FilterPodsByNode() got1 = %v,\n want %v", got1, tt.want1)
+			if diff := cmp.Diff(tt.want, gotPodbyNodeName); diff != "" {
+				t.Errorf("FilterPodsByNode() mismatch (-want +got):\n%s", diff)
+			}
+			if diff := cmp.Diff(tt.want1, got1); diff != "" {
+				t.Errorf("FilterPodsByNode() mismatch (-want1 +got1):\n%s", diff)
 			}
 		})
 	}
@@ -157,14 +161,14 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 
 	type args struct {
 		replicaset  *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet
-		nodeList    *corev1.NodeList
+		nodeList    *strategy.NodeList
 		podList     *corev1.PodList
 		ignoreNodes []string
 	}
 	tests := []struct {
 		name                string
 		args                args
-		wantNodeByName      map[string]*corev1.Node
+		wantNodeByName      map[string]*strategy.NodeItem
 		wantPodByNode       map[string]*corev1.Pod
 		wantPodToDelete     []*corev1.Pod
 		wantUnscheduledPods []*corev1.Pod
@@ -173,8 +177,12 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 			name: "one pod, one filtered node",
 			args: args{
 				replicaset: datadoghqv1alpha1test.NewExtendedDaemonSetReplicaSet("foo", "bar", nil),
-				nodeList: &corev1.NodeList{
-					Items: []corev1.Node{*node1, *node2, *node3},
+				nodeList: &strategy.NodeList{
+					Items: []*strategy.NodeItem{
+						strategy.NewNodeItem(node1, nil),
+						strategy.NewNodeItem(node2, nil),
+						strategy.NewNodeItem(node3, nil),
+					},
 				},
 				podList: &corev1.PodList{
 					Items: []corev1.Pod{
@@ -185,10 +193,10 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 					node2.Name,
 				},
 			},
-			wantNodeByName: map[string]*corev1.Node{
-				"node1": node1,
-				"node2": node2,
-				"node3": node3,
+			wantNodeByName: map[string]*strategy.NodeItem{
+				"node1": strategy.NewNodeItem(node1, nil),
+				"node2": strategy.NewNodeItem(node2, nil),
+				"node3": strategy.NewNodeItem(node3, nil),
 			},
 			wantPodByNode: map[string]*corev1.Pod{
 				"node1": pod1Node1,
@@ -201,18 +209,22 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 			name: "ignore node2",
 			args: args{
 				replicaset: datadoghqv1alpha1test.NewExtendedDaemonSetReplicaSet("foo", "bar", nil),
-				nodeList: &corev1.NodeList{
-					Items: []corev1.Node{*node1, *node2, *node3},
+				nodeList: &strategy.NodeList{
+					Items: []*strategy.NodeItem{
+						strategy.NewNodeItem(node1, nil),
+						strategy.NewNodeItem(node2, nil),
+						strategy.NewNodeItem(node3, nil),
+					},
 				},
 				podList: &corev1.PodList{
 					Items: []corev1.Pod{},
 				},
 				ignoreNodes: []string{"node2"},
 			},
-			wantNodeByName: map[string]*corev1.Node{
-				"node1": node1,
-				"node2": node2,
-				"node3": node3,
+			wantNodeByName: map[string]*strategy.NodeItem{
+				"node1": strategy.NewNodeItem(node1, nil),
+				"node2": strategy.NewNodeItem(node2, nil),
+				"node3": strategy.NewNodeItem(node3, nil),
 			},
 			wantPodByNode: map[string]*corev1.Pod{
 				"node1": nil,
@@ -226,8 +238,12 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 			name: "ignore node2 + 3 pods",
 			args: args{
 				replicaset: datadoghqv1alpha1test.NewExtendedDaemonSetReplicaSet("foo", "bar", nil),
-				nodeList: &corev1.NodeList{
-					Items: []corev1.Node{*node1, *node2, *node3},
+				nodeList: &strategy.NodeList{
+					Items: []*strategy.NodeItem{
+						strategy.NewNodeItem(node1, nil),
+						strategy.NewNodeItem(node2, nil),
+						strategy.NewNodeItem(node3, nil),
+					},
 				},
 				podList: &corev1.PodList{
 					Items: []corev1.Pod{
@@ -238,10 +254,10 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 				},
 				ignoreNodes: []string{},
 			},
-			wantNodeByName: map[string]*corev1.Node{
-				"node1": node1,
-				"node2": node2,
-				"node3": node3,
+			wantNodeByName: map[string]*strategy.NodeItem{
+				"node1": strategy.NewNodeItem(node1, nil),
+				"node2": strategy.NewNodeItem(node2, nil),
+				"node3": strategy.NewNodeItem(node3, nil),
 			},
 			wantPodByNode: map[string]*corev1.Pod{
 				"node1": pod1Node1,
@@ -255,8 +271,10 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 			name: "pod deletion support",
 			args: args{
 				replicaset: datadoghqv1alpha1test.NewExtendedDaemonSetReplicaSet("foo", "bar", nil),
-				nodeList: &corev1.NodeList{
-					Items: []corev1.Node{*node3},
+				nodeList: &strategy.NodeList{
+					Items: []*strategy.NodeItem{
+						strategy.NewNodeItem(node3, nil),
+					},
 				},
 				podList: &corev1.PodList{
 					Items: []corev1.Pod{
@@ -265,8 +283,8 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 				},
 				ignoreNodes: []string{},
 			},
-			wantNodeByName: map[string]*corev1.Node{
-				"node3": node3,
+			wantNodeByName: map[string]*strategy.NodeItem{
+				"node3": strategy.NewNodeItem(node3, nil),
 			},
 			wantPodByNode: map[string]*corev1.Pod{
 				"node3": nil,
@@ -278,8 +296,10 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 			name: "pod deletion support, already in deletion state",
 			args: args{
 				replicaset: datadoghqv1alpha1test.NewExtendedDaemonSetReplicaSet("foo", "bar", nil),
-				nodeList: &corev1.NodeList{
-					Items: []corev1.Node{*node3},
+				nodeList: &strategy.NodeList{
+					Items: []*strategy.NodeItem{
+						strategy.NewNodeItem(node3, nil),
+					},
 				},
 				podList: &corev1.PodList{
 					Items: []corev1.Pod{
@@ -288,8 +308,8 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 				},
 				ignoreNodes: []string{},
 			},
-			wantNodeByName: map[string]*corev1.Node{
-				"node3": node3,
+			wantNodeByName: map[string]*strategy.NodeItem{
+				"node3": strategy.NewNodeItem(node3, nil),
 			},
 			wantPodByNode: map[string]*corev1.Pod{
 				"node3": nil,
@@ -301,8 +321,10 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 			name: "filter pod unknow status phase",
 			args: args{
 				replicaset: datadoghqv1alpha1test.NewExtendedDaemonSetReplicaSet("foo", "bar", nil),
-				nodeList: &corev1.NodeList{
-					Items: []corev1.Node{*node1},
+				nodeList: &strategy.NodeList{
+					Items: []*strategy.NodeItem{
+						strategy.NewNodeItem(node1, nil),
+					},
 				},
 				podList: &corev1.PodList{
 					Items: []corev1.Pod{
@@ -312,8 +334,8 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 				},
 				ignoreNodes: []string{},
 			},
-			wantNodeByName: map[string]*corev1.Node{
-				"node1": node1,
+			wantNodeByName: map[string]*strategy.NodeItem{
+				"node1": strategy.NewNodeItem(node1, nil),
 			},
 			wantPodByNode: map[string]*corev1.Pod{
 				"node1": pod1Node1,
@@ -325,8 +347,11 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 			name: "don't filter node not ready unknow status phase",
 			args: args{
 				replicaset: datadoghqv1alpha1test.NewExtendedDaemonSetReplicaSet("foo", "bar", nil),
-				nodeList: &corev1.NodeList{
-					Items: []corev1.Node{*node1, *node4},
+				nodeList: &strategy.NodeList{
+					Items: []*strategy.NodeItem{
+						{Node: node1},
+						{Node: node4},
+					},
 				},
 				podList: &corev1.PodList{
 					Items: []corev1.Pod{
@@ -336,9 +361,9 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 				},
 				ignoreNodes: []string{},
 			},
-			wantNodeByName: map[string]*corev1.Node{
-				"node1": node1,
-				"node4": node4,
+			wantNodeByName: map[string]*strategy.NodeItem{
+				"node1": strategy.NewNodeItem(node1, nil),
+				"node4": strategy.NewNodeItem(node4, nil),
 			},
 			wantPodByNode: map[string]*corev1.Pod{
 				"node1": pod1Node1,
@@ -357,7 +382,7 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 			}
 			gotPodbyNodeName := make(map[string]*corev1.Pod)
 			for node, pod := range gotPodByNode {
-				gotPodbyNodeName[node.Name] = pod
+				gotPodbyNodeName[node.Node.Name] = pod
 			}
 			if diff := cmp.Diff(tt.wantPodByNode, gotPodbyNodeName); diff != "" {
 				t.Errorf("FilterAndMapPodsByNode() gotPodByNode mismatch (-want +got):\n%s", diff)

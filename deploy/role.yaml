@@ -7,40 +7,46 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - pods
-  verbs:
-  - '*'
-- apiGroups:
-  - ""
-  resources:
   - events
   verbs:
   - create
 - apiGroups:
-  - extensions
-  - apps
-  resources:
-  - deployments
-  - replicasets
-  - daemonsets
-  verbs:
-  - get
-  - watch
-  - list
-- apiGroups:
   - ""
   resources:
   - pods
-  - configmaps
-  - services
   verbs:
   - '*'
 - apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - create
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  resourceNames:
+  - extendeddaemonset-lock
+  verbs:
+  - update
+  - get
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - get
+  - watch
+- apiGroups:
   - datadoghq.com
   resources:
-  - extendeddaemonsets
-  - extendeddaemonsets/status
-  - extendeddaemonsetreplicasets
-  - extendeddaemonsetreplicasets/status
+  - 'extendeddaemonsets'
+  - 'extendeddaemonsets/status'
+  - 'extendeddaemonsetreplicasets'
+  - 'extendeddaemonsetreplicasets/status'
+  - 'extendednodes'
+  - 'extendednodes/status'
   verbs:
   - '*'
