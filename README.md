@@ -175,7 +175,7 @@ node/<node-name> annotated
 
 In some cases (for example with different nodes type), it can be useful to have different resource configurations for a Daemonset to handle the Node's workload specificity.
 
-To so you can create an instance of `ExtendedNode` resource that aims to overwrite the resources
+To do so you can create an instance of `ExtendedNode` resource that aims to overwrite the resources
 definition of the container(s) present in ExtendedDaemonset Pods.
 
 the information needed is:
