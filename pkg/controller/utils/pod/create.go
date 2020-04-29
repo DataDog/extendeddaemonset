@@ -47,7 +47,10 @@ func CreatePodFromDaemonSetReplicaSet(scheme *runtime.Scheme, replicaset *datado
 
 	if node != nil {
 		err = overwriteResourcesFromNode(templateCopy, replicaset.Namespace, edsName, node)
-		templateCopy.ObjectMeta.Annotations[datadoghqv1alpha1.MD5NodeExtendedDaemonSetAnnotationKey] = comparison.GenerateHashFromEDSResourceNodeAnnotation(replicaset.Namespace, edsName, node.Annotations)
+		hash := comparison.GenerateHashFromEDSResourceNodeAnnotation(replicaset.Namespace, edsName, node.Annotations)
+		if hash != "" {
+			templateCopy.ObjectMeta.Annotations[datadoghqv1alpha1.MD5NodeExtendedDaemonSetAnnotationKey] = hash
+		}
 	}
 
 	pod := &corev1.Pod{
