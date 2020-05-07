@@ -34,13 +34,13 @@ func ManageUnknow(client client.Client, params *Parameters) (*Result, error) {
 
 	for node, pod := range params.PodByNodeName {
 		desiredPods++
-		if pod == nil {
-		} else {
-			if podutils.HasPodSchedulerIssue(pod) && int(nbIgnoredUnresponsiveNodes) < maxPodSchedulerFailure {
-				nbIgnoredUnresponsiveNodes++
-				continue
-			}
-			if !compareCurrentPodWithNewPod(params, pod, node) {
+		if pod != nil {
+			if compareCurrentPodWithNewPod(params, pod, node) {
+				if podutils.HasPodSchedulerIssue(pod) && int(nbIgnoredUnresponsiveNodes) < maxPodSchedulerFailure {
+					nbIgnoredUnresponsiveNodes++
+					continue
+				}
+
 				currentPods++
 				if podutils.IsPodAvailable(pod, 0, metaNow) {
 					availablePods++
