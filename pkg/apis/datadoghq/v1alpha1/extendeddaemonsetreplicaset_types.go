@@ -48,7 +48,8 @@ type ExtendedDaemonSetReplicaSetStatus struct {
 	IgnoredUnresponsiveNodes int32  `json:"ignoredUnresponsiveNodes"`
 
 	// Conditions Represents the latest available observations of a DaemonSet's current state.
-	// +listType=set
+	// +listType=map
+	// +listMapKey=type
 	Conditions []ExtendedDaemonSetReplicaSetCondition `json:"conditions,omitempty"`
 }
 

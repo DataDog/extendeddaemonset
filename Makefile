@@ -11,9 +11,9 @@ SOURCES:=$(shell find $(SOURCEDIR) ! -name "*_test.go" -name '*.go')
 
 BUILDINFOPKG=github.com/datadog/extendeddaemonset/version
 GIT_TAG?=$(shell git tag -l --contains HEAD | tail -1)
-TAG?=${GIT_TAG}
 TAG_HASH=$(shell git tag | tail -1)_$(shell git rev-parse --short HEAD)
 VERSION?=$(if $(GIT_TAG),$(GIT_TAG),$(TAG_HASH))
+TAG?=${VERSION}
 GIT_COMMIT?=$(shell git rev-parse HEAD)
 DATE=$(shell date +%Y-%m-%d/%H:%M:%S )
 GOMOD="-mod=vendor"
@@ -52,7 +52,8 @@ test:
 	./go.test.sh
 
 e2e:
-	operator-sdk test local --verbose ./test/e2e --image $(PREFIX):$(TAG)
+	./hack/generate-e2etest-manifest.sh
+	./bin/operator-sdk test local ./test/e2e --global-manifest ./test/e2e/global-manifest.yaml --go-test-flags '-v' --image $(PREFIX):$(TAG)
 
 push: container
 	docker push $(PREFIX):$(TAG)
@@ -67,7 +68,9 @@ validate: bin/golangci-lint bin/wwhrd
 
 generate: bin/operator-sdk bin/openapi-gen bin/client-gen bin/informer-gen bin/lister-gen
 	./bin/operator-sdk generate k8s
-	./bin/operator-sdk generate crds
+	./bin/operator-sdk generate crds --crd-version v1beta1
+	./hack/patch-crds.sh
+
 	./bin/openapi-gen --logtostderr=true -o "" -i ./pkg/apis/datadoghq/v1alpha1 -O zz_generated.openapi -p ./pkg/apis/datadoghq/v1alpha1 -h ./hack/boilerplate.go.txt -r "-"
 	./hack/generate-groups.sh client,lister,informer \
   github.com/datadog/extendeddaemonset/pkg/generated github.com/datadog/extendeddaemonset/pkg/apis datadoghq:v1alpha1 \
@@ -83,7 +86,10 @@ local-load: $(CRDS)
 $(filter %.yaml,$(files)): %.yaml: %yaml
 	kubectl apply -f $@
 
-install-tools: bin/golangci-lint bin/operator-sdk
+install-tools: bin/golangci-lint bin/operator-sdk bin/yq
+
+bin/yq:
+	./hack/install-yq.sh
 
 bin/golangci-lint:
 	./hack/golangci-lint.sh v1.18.0
