@@ -41,6 +41,7 @@ func NewExtendedDaemonset(ns, name, image string, options *NewExtendedDaemonsetO
 						Name:  "main",
 						Ports: []corev1.ContainerPort{{
 							ContainerPort: 80,
+							Protocol:      "TCP",
 							Name:          "http",
 						}},
 					}},
@@ -137,6 +138,7 @@ func NewDaemonset(ns, name, image string, options *NewDaemonsetOptions) *appsv1.
 						Name:  "main",
 						Ports: []corev1.ContainerPort{{
 							ContainerPort: 80,
+							Protocol:      "TCP",
 							Name:          "http",
 						}},
 					}},

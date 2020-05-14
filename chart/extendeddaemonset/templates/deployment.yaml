@@ -31,6 +31,8 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - --zap-level={{ .Values.logLevel }}
+            - --zap-encoder=console
+            - --zap-stacktrace-level=error
           {{- if .Values.pprof.enabled }}
             - --pprof=true
           {{- end }}

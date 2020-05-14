@@ -4,6 +4,8 @@ build/_test
 /controller
 /kubectl-eds
 /test/fake-process/fake-process
+test/e2e/global-manifest.yaml
+deploy/test/empty.yaml
 # Code coverage report
 /.cover
 /bin

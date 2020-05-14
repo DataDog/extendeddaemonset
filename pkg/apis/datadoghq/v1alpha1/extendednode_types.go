@@ -20,7 +20,8 @@ type ExtendedNodeSpec struct {
 	// NodeSelector lists labels that must be present on nodes to trigger the usage of this resource.
 	NodeSelector metav1.LabelSelector `json:"nodeSelector"`
 	// Containers contains a list of container spec overwrite.
-	// +listType=set
+	// +listType=map
+	// +listMapKey=name
 	Containers []ExtendedNodeContainerSpec `json:"containers,omitempty"`
 }
 

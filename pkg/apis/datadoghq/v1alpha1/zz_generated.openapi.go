@@ -280,7 +280,10 @@ func schema_pkg_apis_datadoghq_v1alpha1_ExtendedDaemonSetReplicaSetStatus(ref co
 					"conditions": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "set",
+								"x-kubernetes-list-map-keys": []interface{}{
+									"type",
+								},
+								"x-kubernetes-list-type": "map",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -570,7 +573,10 @@ func schema_pkg_apis_datadoghq_v1alpha1_ExtendedNodeSpec(ref common.ReferenceCal
 					"containers": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "set",
+								"x-kubernetes-list-map-keys": []interface{}{
+									"name",
+								},
+								"x-kubernetes-list-type": "map",
 							},
 						},
 						SchemaProps: spec.SchemaProps{

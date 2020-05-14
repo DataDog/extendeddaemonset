@@ -14,17 +14,19 @@ spec:
     spec:
       serviceAccountName: extendeddaemonset
       tolerations:
-      - operator: Exists
-        effect: NoSchedule
+        - operator: Exists
+          effect: NoSchedule
       containers:
         - name: extendeddaemonset
           image: datadog/extendeddaemonset:latest
           imagePullPolicy: IfNotPresent
           command:
-          - extendeddaemonset
+            - extendeddaemonset
           args:
             - --zap-level=2
-          env:  
+            - --zap-encoder=console
+            - --zap-stacktrace-level=error
+          env:
             - name: WATCH_NAMESPACE
               valueFrom:
                 fieldRef:

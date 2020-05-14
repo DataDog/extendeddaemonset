@@ -346,7 +346,7 @@ func initTestFwkResources(t *testing.T, deploymentName string) (string, *framewo
 		t.Fatalf("failed to initialize cluster resources: %v", err)
 	}
 	t.Log("Initialized cluster resources")
-	namespace, err := ctx.GetNamespace()
+	namespace, err := ctx.GetOperatorNamespace()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -406,7 +406,7 @@ type logWriter struct {
 }
 
 func (l *logWriter) Write(b []byte) (int, error) {
-	l.t.Logf("pod [%s]: %s", l.name, string(b))
+	l.t.Logf("#[%s] %s", l.name, string(b))
 	return len(b), nil
 }
 
