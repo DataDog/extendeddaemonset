@@ -48,8 +48,8 @@ rules:
   - 'extendeddaemonsets/status'
   - 'extendeddaemonsetreplicasets'
   - 'extendeddaemonsetreplicasets/status'
-  - 'extendednodes'
-  - 'extendednodes/status'
+  - 'extendeddaemonsetsettings'
+  - 'extendeddaemonsetsettings/status'
   verbs:
   - '*'
 {{- end -}}

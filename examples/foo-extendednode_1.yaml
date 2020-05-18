@@ -1,7 +1,7 @@
 apiVersion: datadoghq.com/v1alpha1
-kind: ExtendedNode
+kind: ExtendedDaemonsetSetting
 metadata:
-  name: example-extendednode
+  name: example-extendeddaemonsetsetting
 spec:
   nodeSelector: 
     matchLabels:

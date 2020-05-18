@@ -3,7 +3,7 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-2019 Datadog, Inc.
 
-package extendednode
+package extendeddaemonsetsetting
 
 import (
 	"context"
@@ -29,14 +29,14 @@ import (
 	datadoghqv1alpha1 "github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
 )
 
-var log = logf.Log.WithName("controller_extendednode")
+var log = logf.Log.WithName("controller_extendeddaemonsetsetting")
 
 /**
 * USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
 * business logic.  Delete these comments after modifying this file.*
  */
 
-// Add creates a new ExtendedNode Controller and adds it to the Manager. The Manager will set fields on the Controller
+// Add creates a new ExtendedDaemonsetSetting Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
 	return add(mgr, newReconciler(mgr))
@@ -44,19 +44,19 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileExtendedNode{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	return &ReconcileExtendedDaemonsetSetting{client: mgr.GetClient(), scheme: mgr.GetScheme()}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Create a new controller
-	c, err := controller.New("extendednode-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New("extendeddaemonsetsetting-controller", mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to primary resource ExtendedNode
-	err = c.Watch(&source.Kind{Type: &datadoghqv1alpha1.ExtendedNode{}}, &handler.EnqueueRequestForObject{})
+	// Watch for changes to primary resource ExtendedDaemonsetSetting
+	err = c.Watch(&source.Kind{Type: &datadoghqv1alpha1.ExtendedDaemonsetSetting{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
@@ -64,30 +64,30 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	return nil
 }
 
-// blank assignment to verify that ReconcileExtendedNode implements reconcile.Reconciler
-var _ reconcile.Reconciler = &ReconcileExtendedNode{}
+// blank assignment to verify that ReconcileExtendedDaemonsetSetting implements reconcile.Reconciler
+var _ reconcile.Reconciler = &ReconcileExtendedDaemonsetSetting{}
 
-// ReconcileExtendedNode reconciles a ExtendedNode object
-type ReconcileExtendedNode struct {
+// ReconcileExtendedDaemonsetSetting reconciles a ExtendedDaemonsetSetting object
+type ReconcileExtendedDaemonsetSetting struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
 	client client.Client
 	scheme *runtime.Scheme
 }
 
-// Reconcile reads that state of the cluster for a ExtendedNode object and makes changes based on the state read
-// and what is in the ExtendedNode.Spec
+// Reconcile reads that state of the cluster for a ExtendedDaemonsetSetting object and makes changes based on the state read
+// and what is in the ExtendedDaemonsetSetting.Spec
 // TODO(user): Modify this Reconcile function to implement your Controller logic.  This example creates
 // a Pod as an example
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
-func (r *ReconcileExtendedNode) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *ReconcileExtendedDaemonsetSetting) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling ExtendedNode")
+	reqLogger.Info("Reconciling ExtendedDaemonsetSetting")
 
-	// Fetch the ExtendedNode instance
-	instance := &datadoghqv1alpha1.ExtendedNode{}
+	// Fetch the ExtendedDaemonsetSetting instance
+	instance := &datadoghqv1alpha1.ExtendedDaemonsetSetting{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -106,36 +106,36 @@ func (r *ReconcileExtendedNode) Reconcile(request reconcile.Request) (reconcile.
 		newStatus.Error = "missing reference"
 
 		newStatus.Error = fmt.Sprintf("missing reference in spec")
-		newStatus.Status = datadoghqv1alpha1.ExtendedNodeStatusError
-		return r.updateExtendedNode(instance, newStatus)
+		newStatus.Status = datadoghqv1alpha1.ExtendedDaemonsetSettingStatusError
+		return r.updateExtendedDaemonsetSetting(instance, newStatus)
 	}
 
-	edsNodesList := &datadoghqv1alpha1.ExtendedNodeList{}
+	edsNodesList := &datadoghqv1alpha1.ExtendedDaemonsetSettingList{}
 	if err = r.client.List(context.TODO(), edsNodesList, &client.ListOptions{Namespace: instance.Namespace}); err != nil {
-		return r.updateExtendedNode(instance, newStatus)
+		return r.updateExtendedDaemonsetSetting(instance, newStatus)
 	}
 
 	nodesList := &corev1.NodeList{}
 	if err = r.client.List(context.TODO(), nodesList); err != nil {
-		newStatus.Status = datadoghqv1alpha1.ExtendedNodeStatusError
+		newStatus.Status = datadoghqv1alpha1.ExtendedDaemonsetSettingStatusError
 		newStatus.Error = fmt.Sprintf("unable to get nodes, err:%v", err)
 	}
 
 	var otherEdsNode string
 	otherEdsNode, err = searchPossibleConflict(instance, nodesList, edsNodesList)
 	if err != nil {
-		newStatus.Status = datadoghqv1alpha1.ExtendedNodeStatusError
-		newStatus.Error = fmt.Sprintf("conflict with another ExtendedNode: %s", otherEdsNode)
+		newStatus.Status = datadoghqv1alpha1.ExtendedDaemonsetSettingStatusError
+		newStatus.Error = fmt.Sprintf("conflict with another ExtendedDaemonsetSetting: %s", otherEdsNode)
 	}
 
 	if newStatus.Error == "" {
-		newStatus.Status = datadoghqv1alpha1.ExtendedNodeStatusValid
+		newStatus.Status = datadoghqv1alpha1.ExtendedDaemonsetSettingStatusValid
 	}
 
-	return r.updateExtendedNode(instance, newStatus)
+	return r.updateExtendedDaemonsetSetting(instance, newStatus)
 }
 
-func (r *ReconcileExtendedNode) updateExtendedNode(edsNode *datadoghqv1alpha1.ExtendedNode, newStatus *datadoghqv1alpha1.ExtendedNodeStatus) (reconcile.Result, error) {
+func (r *ReconcileExtendedDaemonsetSetting) updateExtendedDaemonsetSetting(edsNode *datadoghqv1alpha1.ExtendedDaemonsetSetting, newStatus *datadoghqv1alpha1.ExtendedDaemonsetSettingStatus) (reconcile.Result, error) {
 	if apiequality.Semantic.DeepEqual(&edsNode.Status, newStatus) {
 		return reconcile.Result{}, nil
 	}
@@ -146,7 +146,7 @@ func (r *ReconcileExtendedNode) updateExtendedNode(edsNode *datadoghqv1alpha1.Ex
 	return reconcile.Result{}, err
 }
 
-func searchPossibleConflict(instance *datadoghqv1alpha1.ExtendedNode, nodeList *corev1.NodeList, edsNodeList *datadoghqv1alpha1.ExtendedNodeList) (string, error) {
+func searchPossibleConflict(instance *datadoghqv1alpha1.ExtendedDaemonsetSetting, nodeList *corev1.NodeList, edsNodeList *datadoghqv1alpha1.ExtendedDaemonsetSettingList) (string, error) {
 	var edsNodes edsNodeByCreationTimestampAndPhase
 	for id := range edsNodeList.Items {
 		edsNodes = append(edsNodes, &edsNodeList.Items[id])
@@ -163,7 +163,7 @@ func searchPossibleConflict(instance *datadoghqv1alpha1.ExtendedNode, nodeList *
 			if selector.Matches(labels.Set(node.Labels)) {
 				if edsNode.Name == instance.Name {
 					if previousEdsNode, found := nodesAlreadySelected[node.Name]; found {
-						return previousEdsNode, fmt.Errorf("extendedNode already assigned to the node %s", node.Name)
+						return previousEdsNode, fmt.Errorf("extendedDaemonsetSetting already assigned to the node %s", node.Name)
 					}
 				}
 				nodesAlreadySelected[node.Name] = edsNode.Name

@@ -175,11 +175,11 @@ $ kubectl annotate node <node-name> `resources.extendeddaemonset.datadoghq.com/b
 node/<node-name> annotated
 ```
 
-#### Overwrite container's Pod resources for a set of Nodes with `ExtendedNodes`
+#### Overwrite container's Pod resources for a set of Nodes with `ExtendedDaemonsetSettings`
 
 In some cases (for example with different nodes type), it can be useful to have different resource configurations for a Daemonset to handle the Node's workload specificity.
 
-To do so you can create an instance of `ExtendedNode` resource that aims to overwrite the resources
+To do so you can create an instance of `ExtendedDaemonsetSetting` resource that aims to overwrite the resources
 definition of the container(s) present in ExtendedDaemonset Pods.
 
 the information needed is:
@@ -190,7 +190,7 @@ the information needed is:
 
 ```yaml
 apiVersion: datadoghq.com/v1alpha1
-kind: ExtendedNode
+kind: ExtendedDaemonsetSetting
 metadata:
   name: foo-xxl-node
 spec:
