@@ -33,7 +33,7 @@ func compareCurrentPodWithNewPod(params *Parameters, pod *corev1.Pod, node *Node
 	if !compareSpecTemplateMD5Hash(params.Replicaset.Spec.TemplateGeneration, pod) {
 		return false
 	}
-	if !compareWithExtendedNodeOverwrite(pod, node) {
+	if !compareWithExtendedDaemonsetSettingOverwrite(pod, node) {
 		return false
 	}
 	if !compareNodeResourcesOverwriteMD5Hash(params.EDSName, params.Replicaset, pod, node) {
@@ -50,11 +50,11 @@ func compareNodeResourcesOverwriteMD5Hash(edsName string, replicaset *datadoghqv
 	return false
 }
 
-func compareWithExtendedNodeOverwrite(pod *corev1.Pod, node *NodeItem) bool {
-	if node.ExtendedNode != nil {
+func compareWithExtendedDaemonsetSettingOverwrite(pod *corev1.Pod, node *NodeItem) bool {
+	if node.ExtendedDaemonsetSetting != nil {
 		specCopy := pod.Spec.DeepCopy()
 		for id, container := range specCopy.Containers {
-			for _, container2 := range node.ExtendedNode.Spec.Containers {
+			for _, container2 := range node.ExtendedDaemonsetSetting.Spec.Containers {
 				if container.Name == container2.Name {
 					for key, val := range container2.Resources.Limits {
 						specCopy.Containers[id].Resources.Limits[key] = val

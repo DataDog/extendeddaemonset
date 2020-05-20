@@ -46,8 +46,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Datadoghq().V1alpha1().ExtendedDaemonSets().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("extendeddaemonsetreplicasets"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Datadoghq().V1alpha1().ExtendedDaemonSetReplicaSets().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("extendednodes"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Datadoghq().V1alpha1().ExtendedNodes().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("extendeddaemonsetsettings"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Datadoghq().V1alpha1().ExtendedDaemonsetSettings().Informer()}, nil
 
 	}
 

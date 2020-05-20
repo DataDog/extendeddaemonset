@@ -17,8 +17,8 @@ type Interface interface {
 	ExtendedDaemonSets() ExtendedDaemonSetInformer
 	// ExtendedDaemonSetReplicaSets returns a ExtendedDaemonSetReplicaSetInformer.
 	ExtendedDaemonSetReplicaSets() ExtendedDaemonSetReplicaSetInformer
-	// ExtendedNodes returns a ExtendedNodeInformer.
-	ExtendedNodes() ExtendedNodeInformer
+	// ExtendedDaemonsetSettings returns a ExtendedDaemonsetSettingInformer.
+	ExtendedDaemonsetSettings() ExtendedDaemonsetSettingInformer
 }
 
 type version struct {
@@ -42,7 +42,7 @@ func (v *version) ExtendedDaemonSetReplicaSets() ExtendedDaemonSetReplicaSetInfo
 	return &extendedDaemonSetReplicaSetInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// ExtendedNodes returns a ExtendedNodeInformer.
-func (v *version) ExtendedNodes() ExtendedNodeInformer {
-	return &extendedNodeInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+// ExtendedDaemonsetSettings returns a ExtendedDaemonsetSettingInformer.
+func (v *version) ExtendedDaemonsetSettings() ExtendedDaemonsetSettingInformer {
+	return &extendedDaemonsetSettingInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

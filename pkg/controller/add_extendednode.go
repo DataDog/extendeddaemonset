@@ -6,10 +6,10 @@
 package controller
 
 import (
-	"github.com/datadog/extendeddaemonset/pkg/controller/extendednode"
+	"github.com/datadog/extendeddaemonset/pkg/controller/extendeddaemonsetsetting"
 )
 
 func init() {
 	// AddToManagerFuncs is a list of functions to create controllers and add them to a manager.
-	AddToManagerFuncs = append(AddToManagerFuncs, extendednode.Add)
+	AddToManagerFuncs = append(AddToManagerFuncs, extendeddaemonsetsetting.Add)
 }

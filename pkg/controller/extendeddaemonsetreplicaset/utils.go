@@ -30,7 +30,7 @@ func createPods(logger logr.Logger, client client.Client, scheme *runtime.Scheme
 		go func(id int) {
 			defer wg.Done()
 			nodeItem := podsToCreate[id]
-			newPod, err := podutils.CreatePodFromDaemonSetReplicaSet(scheme, replicaset, nodeItem.Node, nodeItem.ExtendedNode, podAffinitySupported)
+			newPod, err := podutils.CreatePodFromDaemonSetReplicaSet(scheme, replicaset, nodeItem.Node, nodeItem.ExtendedDaemonsetSetting, podAffinitySupported)
 			if err != nil {
 				logger.Error(err, "Generate pod template failed", "name", newPod.GenerateName)
 				errsChan <- err

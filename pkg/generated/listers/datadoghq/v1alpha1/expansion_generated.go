@@ -23,10 +23,10 @@ type ExtendedDaemonSetReplicaSetListerExpansion interface{}
 // ExtendedDaemonSetReplicaSetNamespaceLister.
 type ExtendedDaemonSetReplicaSetNamespaceListerExpansion interface{}
 
-// ExtendedNodeListerExpansion allows custom methods to be added to
-// ExtendedNodeLister.
-type ExtendedNodeListerExpansion interface{}
+// ExtendedDaemonsetSettingListerExpansion allows custom methods to be added to
+// ExtendedDaemonsetSettingLister.
+type ExtendedDaemonsetSettingListerExpansion interface{}
 
-// ExtendedNodeNamespaceListerExpansion allows custom methods to be added to
-// ExtendedNodeNamespaceLister.
-type ExtendedNodeNamespaceListerExpansion interface{}
+// ExtendedDaemonsetSettingNamespaceListerExpansion allows custom methods to be added to
+// ExtendedDaemonsetSettingNamespaceLister.
+type ExtendedDaemonsetSettingNamespaceListerExpansion interface{}

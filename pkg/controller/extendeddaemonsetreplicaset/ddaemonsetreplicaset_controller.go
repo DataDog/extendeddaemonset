@@ -329,13 +329,13 @@ func (r *ReconcileExtendedDaemonSetReplicaSet) getDaemonsetOwner(replicaset *dat
 	return daemonsetInstance, nil
 }
 
-func (r *ReconcileExtendedDaemonSetReplicaSet) getExtendedNodes(eds *datadoghqv1alpha1.ExtendedDaemonSet) ([]*datadoghqv1alpha1.ExtendedNode, error) {
-	edsNodeList := &datadoghqv1alpha1.ExtendedNodeList{}
+func (r *ReconcileExtendedDaemonSetReplicaSet) getExtendedDaemonsetSettings(eds *datadoghqv1alpha1.ExtendedDaemonSet) ([]*datadoghqv1alpha1.ExtendedDaemonsetSetting, error) {
+	edsNodeList := &datadoghqv1alpha1.ExtendedDaemonsetSettingList{}
 	err := r.client.List(context.TODO(), edsNodeList, &client.ListOptions{Namespace: eds.Namespace})
 	if err != nil {
 		return nil, err
 	}
-	var outputList []*datadoghqv1alpha1.ExtendedNode
+	var outputList []*datadoghqv1alpha1.ExtendedDaemonsetSetting
 	for index, edsNode := range edsNodeList.Items {
 		if edsNode.Spec.Reference == nil {
 			continue
@@ -377,15 +377,15 @@ func (r *ReconcileExtendedDaemonSetReplicaSet) getNodeList(eds *datadoghqv1alpha
 		return nil, err
 	}
 
-	extendedNodes, err := r.getExtendedNodes(eds)
+	extendedDaemonsetSettings, err := r.getExtendedDaemonsetSettings(eds)
 	if err != nil {
 		return nil, err
 	}
 
 	for index, node := range nodeList.Items {
-		var edsNodeSelected *datadoghqv1alpha1.ExtendedNode
-		for _, edsNode := range extendedNodes {
-			if edsNode.Status.Status != datadoghqv1alpha1.ExtendedNodeStatusValid {
+		var edsNodeSelected *datadoghqv1alpha1.ExtendedDaemonsetSetting
+		for _, edsNode := range extendedDaemonsetSettings {
+			if edsNode.Status.Status != datadoghqv1alpha1.ExtendedDaemonsetSettingStatusValid {
 				continue
 			}
 			selector, err2 := metav1.LabelSelectorAsSelector(&edsNode.Spec.NodeSelector)

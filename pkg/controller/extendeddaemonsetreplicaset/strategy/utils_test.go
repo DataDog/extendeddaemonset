@@ -15,7 +15,7 @@ import (
 	commontest "github.com/datadog/extendeddaemonset/pkg/controller/test"
 )
 
-func Test_compareWithExtendedNodeOverwrite(t *testing.T) {
+func Test_compareWithExtendedDaemonsetSettingOverwrite(t *testing.T) {
 	nodeName1 := "node1"
 	nodeOptions := &commontest.NewNodeOptions{}
 	node1 := commontest.NewNode(nodeName1, nodeOptions)
@@ -29,14 +29,14 @@ func Test_compareWithExtendedNodeOverwrite(t *testing.T) {
 	pod1 := commontest.NewPod("bar", "pod1", nodeName1, pod1Option)
 	pod1.Spec.Containers[0].Resources = *resource1
 
-	edsNode1Options := &test.NewExtendedNodeOptions{
+	edsNode1Options := &test.NewExtendedDaemonsetSettingOptions{
 		Resources: map[string]corev1.ResourceRequirements{
 			"pod1": *resource1,
 		},
 	}
-	extendedNode1 := test.NewExtendedNode("bar", "foo", "foo", edsNode1Options)
+	extendedDaemonsetSetting1 := test.NewExtendedDaemonsetSetting("bar", "foo", "foo", edsNode1Options)
 
-	edsNode2Options := &test.NewExtendedNodeOptions{
+	edsNode2Options := &test.NewExtendedDaemonsetSettingOptions{
 		Resources: map[string]corev1.ResourceRequirements{
 			"pod1": {
 				Requests: corev1.ResourceList{
@@ -46,7 +46,7 @@ func Test_compareWithExtendedNodeOverwrite(t *testing.T) {
 			},
 		},
 	}
-	extendedNode2 := test.NewExtendedNode("bar", "foo", "foo", edsNode2Options)
+	extendedDaemonsetSetting2 := test.NewExtendedDaemonsetSetting("bar", "foo", "foo", edsNode2Options)
 
 	type args struct {
 		pod  *corev1.Pod
@@ -58,7 +58,7 @@ func Test_compareWithExtendedNodeOverwrite(t *testing.T) {
 		want bool
 	}{
 		{
-			name: "empty ExtendedNode",
+			name: "empty ExtendedDaemonsetSetting",
 			args: args{
 				pod: pod1,
 				node: &NodeItem{
@@ -68,23 +68,23 @@ func Test_compareWithExtendedNodeOverwrite(t *testing.T) {
 			want: true,
 		},
 		{
-			name: "ExtendedNode that match",
+			name: "ExtendedDaemonsetSetting that match",
 			args: args{
 				pod: pod1,
 				node: &NodeItem{
-					Node:         node1,
-					ExtendedNode: extendedNode1,
+					Node:                     node1,
+					ExtendedDaemonsetSetting: extendedDaemonsetSetting1,
 				},
 			},
 			want: true,
 		},
 		{
-			name: "ExtendedNode doesn't match",
+			name: "ExtendedDaemonsetSetting doesn't match",
 			args: args{
 				pod: pod1,
 				node: &NodeItem{
-					Node:         node1,
-					ExtendedNode: extendedNode2,
+					Node:                     node1,
+					ExtendedDaemonsetSetting: extendedDaemonsetSetting2,
 				},
 			},
 			want: false,
@@ -92,8 +92,8 @@ func Test_compareWithExtendedNodeOverwrite(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := compareWithExtendedNodeOverwrite(tt.args.pod, tt.args.node); got != tt.want {
-				t.Errorf("compareWithExtendedNodeOverwrite() = %v, want %v", got, tt.want)
+			if got := compareWithExtendedDaemonsetSettingOverwrite(tt.args.pod, tt.args.node); got != tt.want {
+				t.Errorf("compareWithExtendedDaemonsetSettingOverwrite() = %v, want %v", got, tt.want)
 			}
 		})
 	}

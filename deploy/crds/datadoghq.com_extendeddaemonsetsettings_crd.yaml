@@ -1,7 +1,7 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  name: extendednodes.datadoghq.com
+  name: extendeddaemonsetsettings.datadoghq.com
 spec:
   additionalPrinterColumns:
   - JSONPath: .status.status
@@ -18,16 +18,17 @@ spec:
     type: date
   group: datadoghq.com
   names:
-    kind: ExtendedNode
-    listKind: ExtendedNodeList
-    plural: extendednodes
-    singular: extendednode
+    kind: ExtendedDaemonsetSetting
+    listKind: ExtendedDaemonsetSettingList
+    plural: extendeddaemonsetsettings
+    singular: extendeddaemonsetsetting
   scope: Namespaced
   subresources:
     status: {}
   validation:
     openAPIV3Schema:
-      description: ExtendedNode is the Schema for the extendednodes API
+      description: ExtendedDaemonsetSetting is the Schema for the extendeddaemonsetsettings
+        API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -42,13 +43,14 @@ spec:
         metadata:
           type: object
         spec:
-          description: ExtendedNodeSpec is the Schema for the extendednode API
+          description: ExtendedDaemonsetSettingSpec is the Schema for the extendeddaemonsetsetting
+            API
           properties:
             containers:
-              description: Containers contains a list of container spec overwrite.
+              description: Containers contains a list of container spec override.
               items:
-                description: ExtendedNodeContainerSpec defines the resources overwrite
-                  for a container identified by its name
+                description: ExtendedDaemonsetSettingContainerSpec defines the resources
+                  override for a container identified by its name
                 properties:
                   name:
                     type: string
@@ -153,13 +155,14 @@ spec:
           - reference
           type: object
         status:
-          description: ExtendedNodeStatus defines the observed state of ExtendedNode
+          description: ExtendedDaemonsetSettingStatus defines the observed state of
+            ExtendedDaemonsetSetting
           properties:
             error:
               type: string
             status:
-              description: ExtendedNodeStatusStatus defines the readable status in
-                ExtendedNodeStatus
+              description: ExtendedDaemonsetSettingStatusStatus defines the readable
+                status in ExtendedDaemonsetSettingStatus
               type: string
           required:
           - status

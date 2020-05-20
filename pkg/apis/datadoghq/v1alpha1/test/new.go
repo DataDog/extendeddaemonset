@@ -132,16 +132,16 @@ func NewExtendedDaemonSetReplicaSet(ns, name string, options *NewExtendedDaemonS
 	return dd
 }
 
-// NewExtendedNodeOptions used to provide creation options to the NewExtendedNode function
-type NewExtendedNodeOptions struct {
+// NewExtendedDaemonsetSettingOptions used to provide creation options to the NewExtendedDaemonsetSetting function
+type NewExtendedDaemonsetSettingOptions struct {
 	CreationTime time.Time
 	Selector     map[string]string
 	Resources    map[string]corev1.ResourceRequirements
 }
 
-// NewExtendedNode returns new ExtendedNode instance
-func NewExtendedNode(ns, name, reference string, options *NewExtendedNodeOptions) *datadoghqv1alpha1.ExtendedNode {
-	edsNode := &datadoghqv1alpha1.ExtendedNode{}
+// NewExtendedDaemonsetSetting returns new ExtendedDaemonsetSetting instance
+func NewExtendedDaemonsetSetting(ns, name, reference string, options *NewExtendedDaemonsetSettingOptions) *datadoghqv1alpha1.ExtendedDaemonsetSetting {
+	edsNode := &datadoghqv1alpha1.ExtendedDaemonsetSetting{}
 	edsNode.Name = name
 	edsNode.Namespace = ns
 	edsNode.Spec.Reference = &autoscalingv1.CrossVersionObjectReference{
@@ -157,7 +157,7 @@ func NewExtendedNode(ns, name, reference string, options *NewExtendedNodeOptions
 		}
 
 		for key, val := range options.Resources {
-			edsNode.Spec.Containers = append(edsNode.Spec.Containers, datadoghqv1alpha1.ExtendedNodeContainerSpec{Name: key, Resources: val})
+			edsNode.Spec.Containers = append(edsNode.Spec.Containers, datadoghqv1alpha1.ExtendedDaemonsetSettingContainerSpec{Name: key, Resources: val})
 		}
 	}
 	return edsNode

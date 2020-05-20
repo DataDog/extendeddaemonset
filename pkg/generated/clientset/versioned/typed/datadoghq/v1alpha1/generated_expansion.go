@@ -11,4 +11,4 @@ type ExtendedDaemonSetExpansion interface{}
 
 type ExtendedDaemonSetReplicaSetExpansion interface{}
 
-type ExtendedNodeExpansion interface{}
+type ExtendedDaemonsetSettingExpansion interface{}

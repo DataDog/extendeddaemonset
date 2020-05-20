@@ -68,14 +68,14 @@ type NodeList struct {
 
 // NodeItem used to store all informations needs to create or delete a pod
 type NodeItem struct {
-	Node         *corev1.Node
-	ExtendedNode *datadoghqv1alpha1.ExtendedNode
+	Node                     *corev1.Node
+	ExtendedDaemonsetSetting *datadoghqv1alpha1.ExtendedDaemonsetSetting
 }
 
 // NewNodeItem used to create new NodeItem instance
-func NewNodeItem(node *corev1.Node, edsNode *datadoghqv1alpha1.ExtendedNode) *NodeItem {
+func NewNodeItem(node *corev1.Node, edsNode *datadoghqv1alpha1.ExtendedDaemonsetSetting) *NodeItem {
 	return &NodeItem{
-		Node:         node,
-		ExtendedNode: edsNode,
+		Node:                     node,
+		ExtendedDaemonsetSetting: edsNode,
 	}
 }

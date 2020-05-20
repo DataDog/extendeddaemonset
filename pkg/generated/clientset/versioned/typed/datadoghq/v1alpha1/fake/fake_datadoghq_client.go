@@ -25,8 +25,8 @@ func (c *FakeDatadoghqV1alpha1) ExtendedDaemonSetReplicaSets(namespace string) v
 	return &FakeExtendedDaemonSetReplicaSets{c, namespace}
 }
 
-func (c *FakeDatadoghqV1alpha1) ExtendedNodes(namespace string) v1alpha1.ExtendedNodeInterface {
-	return &FakeExtendedNodes{c, namespace}
+func (c *FakeDatadoghqV1alpha1) ExtendedDaemonsetSettings(namespace string) v1alpha1.ExtendedDaemonsetSettingInterface {
+	return &FakeExtendedDaemonsetSettings{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate

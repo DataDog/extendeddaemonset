@@ -3,7 +3,7 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-2019 Datadog, Inc.
 
-package extendednode
+package extendeddaemonsetsetting
 
 import (
 	"testing"
@@ -21,16 +21,16 @@ func Test_searchPossibleConflict(t *testing.T) {
 	commonLabels := map[string]string{
 		"test": "bigmemory",
 	}
-	edsOptions1 := &test.NewExtendedNodeOptions{
+	edsOptions1 := &test.NewExtendedDaemonsetSettingOptions{
 		CreationTime: now,
 		Selector:     commonLabels,
 	}
-	edsNode1 := test.NewExtendedNode("bar", "foo", "app", edsOptions1)
-	edsOptions2 := &test.NewExtendedNodeOptions{
+	edsNode1 := test.NewExtendedDaemonsetSetting("bar", "foo", "app", edsOptions1)
+	edsOptions2 := &test.NewExtendedDaemonsetSettingOptions{
 		CreationTime: now.Add(time.Minute),
 		Selector:     commonLabels,
 	}
-	edsNode2 := test.NewExtendedNode("bar", "foo2", "app", edsOptions2)
+	edsNode2 := test.NewExtendedDaemonsetSetting("bar", "foo2", "app", edsOptions2)
 	nodeOptions := &commontest.NewNodeOptions{
 		Labels: commonLabels,
 		Conditions: []corev1.NodeCondition{
@@ -42,9 +42,9 @@ func Test_searchPossibleConflict(t *testing.T) {
 	}
 	node1 := commontest.NewNode("node1", nodeOptions)
 	type args struct {
-		instance    *datadoghqv1alpha1.ExtendedNode
+		instance    *datadoghqv1alpha1.ExtendedDaemonsetSetting
 		nodeList    *corev1.NodeList
-		edsNodeList *datadoghqv1alpha1.ExtendedNodeList
+		edsNodeList *datadoghqv1alpha1.ExtendedDaemonsetSettingList
 	}
 	tests := []struct {
 		name    string
@@ -57,36 +57,36 @@ func Test_searchPossibleConflict(t *testing.T) {
 			args: args{
 				instance: edsNode1,
 				nodeList: &corev1.NodeList{},
-				edsNodeList: &datadoghqv1alpha1.ExtendedNodeList{
-					Items: []datadoghqv1alpha1.ExtendedNode{*edsNode1},
+				edsNodeList: &datadoghqv1alpha1.ExtendedDaemonsetSettingList{
+					Items: []datadoghqv1alpha1.ExtendedDaemonsetSetting{*edsNode1},
 				},
 			},
 			want:    "",
 			wantErr: false,
 		},
 		{
-			name: "1 ExtendedNode, no conflict",
+			name: "1 ExtendedDaemonsetSetting, no conflict",
 			args: args{
 				instance: edsNode1,
 				nodeList: &corev1.NodeList{
 					Items: []corev1.Node{*node1},
 				},
-				edsNodeList: &datadoghqv1alpha1.ExtendedNodeList{
-					Items: []datadoghqv1alpha1.ExtendedNode{*edsNode1},
+				edsNodeList: &datadoghqv1alpha1.ExtendedDaemonsetSettingList{
+					Items: []datadoghqv1alpha1.ExtendedDaemonsetSetting{*edsNode1},
 				},
 			},
 			want:    "",
 			wantErr: false,
 		},
 		{
-			name: "1 ExtendedNode, conflict between 2 ExtendedNode",
+			name: "1 ExtendedDaemonsetSetting, conflict between 2 ExtendedDaemonsetSetting",
 			args: args{
 				instance: edsNode1,
 				nodeList: &corev1.NodeList{
 					Items: []corev1.Node{*node1},
 				},
-				edsNodeList: &datadoghqv1alpha1.ExtendedNodeList{
-					Items: []datadoghqv1alpha1.ExtendedNode{*edsNode1, *edsNode2},
+				edsNodeList: &datadoghqv1alpha1.ExtendedDaemonsetSettingList{
+					Items: []datadoghqv1alpha1.ExtendedDaemonsetSetting{*edsNode1, *edsNode2},
 				},
 			},
 			want:    "foo2",

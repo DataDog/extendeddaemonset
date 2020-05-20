@@ -79,7 +79,7 @@ func TestEDS(t *testing.T) {
 	t.Run("extendeddaemonset-group", func(t *testing.T) {
 		t.Run("Initial-Deployment", InitialDeployment)
 		//t.Run("MigrationFromDaemonSet", MigrationFromDaemonSet)
-		t.Run("Use ExtendedNode", UseExtendedNode)
+		t.Run("Use ExtendedDaemonsetSetting", UseExtendedDaemonsetSetting)
 	})
 }
 
@@ -255,7 +255,7 @@ func MigrationFromDaemonSet(t *testing.T) {
 	}
 }
 
-func UseExtendedNode(t *testing.T) {
+func UseExtendedDaemonsetSetting(t *testing.T) {
 	namespace, ctx, f := initTestFwkResources(t, "extendeddaemonset")
 	defer ctx.Cleanup()
 	edsName := "eds"
@@ -264,7 +264,7 @@ func UseExtendedNode(t *testing.T) {
 		"cpu":    resource.MustParse("0.1"),
 		"memory": resource.MustParse("20M"),
 	}
-	edsNode := utils.NewExtendedNode(namespace, "test-eds", edsName, &utils.NewExtendedNodeOptions{
+	edsNode := utils.NewExtendedDaemonsetSetting(namespace, "test-eds", edsName, &utils.NewExtendedDaemonsetSettingOptions{
 		Selector: map[string]string{"overwrite": "test-eds"},
 		Resources: map[string]corev1.ResourceRequirements{
 			"main": {

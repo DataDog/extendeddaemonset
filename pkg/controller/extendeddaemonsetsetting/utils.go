@@ -1,10 +1,10 @@
-package extendednode
+package extendeddaemonsetsetting
 
 import (
 	datadoghqv1alpha1 "github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
 )
 
-type edsNodeByCreationTimestampAndPhase []*datadoghqv1alpha1.ExtendedNode
+type edsNodeByCreationTimestampAndPhase []*datadoghqv1alpha1.ExtendedDaemonsetSetting
 
 func (o edsNodeByCreationTimestampAndPhase) Len() int      { return len(o) }
 func (o edsNodeByCreationTimestampAndPhase) Swap(i, j int) { o[i], o[j] = o[j], o[i] }
