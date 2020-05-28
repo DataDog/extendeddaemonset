@@ -160,6 +160,14 @@ func UpdatePodCondition(status *v1.PodStatus, condition *v1.PodCondition) bool {
 	return !isEqual
 }
 
+// IsEvicted returns whether the status corresponds to an evicted pod
+func IsEvicted(status *v1.PodStatus) bool {
+	if status.Phase == v1.PodFailed && status.Reason == "Evicted" {
+		return true
+	}
+	return false
+}
+
 // SortPodByCreationTime return the pods sorted by creation time
 // from the newer to the older
 func SortPodByCreationTime(pods []*v1.Pod) []*v1.Pod {
