@@ -55,6 +55,7 @@ type NewPodOptions struct {
 	Annotations       map[string]string
 	Labels            map[string]string
 	Phase             corev1.PodPhase
+	Reason            string
 	Resources         corev1.ResourceRequirements
 }
 
@@ -97,6 +98,7 @@ func NewPod(namespace, name, nodeName string, opts *NewPodOptions) *corev1.Pod {
 			}
 		}
 		pod.Status.Phase = opts.Phase
+		pod.Status.Reason = opts.Reason
 	}
 
 	utilaffinity.ReplaceNodeNameNodeAffinity(pod.Spec.Affinity, nodeName)

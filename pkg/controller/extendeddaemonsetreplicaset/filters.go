@@ -14,6 +14,7 @@ import (
 	datadoghqv1alpha1 "github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
 	"github.com/datadog/extendeddaemonset/pkg/controller/extendeddaemonsetreplicaset/scheduler"
 	"github.com/datadog/extendeddaemonset/pkg/controller/extendeddaemonsetreplicaset/strategy"
+	"github.com/datadog/extendeddaemonset/pkg/controller/utils/pod"
 	podutils "github.com/datadog/extendeddaemonset/pkg/controller/utils/pod"
 )
 
@@ -57,7 +58,9 @@ func FilterAndMapPodsByNode(logger logr.Logger, replicaset *datadoghqv1alpha1.Ex
 			// ignore pod with status phase unknown: usually it means the pod's node
 			// in unreacheable so the pod can't be delete. It will be cleanup by the
 			// pods garbage collector.
-			if pod.Status.Phase == corev1.PodUnknown {
+			// Ignore evicted pods to try scheduling new pods.
+			// Evicted pods will be cleaned up by pods garbage collector.
+			if shouldIgnorePod(pod.Status) {
 				continue
 			}
 
@@ -66,12 +69,16 @@ func FilterAndMapPodsByNode(logger logr.Logger, replicaset *datadoghqv1alpha1.Ex
 			if _, ok := ignoreMapNode[pod.Spec.NodeName]; ok {
 				continue
 			}
+
 			// ignore pod with status phase unknown: usually it means the pod's node
 			// in unreacheable so the pod can't be delete. It will be cleanup by the
 			// pods garbage collector.
-			if pod.Status.Phase == corev1.PodUnknown {
+			// Ignore evicted pods to try scheduling new pods.
+			// Evicted pods will be cleaned up by pods garbage collector.
+			if shouldIgnorePod(pod.Status) {
 				continue
 			}
+
 			// Add pod with missing Node in podToDelete slice
 			// Skip pod with DeletionTimestamp already set
 			if pod.DeletionTimestamp == nil {
@@ -114,6 +121,14 @@ func FilterPodsByNode(podsByNodeName map[string][]*corev1.Pod, nodesMap map[stri
 	}
 
 	return podByNodeName, duplicatedPods
+}
+
+// shouldIgnorePod returns true if the pod is in an unknown phase or was evited
+func shouldIgnorePod(status corev1.PodStatus) bool {
+	if status.Phase == corev1.PodUnknown {
+		return true
+	}
+	return pod.IsEvicted(&status)
 }
 
 type sortPodByNodeName []*corev1.Pod

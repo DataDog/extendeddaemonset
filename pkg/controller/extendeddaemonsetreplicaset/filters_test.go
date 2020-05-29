@@ -9,16 +9,15 @@ import (
 	"testing"
 	"time"
 
-	cmp "github.com/google/go-cmp/cmp"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
-
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	datadoghqv1alpha1 "github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
 	datadoghqv1alpha1test "github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1/test"
 	"github.com/datadog/extendeddaemonset/pkg/controller/extendeddaemonsetreplicaset/strategy"
 	ctrltest "github.com/datadog/extendeddaemonset/pkg/controller/test"
+
+	cmp "github.com/google/go-cmp/cmp"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
 func TestFilterPodsByNode(t *testing.T) {
@@ -147,6 +146,12 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 	pod4Node1 := ctrltest.NewPod(ns, "pod4", node1.Name, &ctrltest.NewPodOptions{
 		CreationTimestamp: metav1.NewTime(now),
 		Phase:             corev1.PodUnknown,
+	})
+
+	pod5Node1 := ctrltest.NewPod(ns, "pod5", node1.Name, &ctrltest.NewPodOptions{
+		CreationTimestamp: metav1.NewTime(now),
+		Phase:             corev1.PodFailed,
+		Reason:            "Evicted",
 	})
 
 	pod3NodeFake := ctrltest.NewPod(ns, "pod3", "fakenode", &ctrltest.NewPodOptions{
@@ -372,6 +377,32 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 			wantPodToDelete:     nil,
 			wantUnscheduledPods: nil,
 		},
+		{
+			name: "filter evicted pod",
+			args: args{
+				replicaset: datadoghqv1alpha1test.NewExtendedDaemonSetReplicaSet("foo", "bar", nil),
+				nodeList: &strategy.NodeList{
+					Items: []*strategy.NodeItem{
+						strategy.NewNodeItem(node1, nil),
+					},
+				},
+				podList: &corev1.PodList{
+					Items: []corev1.Pod{
+						*pod1Node1,
+						*pod5Node1,
+					},
+				},
+				ignoreNodes: []string{},
+			},
+			wantNodeByName: map[string]*strategy.NodeItem{
+				"node1": strategy.NewNodeItem(node1, nil),
+			},
+			wantPodByNode: map[string]*corev1.Pod{
+				"node1": pod1Node1,
+			},
+			wantPodToDelete:     nil,
+			wantUnscheduledPods: nil,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -392,6 +423,44 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 			}
 			if diff := cmp.Diff(tt.wantUnscheduledPods, gotUnscheduledPods); diff != "" {
 				t.Errorf("FilterAndMapPodsByNode() gotUnscheduledPods mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func Test_shouldIgnorePod(t *testing.T) {
+	tests := []struct {
+		name   string
+		status corev1.PodStatus
+		want   bool
+	}{
+		{
+			name: "unknown",
+			status: corev1.PodStatus{
+				Phase: corev1.PodUnknown,
+			},
+			want: true,
+		},
+		{
+			name: "evicted",
+			status: corev1.PodStatus{
+				Phase:  corev1.PodFailed,
+				Reason: "Evicted",
+			},
+			want: true,
+		},
+		{
+			name: "running",
+			status: corev1.PodStatus{
+				Phase: corev1.PodRunning,
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := shouldIgnorePod(tt.status); got != tt.want {
+				t.Errorf("shouldIgnorePod() = %v, want %v", got, tt.want)
 			}
 		})
 	}
