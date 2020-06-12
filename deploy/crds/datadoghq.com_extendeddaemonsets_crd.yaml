@@ -117,11 +117,15 @@ spec:
                   properties:
                     duration:
                       type: string
+                    paused:
+                      type: boolean
                     replicas:
                       anyOf:
                       - type: integer
                       - type: string
                       x-kubernetes-int-or-string: true
+                  required:
+                  - paused
                   type: object
                 reconcileFrequency:
                   description: ReconcileFrequency use to configure how often the ExtendedDeamonset
