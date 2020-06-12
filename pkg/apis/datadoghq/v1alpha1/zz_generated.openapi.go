@@ -390,7 +390,14 @@ func schema_pkg_apis_datadoghq_v1alpha1_ExtendedDaemonSetSpecStrategyCanary(ref 
 							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
+					"paused": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
 				},
+				Required: []string{"paused"},
 			},
 		},
 		Dependencies: []string{

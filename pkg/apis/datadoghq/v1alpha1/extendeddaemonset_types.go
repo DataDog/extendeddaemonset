@@ -75,6 +75,7 @@ type ExtendedDaemonSetSpecStrategyRollingUpdate struct {
 type ExtendedDaemonSetSpecStrategyCanary struct {
 	Replicas *intstr.IntOrString `json:"replicas,omitempty"`
 	Duration *metav1.Duration    `json:"duration,omitempty"`
+	Paused   bool                `json:"paused"`
 }
 
 // ExtendedDaemonSetStatusState type representing the ExtendedDaemonSet state
