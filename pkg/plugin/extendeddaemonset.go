@@ -34,7 +34,7 @@ func NewCmdExtendedDaemonset(streams genericclioptions.IOStreams) *cobra.Command
 		Use: "ExtendedDaemonset [subcommand] [flags]",
 	}
 
-	cmd.AddCommand(NewCmdValidate(streams))
+	cmd.AddCommand(NewCmdCanary(streams))
 	cmd.AddCommand(NewCmdGet(streams))
 	cmd.AddCommand(NewCmdGetERS(streams))
 
