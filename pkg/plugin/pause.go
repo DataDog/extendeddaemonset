@@ -20,10 +20,15 @@ import (
 	"github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
 )
 
+const (
+	cmdPause   = true
+	cmdUnpause = false
+)
+
 var (
 	pauseExample = `
-	# pause a canary replicaset
-	%[1]s pause foo
+	# %[1]s a canary deployment
+	kubectl eds %[1]s foo
 `
 )
 
@@ -38,25 +43,53 @@ type PauseOptions struct {
 
 	userNamespace             string
 	userExtendedDaemonSetName string
+	pauseStatus               bool
 }
 
 // NewPauseOptions provides an instance of GetOptions with default values
-func NewPauseOptions(streams genericclioptions.IOStreams) *PauseOptions {
+func NewPauseOptions(streams genericclioptions.IOStreams, pauseStatus bool) *PauseOptions {
 	return &PauseOptions{
 		configFlags: genericclioptions.NewConfigFlags(false),
 
 		IOStreams: streams,
+
+		pauseStatus: pauseStatus,
 	}
 }
 
 // NewCmdPause provides a cobra command wrapping PauseOptions
 func NewCmdPause(streams genericclioptions.IOStreams) *cobra.Command {
-	o := NewPauseOptions(streams)
+	o := NewPauseOptions(streams, cmdPause)
 
 	cmd := &cobra.Command{
-		Use:          "pause an ExtendedDaemonSet canary replicaset",
-		Short:        "pause canary replicaset",
-		Example:      fmt.Sprintf(pauseExample, "kubectl"),
+		Use:          "pause [ExtendedDaemonSet name]",
+		Short:        "pause canary deployment",
+		Example:      fmt.Sprintf(pauseExample, "pause"),
+		SilenceUsage: true,
+		RunE: func(c *cobra.Command, args []string) error {
+			if err := o.Complete(c, args); err != nil {
+				return err
+			}
+			if err := o.Validate(); err != nil {
+				return err
+			}
+			return o.Run()
+		},
+	}
+
+	o.configFlags.AddFlags(cmd.Flags())
+
+	return cmd
+}
+
+// NewCmdUnpause provides a cobra command wrapping PauseOptions
+func NewCmdUnpause(streams genericclioptions.IOStreams) *cobra.Command {
+	o := NewPauseOptions(streams, cmdUnpause)
+
+	cmd := &cobra.Command{
+		Use:          "unpause [ExtendedDaemonSet name]",
+		Short:        "unpause canary deployment",
+		Example:      fmt.Sprintf(pauseExample, "unpause"),
 		SilenceUsage: true,
 		RunE: func(c *cobra.Command, args []string) error {
 			if err := o.Complete(c, args); err != nil {
@@ -130,18 +163,14 @@ func (o *PauseOptions) Run() error {
 		return fmt.Errorf("the ExtendedDaemonset does not have a canary")
 	}
 
-	if eds.Spec.Strategy.Canary.Paused {
-		return fmt.Errorf("ExtendedDaemonset '%s/%s' deployment already paused", o.userNamespace, o.userExtendedDaemonSetName)
-	}
-
 	newEds := eds.DeepCopy()
-	newEds.Spec.Strategy.Canary.Paused = true
+	newEds.Spec.Strategy.Canary.Paused = o.pauseStatus
 
 	if err = o.client.Update(context.TODO(), newEds); err != nil {
 		return fmt.Errorf("unable to pause ExtendedDaemonset deployment, err: %v", err)
 	}
 
-	fmt.Fprintf(o.Out, "ExtendedDaemonset '%s/%s' deployment was paused\n", o.userNamespace, o.userExtendedDaemonSetName)
+	fmt.Fprintf(o.Out, "ExtendedDaemonset '%s/%s' deployment paused set to %t\n", o.userNamespace, o.userExtendedDaemonSetName, o.pauseStatus)
 
 	return nil
 }
