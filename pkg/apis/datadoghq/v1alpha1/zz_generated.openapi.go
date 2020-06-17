@@ -397,7 +397,6 @@ func schema_pkg_apis_datadoghq_v1alpha1_ExtendedDaemonSetSpecStrategyCanary(ref 
 						},
 					},
 				},
-				Required: []string{"paused"},
 			},
 		},
 		Dependencies: []string{

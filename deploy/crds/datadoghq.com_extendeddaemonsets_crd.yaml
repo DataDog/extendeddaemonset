@@ -31,6 +31,9 @@ spec:
   - JSONPath: .status.canary.replicaSet
     name: canary rs
     type: string
+  - JSONPath: .spec.strategy.canary.paused
+    name: canary paused
+    type: boolean
   - JSONPath: .metadata.creationTimestamp
     name: age
     type: date
@@ -124,8 +127,6 @@ spec:
                       - type: integer
                       - type: string
                       x-kubernetes-int-or-string: true
-                  required:
-                  - paused
                   type: object
                 reconcileFrequency:
                   description: ReconcileFrequency use to configure how often the ExtendedDeamonset

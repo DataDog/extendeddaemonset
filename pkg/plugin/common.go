@@ -26,6 +26,13 @@ func getCanaryRS(eds *v1alpha1.ExtendedDaemonSet) string {
 	return "-"
 }
 
+func getCanaryPaused(eds *v1alpha1.ExtendedDaemonSet) string {
+	if eds.Spec.Strategy.Canary != nil {
+		return fmt.Sprintf("%t", eds.Spec.Strategy.Canary.Paused)
+	}
+	return "-"
+}
+
 func getDuration(obj *metav1.ObjectMeta) string {
 	return durafmt.ParseShort(time.Since(obj.CreationTimestamp.Time)).String()
 }
