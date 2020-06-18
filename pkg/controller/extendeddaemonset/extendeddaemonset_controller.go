@@ -294,6 +294,14 @@ func (r *ReconcileExtendedDaemonSet) selectNodes(logger logr.Logger, daemonsetSp
 	listOptions := []client.ListOption{
 		&client.MatchingLabelsSelector{Selector: nodeSelector.AsSelectorPreValidated()},
 	}
+	if daemonsetSpec.Strategy.Canary != nil && daemonsetSpec.Strategy.Canary.NodeSelector != nil {
+		canaryNodeSelector := labels.Set(daemonsetSpec.Strategy.Canary.NodeSelector.MatchLabels)
+		listOptions = append(listOptions,
+			&client.MatchingLabelsSelector{
+				Selector: canaryNodeSelector.AsSelectorPreValidated(),
+			},
+		)
+	}
 	err := r.client.List(context.TODO(), nodeList, listOptions...)
 	if err != nil {
 		return err
