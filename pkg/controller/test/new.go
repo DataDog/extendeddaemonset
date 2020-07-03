@@ -14,9 +14,10 @@ import (
 
 // NewNodeOptions store NewNode options
 type NewNodeOptions struct {
-	Annotations map[string]string
-	Labels      map[string]string
-	Conditions  []corev1.NodeCondition
+	Annotations   map[string]string
+	Labels        map[string]string
+	Conditions    []corev1.NodeCondition
+	Unschedulable bool
 }
 
 // NewNode returns new node instance
@@ -44,6 +45,8 @@ func NewNode(name string, opts *NewNodeOptions) *corev1.Node {
 				node.Labels[key] = value
 			}
 		}
+
+		node.Spec.Unschedulable = opts.Unschedulable
 		node.Status.Conditions = append(node.Status.Conditions, opts.Conditions...)
 	}
 	return node
@@ -57,6 +60,7 @@ type NewPodOptions struct {
 	Phase             corev1.PodPhase
 	Reason            string
 	Resources         corev1.ResourceRequirements
+	NodeSelector      map[string]string
 }
 
 // NewPod used to return new pod instance
@@ -97,10 +101,19 @@ func NewPod(namespace, name, nodeName string, opts *NewPodOptions) *corev1.Pod {
 				pod.Labels[key] = value
 			}
 		}
+		if opts.NodeSelector != nil {
+			pod.Spec.NodeSelector = map[string]string{}
+			for key, value := range opts.NodeSelector {
+				pod.Spec.NodeSelector[key] = value
+			}
+		}
 		pod.Status.Phase = opts.Phase
 		pod.Status.Reason = opts.Reason
 	}
 
-	utilaffinity.ReplaceNodeNameNodeAffinity(pod.Spec.Affinity, nodeName)
+	if nodeName != "" {
+		utilaffinity.ReplaceNodeNameNodeAffinity(pod.Spec.Affinity, nodeName)
+	}
+
 	return pod
 }

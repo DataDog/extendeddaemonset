@@ -41,6 +41,11 @@ func CheckNodeFitness(logger logr.Logger, pod *corev1.Pod, node *corev1.Node, ig
 		return false
 	}
 
+	if node.Spec.Unschedulable {
+		logger.V(1).Info("CheckNodeFitness return false", "reason", "node unschedulable")
+		return false
+	}
+
 	return true
 }
 
