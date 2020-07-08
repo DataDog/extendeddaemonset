@@ -134,3 +134,10 @@ func manageUnscheduledPodNodes(pods []*corev1.Pod) []string {
 	}
 	return output
 }
+
+// pauseCanaryDeploy updates the spec so that the Canary deployment is marked as paused
+// This assumes that specCanary is not nil
+func pauseCanaryDeployment(specCanary *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary, reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason) {
+	specCanary.Paused = true
+	specCanary.Reason = reason
+}

@@ -25,7 +25,7 @@ import (
 
 var (
 	getExample = `
-	# view all extendeddaemonset 
+	# view all extendeddaemonset
 	%[1]s get in the current namespace
 	# view extendeddaemonset foo
 	%[1]s get foo
@@ -143,7 +143,7 @@ func (o *GetOptions) Run() error {
 
 	table := newGetTable(o.Out)
 	for _, item := range edsList.Items {
-		data := []string{item.Namespace, item.Name, intToString(item.Status.Desired), intToString(item.Status.Current), intToString(item.Status.Ready), intToString(item.Status.UpToDate), intToString(item.Status.Available), intToString(item.Status.IgnoredUnresponsiveNodes), string(item.Status.State), item.Status.ActiveReplicaSet, getCanaryRS(&item), getCanaryPaused(&item), getDuration(&item.ObjectMeta)}
+		data := []string{item.Namespace, item.Name, intToString(item.Status.Desired), intToString(item.Status.Current), intToString(item.Status.Ready), intToString(item.Status.UpToDate), intToString(item.Status.Available), intToString(item.Status.IgnoredUnresponsiveNodes), string(item.Status.State), string(item.Status.Reason), item.Status.ActiveReplicaSet, getCanaryRS(&item), getCanaryPaused(&item), getDuration(&item.ObjectMeta)}
 		table.Append(data)
 	}
 
@@ -154,7 +154,7 @@ func (o *GetOptions) Run() error {
 
 func newGetTable(out io.Writer) *tablewriter.Table {
 	table := tablewriter.NewWriter(out)
-	table.SetHeader([]string{"Namespace", "Name", "Desired", "Current", "Ready", "Up-to-date", "Available", "Ignored Unresponsive Nodes", "Status", "Active RS", "Canary RS", "Canary Paused", "Age"})
+	table.SetHeader([]string{"Namespace", "Name", "Desired", "Current", "Ready", "Up-to-date", "Available", "Ignored Unresponsive Nodes", "Status", "Reason", "Active RS", "Canary RS", "Canary Paused", "Age"})
 	table.SetBorders(tablewriter.Border{Left: false, Top: false, Right: false, Bottom: false})
 	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
 	table.SetRowLine(false)

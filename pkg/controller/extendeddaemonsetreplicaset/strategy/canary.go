@@ -12,6 +12,7 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	// eds "github.com/datadog/extendeddaemonset/pkg/controller/extendeddaemonset"
 	podUtils "github.com/datadog/extendeddaemonset/pkg/controller/utils/pod"
 )
 
@@ -24,6 +25,7 @@ func ManageCanaryDeployment(client client.Client, params *Parameters) (*Result, 
 	var desiredPods, currentPods, availablePods, readyPods int32
 
 	var needRequeue bool
+	var isPaused bool
 	// Canary mode
 	for _, nodeName := range params.CanaryNodes {
 		node := params.NodeByName[nodeName]
@@ -45,6 +47,12 @@ func ManageCanaryDeployment(client client.Client, params *Parameters) (*Result, 
 					}
 					if podUtils.IsPodReady(pod) {
 						readyPods++
+					}
+					// Check if deploy should be paused. Pausing the canary will have no effect if it has been validated or failed
+					isRestarting, reason := podUtils.IsPodRestarting(pod)
+					if !isPaused && isRestarting {
+						pauseCanaryDeployment(params.Strategy.Canary, reason)
+						isPaused = true
 					}
 				}
 			}

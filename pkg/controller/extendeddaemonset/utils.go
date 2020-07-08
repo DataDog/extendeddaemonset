@@ -26,7 +26,8 @@ func IsCanaryPhaseEnded(specCanary *datadoghqv1alpha1.ExtendedDaemonSetSpecStrat
 	if specCanary == nil {
 		return true, pendingDuration
 	}
-	if specCanary.Paused || specCanary.Duration == nil {
+	// if specCanary.Paused || specCanary.Duration == nil {
+	if specCanary.Duration == nil {
 		// in this case, it means the canary never ends
 		return false, pendingDuration
 	}
@@ -38,14 +39,32 @@ func IsCanaryPhaseEnded(specCanary *datadoghqv1alpha1.ExtendedDaemonSetSpecStrat
 	return true, pendingDuration
 }
 
+// IsCanaryPhasePaused checks if the Canary deployment has been declared paused
+func IsCanaryPhasePaused(specCanary *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary) bool {
+	return specCanary.Paused
+}
+
 // IsCanaryDeploymentValid used to know if the Canary deployment has been declared
 // valid even if its duration has not finished yet.
 // If the ExtendedDaemonSet has the corresponding annotation: return true
+// If canary is marked as failed, isValid should be False
 func IsCanaryDeploymentValid(dsAnnotations map[string]string, rsName string) bool {
 	if value, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryValidAnnotationKey]; found {
 		return value == rsName
 	}
 	return false
+}
+
+// IsCanaryDeploymentFailed checks if the Canary deployment has been declared failed, and also returns the reason
+func IsCanaryDeploymentFailed(specCanary *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary) (bool, datadoghqv1alpha1.ExtendedDaemonSetStatusReason) {
+	if specCanary.Failed {
+		// If the reason exists (due to auto-pausing), then return it; otherwise use Unknown
+		if specCanary.Reason != "" {
+			return specCanary.Failed, specCanary.Reason
+		}
+		return specCanary.Failed, datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown
+	}
+	return false, ""
 }
 
 func getPodListFromReplicaSet(c client.Client, ds *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) (*corev1.PodList, error) {

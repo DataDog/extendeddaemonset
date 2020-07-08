@@ -213,8 +213,10 @@ func selectCurrentReplicaSet(daemonset *datadoghqv1alpha1.ExtendedDaemonSet, rep
 	} else {
 		var isEnded bool
 		isEnded, requeueAfter = IsCanaryPhaseEnded(daemonset.Spec.Strategy.Canary, rsUpToDate, now)
+		isPaused := IsCanaryPhasePaused(daemonset.Spec.Strategy.Canary)
 		isValid := IsCanaryDeploymentValid(daemonset.GetAnnotations(), rsUpToDate.GetName())
-		if isEnded || isValid {
+		// Only update the RS if the canary deployment is marked as valid or the canary duration has ended and it has not been paused
+		if isValid || (!isPaused && isEnded) {
 			currentRS = rsUpToDate
 		}
 	}
@@ -243,9 +245,14 @@ func (r *ReconcileExtendedDaemonSet) updateStatusWithNewRS(logger logr.Logger, d
 			newDaemonset.Status.Canary = &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{}
 		}
 		if current.Name == upToDate.Name {
-			// It means no more canary deployment needed
+			// Canary deployment is no longer needed because it completed without issue
 			newDaemonset.Status.Canary = nil
 			newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateRunning
+		} else if isFailed, reason := IsCanaryDeploymentFailed(daemonset.Spec.Strategy.Canary); isFailed {
+			// Canary deployment is no longer needed because it was marked as failed
+			newDaemonset.Status.Canary = nil
+			newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateFailed
+			newDaemonset.Status.Reason = reason
 		} else {
 			// Else compute the Canary status
 			newDaemonset.Status.Desired += upToDate.Status.Desired
