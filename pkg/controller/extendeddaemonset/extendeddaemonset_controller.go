@@ -287,20 +287,27 @@ func (r *ReconcileExtendedDaemonSet) selectNodes(logger logr.Logger, daemonsetSp
 	newPod, _ := podutils.CreatePodFromDaemonSetReplicaSet(r.scheme, replicaset, nil, nil, false)
 
 	nodeList := &corev1.NodeList{}
-	nodeSelector := labels.Set{}
+
+	listOptions := []client.ListOption{}
 	if replicaset.Spec.Selector != nil {
-		nodeSelector = labels.Set(replicaset.Spec.Selector.MatchLabels)
+		selector, err := utils.LabelSelector2LabelSelector(logger, replicaset.Spec.Selector)
+		if err != nil {
+			logger.Error(err, "Failed to parse label selector")
+		} else {
+			listOptions = append(listOptions, &client.MatchingLabelsSelector{
+				Selector: selector,
+			})
+		}
 	}
-	listOptions := []client.ListOption{
-		&client.MatchingLabelsSelector{Selector: nodeSelector.AsSelectorPreValidated()},
-	}
-	if daemonsetSpec.Strategy.Canary != nil && daemonsetSpec.Strategy.Canary.NodeSelector != nil {
-		canaryNodeSelector := labels.Set(daemonsetSpec.Strategy.Canary.NodeSelector.MatchLabels)
-		listOptions = append(listOptions,
-			&client.MatchingLabelsSelector{
-				Selector: canaryNodeSelector.AsSelectorPreValidated(),
-			},
-		)
+	if daemonsetSpec.Strategy.Canary.NodeSelector != nil {
+		selector, err := utils.LabelSelector2LabelSelector(logger, daemonsetSpec.Strategy.Canary.NodeSelector)
+		if err != nil {
+			logger.Error(err, "Failed to parse label selector")
+		} else {
+			listOptions = append(listOptions, &client.MatchingLabelsSelector{
+				Selector: selector,
+			})
+		}
 	}
 	err := r.client.List(context.TODO(), nodeList, listOptions...)
 	if err != nil {
