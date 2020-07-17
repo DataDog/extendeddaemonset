@@ -73,9 +73,10 @@ type ExtendedDaemonSetSpecStrategyRollingUpdate struct {
 // ExtendedDaemonSetSpecStrategyCanary defines the canary deployment strategy of ExtendedDaemonSet
 // +k8s:openapi-gen=true
 type ExtendedDaemonSetSpecStrategyCanary struct {
-	Replicas     *intstr.IntOrString   `json:"replicas,omitempty"`
-	Duration     *metav1.Duration      `json:"duration,omitempty"`
-	NodeSelector *metav1.LabelSelector `json:"nodeSelector,omitempty"`
+	Replicas             *intstr.IntOrString   `json:"replicas,omitempty"`
+	Duration             *metav1.Duration      `json:"duration,omitempty"`
+	NodeSelector         *metav1.LabelSelector `json:"nodeSelector,omitempty"`
+	NodeAntiAffinityKeys []string              `json:"nodeAntiAffinityKeys,omitempty"`
 }
 
 // ExtendedDaemonSetStatusState type representing the ExtendedDaemonSet state

@@ -8,6 +8,7 @@ package extendeddaemonset
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -322,30 +323,79 @@ func (r *ReconcileExtendedDaemonSet) selectNodes(logger logr.Logger, daemonsetSp
 	if err != nil {
 		return err
 	}
+
+	// Filter Nodes Unschedulable
+	for _, node := range nodeList.Items {
+		found := false
+		var id int
+		for id = range currentNodes {
+			if node.Name == currentNodes[id] {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			continue
+		}
+
+		if !scheduler.CheckNodeFitness(logger.WithValues("filter", "Nodes Unschedulabled"), newPod, &node, false) {
+			currentNodes = append(currentNodes[:id], currentNodes[id+1:]...)
+		}
+	}
+
+	// Look for other nodes to use as canary
 	if len(currentNodes) < nbCanaryPod {
+		antiAffinityKeysValues := make(map[string]int)
+
+		// Look for the values of the labels set as NodeAntiAffinityKeys of the nodes already selected as canary
+		if len(daemonsetSpec.Strategy.Canary.NodeAntiAffinityKeys) != 0 {
+			for _, node := range nodeList.Items {
+
+				antiAffinityKeysValueString := antiAffinityKeysValue(&node, daemonsetSpec)
+				if _, found := antiAffinityKeysValues[antiAffinityKeysValueString]; !found {
+					antiAffinityKeysValues[antiAffinityKeysValueString] = 0
+				}
+
+				for _, currentNode := range currentNodes {
+					if node.Name == currentNode {
+						antiAffinityKeysValues[antiAffinityKeysValueString]++
+						break
+					}
+				}
+			}
+		}
+
+		// Look for new canary nodes
 		for _, node := range nodeList.Items {
-			found := false
-			var id int
-			for id = range currentNodes {
-				if node.Name == currentNodes[id] {
-					found = true
+			// Check if that node is already selected
+			alreadySelected := false
+			for _, currentNode := range currentNodes {
+				if node.Name == currentNode {
+					alreadySelected = true
 					break
 				}
 			}
-			// Filter Nodes Unschedulabled
-			if !scheduler.CheckNodeFitness(logger.WithValues("filter", "Nodes Unschedulabled"), newPod, &node, false) {
-				if found {
-					currentNodes = append(currentNodes[:id], currentNodes[id+1:]...)
-				}
+			if alreadySelected {
 				continue
 			}
-			if !found {
-				currentNodes = append(currentNodes, node.Name)
+
+			// Check if the node labels selected by `NodeAntiAffinityKeys` are different from the ones of the already selected canary nodes.
+			if len(daemonsetSpec.Strategy.Canary.NodeAntiAffinityKeys) != 0 {
+				antiAffinityKeysValueString := antiAffinityKeysValue(&node, daemonsetSpec)
+				if nb := antiAffinityKeysValues[antiAffinityKeysValueString]; nb >= (nbCanaryPod+len(antiAffinityKeysValues)-1)/len(antiAffinityKeysValues) {
+					continue
+				}
+				antiAffinityKeysValues[antiAffinityKeysValueString]++
 			}
+
+			currentNodes = append(currentNodes, node.Name)
+			// All nodes are found. We can exit now!
 			if len(currentNodes) == nbCanaryPod {
 				logger.V(1).Info("All nodes were found")
 				break
 			}
+
 		}
 	}
 
@@ -354,6 +404,14 @@ func (r *ReconcileExtendedDaemonSet) selectNodes(logger logr.Logger, daemonsetSp
 		return fmt.Errorf("unable to select enough node for canary, current: %d, wanted: %d", len(canaryStatus.Nodes), nbCanaryPod)
 	}
 	return nil
+}
+
+func antiAffinityKeysValue(node *corev1.Node, daemonsetSpec *datadoghqv1alpha1.ExtendedDaemonSetSpec) string {
+	values := make([]string, 0, len(daemonsetSpec.Strategy.Canary.NodeAntiAffinityKeys))
+	for _, antiAffinityKey := range daemonsetSpec.Strategy.Canary.NodeAntiAffinityKeys {
+		values = append(values, node.Labels[antiAffinityKey])
+	}
+	return strings.Join(values, "$")
 }
 
 func newReplicaSetFromInstance(daemonset *datadoghqv1alpha1.ExtendedDaemonSet) (*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, error) {

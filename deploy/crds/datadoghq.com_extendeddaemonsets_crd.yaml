@@ -117,6 +117,10 @@ spec:
                   properties:
                     duration:
                       type: string
+                    nodeAntiAffinityKeys:
+                      items:
+                        type: string
+                      type: array
                     nodeSelector:
                       description: A label selector is a label query over a set of
                         resources. The result of matchLabels and matchExpressions

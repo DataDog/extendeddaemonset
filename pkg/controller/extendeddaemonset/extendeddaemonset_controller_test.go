@@ -896,3 +896,45 @@ func newRequest(ns, name string) reconcile.Request {
 		},
 	}
 }
+
+func Test_antiAffinityKeysValue(t *testing.T) {
+	node := commontest.NewNode("node", &commontest.NewNodeOptions{
+		Labels: map[string]string{
+			"app":     "foo",
+			"service": "bar",
+			"unused":  "baz",
+		},
+	})
+
+	tests := []struct {
+		name          string
+		node          corev1.Node
+		daemonsetSpec datadoghqv1alpha1.ExtendedDaemonSetSpec
+		want          string
+	}{
+		{
+			name: "basic",
+			node: *node,
+			daemonsetSpec: datadoghqv1alpha1.ExtendedDaemonSetSpec{
+				Strategy: datadoghqv1alpha1.ExtendedDaemonSetSpecStrategy{
+					Canary: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
+						NodeAntiAffinityKeys: []string{
+							"app",
+							"missing",
+							"service",
+						},
+					},
+				},
+			},
+			want: "foo$$bar",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := antiAffinityKeysValue(&tt.node, &tt.daemonsetSpec)
+			if got != tt.want {
+				t.Errorf("antiAffinityKeysValue(%#v, %#v) = %s, want %s", tt.node, tt.daemonsetSpec, got, tt.want)
+			}
+		})
+	}
+}
