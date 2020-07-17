@@ -10,3 +10,9 @@ YQ="$SCRIPT_DIR/../bin/yq"
 # Until issue is fixed: https://github.com/kubernetes-sigs/controller-tools/issues/438 and integrated in operator-sdk
 $YQ m -i "$SCRIPT_DIR/../deploy/crds/datadoghq.com_extendeddaemonsetreplicasets_crd.yaml" "$SCRIPT_DIR/patch-crd-protocol-kube1.18.yaml"
 $YQ m -i "$SCRIPT_DIR/../deploy/crds/datadoghq.com_extendeddaemonsets_crd.yaml" "$SCRIPT_DIR/patch-crd-protocol-kube1.18.yaml"
+
+# Update `metadata` attribute of v1.PodTemplateSpec to properly validate the
+# resource's metadata, since the automatically generated validation is
+# insufficient.
+$YQ m -i "$SCRIPT_DIR/../deploy/crds/datadoghq.com_extendeddaemonsetreplicasets_crd.yaml" "$SCRIPT_DIR/patch-crd-metadata.yaml"
+$YQ m -i "$SCRIPT_DIR/../deploy/crds/datadoghq.com_extendeddaemonsets_crd.yaml" "$SCRIPT_DIR/patch-crd-metadata.yaml"

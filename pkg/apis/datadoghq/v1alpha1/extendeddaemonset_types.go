@@ -73,10 +73,13 @@ type ExtendedDaemonSetSpecStrategyRollingUpdate struct {
 // ExtendedDaemonSetSpecStrategyCanary defines the canary deployment strategy of ExtendedDaemonSet
 // +k8s:openapi-gen=true
 type ExtendedDaemonSetSpecStrategyCanary struct {
-	Replicas             *intstr.IntOrString   `json:"replicas,omitempty"`
-	Duration             *metav1.Duration      `json:"duration,omitempty"`
-	NodeSelector         *metav1.LabelSelector `json:"nodeSelector,omitempty"`
-	NodeAntiAffinityKeys []string              `json:"nodeAntiAffinityKeys,omitempty"`
+	Replicas     *intstr.IntOrString   `json:"replicas,omitempty"`
+	Duration     *metav1.Duration      `json:"duration,omitempty"`
+	NodeSelector *metav1.LabelSelector `json:"nodeSelector,omitempty"`
+	// +listType=set
+	NodeAntiAffinityKeys []string `json:"nodeAntiAffinityKeys,omitempty"`
+	// +optional
+	Paused bool `json:"paused,omitempty"`
 }
 
 // ExtendedDaemonSetStatusState type representing the ExtendedDaemonSet state
@@ -129,6 +132,7 @@ type ExtendedDaemonSetStatusCanary struct {
 // +kubebuilder:printcolumn:name="status",type="string",JSONPath=".status.state"
 // +kubebuilder:printcolumn:name="active rs",type="string",JSONPath=".status.activeReplicaSet"
 // +kubebuilder:printcolumn:name="canary rs",type="string",JSONPath=".status.canary.replicaSet"
+// +kubebuilder:printcolumn:name="canary paused",type="boolean",JSONPath=".spec.strategy.canary.paused"
 // +kubebuilder:printcolumn:name="age",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:resource:path=extendeddaemonsets,shortName=eds
 type ExtendedDaemonSet struct {

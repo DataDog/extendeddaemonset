@@ -26,7 +26,7 @@ func IsCanaryPhaseEnded(specCanary *datadoghqv1alpha1.ExtendedDaemonSetSpecStrat
 	if specCanary == nil {
 		return true, pendingDuration
 	}
-	if specCanary.Duration == nil {
+	if specCanary.Paused || specCanary.Duration == nil {
 		// in this case, it means the canary never ends
 		return false, pendingDuration
 	}
