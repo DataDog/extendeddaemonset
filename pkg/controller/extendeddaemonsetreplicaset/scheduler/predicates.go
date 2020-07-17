@@ -26,12 +26,12 @@ import (
 func CheckNodeFitness(logger logr.Logger, pod *corev1.Pod, node *corev1.Node, ignoreNotReady bool) bool {
 	// Check pod node selector
 	// Check if node.Labels match pod.Spec.NodeSelector.
-	if !chechNodeSelector(pod, node) {
+	if !checkNodeSelector(pod, node) {
 		logger.V(1).Info("CheckNodeFitness return false", "reason", "node selector missmatch")
 		return false
 	}
 
-	if !chechPodToleratesNodeTaints(pod, node) {
+	if !checkPodToleratesNodeTaints(pod, node) {
 		logger.V(1).Info("CheckNodeFitness return false", "reason", "node taints")
 		return false
 	}
@@ -54,7 +54,7 @@ func chechNodeStatusReady(node *corev1.Node) bool {
 	return false
 }
 
-func chechNodeSelector(pod *corev1.Pod, node *corev1.Node) bool {
+func checkNodeSelector(pod *corev1.Pod, node *corev1.Node) bool {
 	if len(pod.Spec.NodeSelector) > 0 {
 		selector := labels.SelectorFromSet(pod.Spec.NodeSelector)
 		if !selector.Matches(labels.Set(node.Labels)) {
@@ -81,7 +81,7 @@ func chechNodeSelector(pod *corev1.Pod, node *corev1.Node) bool {
 	return nodeAffinityMatches
 }
 
-func chechPodToleratesNodeTaints(pod *corev1.Pod, node *corev1.Node) bool {
+func checkPodToleratesNodeTaints(pod *corev1.Pod, node *corev1.Node) bool {
 	filter := func(t *corev1.Taint) bool {
 		return t.Effect == corev1.TaintEffectNoSchedule || t.Effect == corev1.TaintEffectNoExecute
 	}
