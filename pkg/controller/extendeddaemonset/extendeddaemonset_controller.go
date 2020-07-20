@@ -147,30 +147,37 @@ func (r *ReconcileExtendedDaemonSet) Reconcile(request reconcile.Request) (recon
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-	var rsUpToDate *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet
-	for _, rs := range replicaSetList.Items {
+	var upToDateRS *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet
+	var activeRS *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet
+	for id, rs := range replicaSetList.Items {
 		podsCounter.Ready += rs.Status.Ready
 		podsCounter.Current += rs.Status.Available
 
+		// Check if ReplicaSet is currently active
+		if rs.Name == instance.Status.ActiveReplicaSet {
+			activeRS = &replicaSetList.Items[id]
+		}
+
+		// Check if ReplicaSet matches the ExtendedDaemonset Spec
 		if comparison.IsReplicaSetUpToDate(&rs, instance) {
-			rsUpToDate = rs.DeepCopy()
+			upToDateRS = rs.DeepCopy()
 		}
 	}
 
-	if rsUpToDate == nil {
-		// if no ReplicaSet is up to date, create a new one and return to apply again the reconcile loop
+	if upToDateRS == nil {
+		// If there is no ReplicaSet that matches the EDS Spec, create a new one and return to apply the reconcile loop again
 		return r.createNewReplicaSet(reqLogger, instance)
 	}
 
-	// select the current ReplicasSet
-	currentRS, requeueAfter := selectCurrentReplicaSet(instance, replicaSetList, rsUpToDate, now)
+	// Select the ReplicaSet that should be current
+	currentRS, requeueAfter := selectCurrentReplicaSet(instance, activeRS, upToDateRS, now)
 
-	// Remove all replicasets if not used anymore
-	if err = r.cleanupReplicaSet(reqLogger, replicaSetList, currentRS, rsUpToDate); err != nil {
+	// Remove all ReplicaSets if not used anymore
+	if err = r.cleanupReplicaSet(reqLogger, replicaSetList, currentRS, upToDateRS); err != nil {
 		return reconcile.Result{RequeueAfter: requeueAfter}, nil
 	}
 
-	_, result, err := r.updateStatusWithNewRS(reqLogger, instance, currentRS, rsUpToDate, podsCounter)
+	_, result, err := r.updateStatusWithNewRS(reqLogger, instance, currentRS, upToDateRS, podsCounter)
 	result = utils.MergeResult(result, reconcile.Result{RequeueAfter: requeueAfter})
 	return result, err
 }
@@ -196,33 +203,34 @@ func (r *ReconcileExtendedDaemonSet) createNewReplicaSet(logger logr.Logger, dae
 	return reconcile.Result{Requeue: true}, nil
 }
 
-func selectCurrentReplicaSet(daemonset *datadoghqv1alpha1.ExtendedDaemonSet, replicaSetList *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetList, rsUpToDate *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, now time.Time) (*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, time.Duration) {
-	var currentRS *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet
+// selectCurrentReplicaSet selects the replicaset that should be active
+func selectCurrentReplicaSet(daemonset *datadoghqv1alpha1.ExtendedDaemonSet, activeRS, upToDateRS *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, now time.Time) (*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, time.Duration) {
 	var requeueAfter time.Duration
-	if len(replicaSetList.Items) == 1 {
-		currentRS = rsUpToDate
-	} else {
-		for id, rs := range replicaSetList.Items {
-			if rs.Name == daemonset.Status.ActiveReplicaSet {
-				currentRS = &replicaSetList.Items[id]
-			}
-		}
-	}
-	if daemonset.Spec.Strategy.Canary == nil {
-		currentRS = rsUpToDate
-	} else {
-		var isEnded bool
-		isEnded, requeueAfter = IsCanaryPhaseEnded(daemonset.Spec.Strategy.Canary, rsUpToDate, now)
-		isValid := IsCanaryDeploymentValid(daemonset.GetAnnotations(), rsUpToDate.GetName())
-		if isEnded || isValid {
-			currentRS = rsUpToDate
-		}
-	}
-	if currentRS == nil {
-		currentRS = rsUpToDate
+
+	// If active and latest ReplicaSets are the same, nothing to do
+	if activeRS == upToDateRS {
+		return activeRS, requeueAfter
 	}
 
-	return currentRS, requeueAfter
+	// If activeRS is nil (this can occur when an ERS exists while the operator is re-deployed), then use the latest ReplicaSet
+	if activeRS == nil {
+		return upToDateRS, requeueAfter
+	}
+
+	// If there is no Canary phase, then use the latest ReplicaSet
+	if daemonset.Spec.Strategy.Canary == nil {
+		return upToDateRS, requeueAfter
+	}
+
+	// If in Canary phase, then only update ReplicaSet if it has ended or been declared valid
+	var isEnded bool
+	isEnded, requeueAfter = IsCanaryPhaseEnded(daemonset.Spec.Strategy.Canary, upToDateRS, now)
+	isValid := IsCanaryDeploymentValid(daemonset.GetAnnotations(), upToDateRS.GetName())
+	if isEnded || isValid {
+		return upToDateRS, requeueAfter
+	}
+
+	return activeRS, requeueAfter
 }
 
 func (r *ReconcileExtendedDaemonSet) updateStatusWithNewRS(logger logr.Logger, daemonset *datadoghqv1alpha1.ExtendedDaemonSet, current, upToDate *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, podsCounter podsCounterType) (*datadoghqv1alpha1.ExtendedDaemonSet, reconcile.Result, error) {
