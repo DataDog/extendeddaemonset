@@ -323,7 +323,7 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 			wantUnscheduledPods: nil,
 		},
 		{
-			name: "filter pod unknow status phase",
+			name: "filter pod unknown status phase",
 			args: args{
 				replicaset: datadoghqv1alpha1test.NewExtendedDaemonSetReplicaSet("foo", "bar", nil),
 				nodeList: &strategy.NodeList{
@@ -349,7 +349,7 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 			wantUnscheduledPods: nil,
 		},
 		{
-			name: "don't filter node not ready unknow status phase",
+			name: "don't filter node not ready unknown status phase",
 			args: args{
 				replicaset: datadoghqv1alpha1test.NewExtendedDaemonSetReplicaSet("foo", "bar", nil),
 				nodeList: &strategy.NodeList{
