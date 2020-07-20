@@ -212,6 +212,11 @@ func selectCurrentReplicaSet(daemonset *datadoghqv1alpha1.ExtendedDaemonSet, act
 		return activeRS, requeueAfter
 	}
 
+	// If activeRS is nil (this can occur when an ERS exists while the operator is re-deployed), then use the latest ReplicaSet
+	if activeRS == nil {
+		return upToDateRS, requeueAfter
+	}
+
 	// If there is no Canary phase, then use the latest ReplicaSet
 	if daemonset.Spec.Strategy.Canary == nil {
 		return upToDateRS, requeueAfter
