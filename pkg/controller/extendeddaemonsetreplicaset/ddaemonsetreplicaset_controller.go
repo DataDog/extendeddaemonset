@@ -257,7 +257,7 @@ func (r *ReconcileExtendedDaemonSetReplicaSet) applyStrategy(logger logr.Logger,
 		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(strategyParams.NewStatus, now, datadoghqv1alpha1.ConditionTypeCanary, corev1.ConditionFalse, "", false, false)
 		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(strategyParams.NewStatus, now, datadoghqv1alpha1.ConditionTypeActive, corev1.ConditionFalse, "", false, false)
 		logger.Info("ignore this replicaset, since it's not the replicas active or canary")
-		strategyResult, err = strategy.ManageUnknow(r.client, strategyParams)
+		strategyResult, err = strategy.ManageUnknown(r.client, strategyParams)
 	}
 	return strategyResult, err
 }

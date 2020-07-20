@@ -179,15 +179,15 @@ func Test_retrieveReplicaSetStatus(t *testing.T) {
 		want strategy.ReplicaSetStatus
 	}{
 		{
-			name: "status unknow",
+			name: "status unknown",
 			args: args{
 				daemonset:       daemonset,
-				replicassetName: "rs-unknow",
+				replicassetName: "rs-unknown",
 			},
 			want: strategy.ReplicaSetStatusUnknown,
 		},
 		{
-			name: "status unknow",
+			name: "status unknown",
 			args: args{
 				daemonset:       daemonset,
 				replicassetName: "rs-active",
@@ -195,7 +195,7 @@ func Test_retrieveReplicaSetStatus(t *testing.T) {
 			want: strategy.ReplicaSetStatusActive,
 		},
 		{
-			name: "status unknow",
+			name: "status unknown",
 			args: args{
 				daemonset:       daemonset,
 				replicassetName: "rs-canary",
@@ -203,7 +203,7 @@ func Test_retrieveReplicaSetStatus(t *testing.T) {
 			want: strategy.ReplicaSetStatusCanary,
 		},
 		{
-			name: "activeRS not set => unknow",
+			name: "activeRS not set => unknown",
 			args: args{
 				daemonset:       test.NewExtendedDaemonSet("bar", "foo", &test.NewExtendedDaemonSetOptions{Labels: map[string]string{"foo-key": "bar-value"}}),
 				replicassetName: "rs-active",
