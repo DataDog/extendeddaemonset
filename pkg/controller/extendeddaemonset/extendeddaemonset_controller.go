@@ -147,30 +147,37 @@ func (r *ReconcileExtendedDaemonSet) Reconcile(request reconcile.Request) (recon
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-	var rsUpToDate *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet
-	for _, rs := range replicaSetList.Items {
+	var upToDateRS *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet
+	var activeRS *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet
+	for id, rs := range replicaSetList.Items {
 		podsCounter.Ready += rs.Status.Ready
 		podsCounter.Current += rs.Status.Available
 
+		// Check if ReplicaSet is currently active
+		if rs.Name == instance.Status.ActiveReplicaSet {
+			activeRS = &replicaSetList.Items[id]
+		}
+
+		// Check if ReplicaSet matches the ExtendedDaemonset Spec
 		if comparison.IsReplicaSetUpToDate(&rs, instance) {
-			rsUpToDate = rs.DeepCopy()
+			upToDateRS = rs.DeepCopy()
 		}
 	}
 
-	if rsUpToDate == nil {
+	if upToDateRS == nil {
 		// if no ReplicaSet is up to date, create a new one and return to apply again the reconcile loop
 		return r.createNewReplicaSet(reqLogger, instance)
 	}
 
-	// select the current ReplicasSet
-	currentRS, requeueAfter := selectCurrentReplicaSet(instance, replicaSetList, rsUpToDate, now)
+	// Select the ReplicaSet that should be current
+	currentRS, requeueAfter := selectCurrentReplicaSet(reqLogger, instance, activeRS, upToDateRS, now)
 
 	// Remove all replicasets if not used anymore
-	if err = r.cleanupReplicaSet(reqLogger, replicaSetList, currentRS, rsUpToDate); err != nil {
+	if err = r.cleanupReplicaSet(reqLogger, replicaSetList, currentRS, upToDateRS); err != nil {
 		return reconcile.Result{RequeueAfter: requeueAfter}, nil
 	}
 
-	_, result, err := r.updateStatusWithNewRS(reqLogger, instance, currentRS, rsUpToDate, podsCounter)
+	_, result, err := r.updateStatusWithNewRS(reqLogger, instance, currentRS, upToDateRS, podsCounter)
 	result = utils.MergeResult(result, reconcile.Result{RequeueAfter: requeueAfter})
 	return result, err
 }
@@ -186,45 +193,43 @@ func (r *ReconcileExtendedDaemonSet) createNewReplicaSet(logger logr.Logger, dae
 	if err = controllerutil.SetControllerReference(daemonset, newRS, r.scheme); err != nil {
 		return reconcile.Result{}, err
 	}
-	logger.Info("Creating a new ReplicaSet", "replicaSet.Namespace", newRS.Namespace, "replicaSet.Name", newRS.Name)
 
 	err = r.client.Create(context.TODO(), newRS)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 	r.recorder.Event(daemonset, corev1.EventTypeNormal, "Create ExtendedDaemonSetReplicaSet", fmt.Sprintf("%s/%s", newRS.Namespace, newRS.Name))
+
 	return reconcile.Result{Requeue: true}, nil
 }
 
-func selectCurrentReplicaSet(daemonset *datadoghqv1alpha1.ExtendedDaemonSet, replicaSetList *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetList, rsUpToDate *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, now time.Time) (*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, time.Duration) {
-	var currentRS *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet
+// selectCurrentReplicaSet selects the replicaset that should be active
+func selectCurrentReplicaSet(logger logr.Logger, daemonset *datadoghqv1alpha1.ExtendedDaemonSet, activeRS, upToDateRS *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, now time.Time) (*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, time.Duration) {
 	var requeueAfter time.Duration
-	if len(replicaSetList.Items) == 1 {
-		currentRS = rsUpToDate
-	} else {
-		for id, rs := range replicaSetList.Items {
-			if rs.Name == daemonset.Status.ActiveReplicaSet {
-				currentRS = &replicaSetList.Items[id]
-			}
-		}
+
+	// If active and latest ReplicaSets are the same, nothing to do
+	if activeRS == upToDateRS {
+		return activeRS, requeueAfter
 	}
-	if daemonset.Spec.Strategy.Canary == nil {
-		currentRS = rsUpToDate
-	} else {
-		var isEnded bool
-		isEnded, requeueAfter = IsCanaryPhaseEnded(daemonset.Spec.Strategy.Canary, rsUpToDate, now)
-		isPaused := IsCanaryPhasePaused(daemonset.Spec.Strategy.Canary)
-		isValid := IsCanaryDeploymentValid(daemonset.GetAnnotations(), rsUpToDate.GetName())
-		// Only update the RS if the canary deployment is marked as valid or the canary duration has ended and it has not been paused
-		if isValid || (!isPaused && isEnded) {
-			currentRS = rsUpToDate
-		}
-	}
-	if currentRS == nil {
-		currentRS = rsUpToDate
+	if activeRS == nil {
+		return upToDateRS, requeueAfter
 	}
 
-	return currentRS, requeueAfter
+	// If there is no Canary phase, then use the latest ReplicaSet
+	if daemonset.Spec.Strategy.Canary == nil {
+		return upToDateRS, requeueAfter
+	}
+
+	// If in Canary phase, then only update ReplicaSet if it has ended or been declared valid
+	var isEnded bool
+	isEnded, requeueAfter = IsCanaryPhaseEnded(daemonset.Spec.Strategy.Canary, upToDateRS, now)
+	isPaused := IsCanaryPhasePaused(daemonset.Spec.Strategy.Canary)
+	isValid := IsCanaryDeploymentValid(daemonset.GetAnnotations(), upToDateRS.GetName())
+	if isValid || (!isPaused && isEnded) {
+		return upToDateRS, requeueAfter
+	}
+
+	return activeRS, requeueAfter
 }
 
 func (r *ReconcileExtendedDaemonSet) updateStatusWithNewRS(logger logr.Logger, daemonset *datadoghqv1alpha1.ExtendedDaemonSet, current, upToDate *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, podsCounter podsCounterType) (*datadoghqv1alpha1.ExtendedDaemonSet, reconcile.Result, error) {
@@ -240,6 +245,7 @@ func (r *ReconcileExtendedDaemonSet) updateStatusWithNewRS(logger logr.Logger, d
 		newDaemonset.Status.IgnoredUnresponsiveNodes = current.Status.IgnoredUnresponsiveNodes
 	}
 
+	// If the deployment is in Canary phase, then update status, strategy and state as needed
 	if daemonset.Spec.Strategy.Canary != nil {
 		if newDaemonset.Status.Canary == nil {
 			newDaemonset.Status.Canary = &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{}
@@ -247,11 +253,15 @@ func (r *ReconcileExtendedDaemonSet) updateStatusWithNewRS(logger logr.Logger, d
 		if current.Name == upToDate.Name {
 			// Canary deployment is no longer needed because it completed without issue
 			newDaemonset.Status.Canary = nil
+			newDaemonset.Spec.Strategy.Canary = nil
 			newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateRunning
+			// Make sure Reason is empty in case it was populated by Canary failure
+			newDaemonset.Status.Reason = ""
 		} else if isFailed, reason := IsCanaryDeploymentFailed(daemonset.Spec.Strategy.Canary); isFailed {
 			// Canary deployment is no longer needed because it was marked as failed
 			newDaemonset.Status.Canary = nil
-			newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateFailed
+			newDaemonset.Spec.Strategy.Canary = nil
+			newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryFailed
 			newDaemonset.Status.Reason = reason
 		} else {
 			// Else compute the Canary status
