@@ -9,15 +9,14 @@ import (
 )
 
 // ConvertLabelSelector converts a "k8s.io/apimachinery/pkg/apis/meta/v1".LabelSelector as found in manifests spec section into a "k8s.io/apimachinery/pkg/labels".Selector to be used to filter list operations.
-func ConvertLabelSelector(logger logr.Logger, inSelector *metav1.LabelSelector) (outSelector labels.Selector, err error) {
-	outSelector = labels.NewSelector()
+func ConvertLabelSelector(logger logr.Logger, inSelector *metav1.LabelSelector) (labels.Selector, error) {
+	outSelector := labels.NewSelector()
 	if inSelector != nil {
 		for key, value := range inSelector.MatchLabels {
-			req, err2 := labels.NewRequirement(key, selection.In, []string{value})
-			if err2 != nil {
+			req, err := labels.NewRequirement(key, selection.In, []string{value})
+			if err != nil {
 				logger.Error(err, "NewRequirement")
-				err = err2
-				continue
+				return outSelector, err
 			}
 			outSelector = outSelector.Add(*req)
 		}
@@ -37,14 +36,13 @@ func ConvertLabelSelector(logger logr.Logger, inSelector *metav1.LabelSelector) 
 				logger.Info("Invalid Operator:", expr.Operator)
 				continue
 			}
-			req, err2 := labels.NewRequirement(expr.Key, op, expr.Values)
-			if err2 != nil {
+			req, err := labels.NewRequirement(expr.Key, op, expr.Values)
+			if err != nil {
 				logger.Error(err, "NewRequirement")
-				err = err2
-				continue
+				return outSelector, err
 			}
 			outSelector = outSelector.Add(*req)
 		}
 	}
-	return outSelector, err
+	return outSelector, nil
 }
