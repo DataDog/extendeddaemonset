@@ -15,8 +15,8 @@ import (
 	podutils "github.com/datadog/extendeddaemonset/pkg/controller/utils/pod"
 )
 
-// ManageUnknow use to manage ReplicaSet with unknow status
-func ManageUnknow(client client.Client, params *Parameters) (*Result, error) {
+// ManageUnknown use to manage ReplicaSet with unknown status
+func ManageUnknown(client client.Client, params *Parameters) (*Result, error) {
 	result := &Result{}
 	// remove canary node if define
 	for _, nodeName := range params.CanaryNodes {
@@ -53,7 +53,7 @@ func ManageUnknow(client client.Client, params *Parameters) (*Result, error) {
 	}
 
 	result.NewStatus = params.NewStatus.DeepCopy()
-	result.NewStatus.Status = "Unknow"
+	result.NewStatus.Status = string(ReplicaSetStatusUnknown)
 	result.NewStatus.Desired = 0
 	result.NewStatus.Ready = readyPods
 	result.NewStatus.Current = currentPods

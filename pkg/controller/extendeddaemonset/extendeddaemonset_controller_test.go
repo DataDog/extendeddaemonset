@@ -244,10 +244,10 @@ func Test_selectCurrentReplicaSet(t *testing.T) {
 	})
 
 	type args struct {
-		daemonset      *datadoghqv1alpha1.ExtendedDaemonSet
-		replicaSetList *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetList
-		rsUpToDate     *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet
-		now            time.Time
+		daemonset  *datadoghqv1alpha1.ExtendedDaemonSet
+		upToDateRS *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet
+		activeRS   *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet
+		now        time.Time
 	}
 	tests := []struct {
 		name  string
@@ -259,11 +259,9 @@ func Test_selectCurrentReplicaSet(t *testing.T) {
 			name: "one RS, update to date",
 			args: args{
 				daemonset:  daemonset,
-				rsUpToDate: replicassetUpToDate,
-				replicaSetList: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSetList{
-					Items: []datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{*replicassetUpToDate},
-				},
-				now: now,
+				upToDateRS: replicassetUpToDate,
+				activeRS:   replicassetUpToDate,
+				now:        now,
 			},
 			want:  replicassetUpToDate,
 			want1: 0,
@@ -272,11 +270,9 @@ func Test_selectCurrentReplicaSet(t *testing.T) {
 			name: "two RS, update to date, canary not set",
 			args: args{
 				daemonset:  daemonset,
-				rsUpToDate: replicassetUpToDate,
-				replicaSetList: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSetList{
-					Items: []datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{*replicassetOld, *replicassetUpToDate},
-				},
-				now: now,
+				upToDateRS: replicassetUpToDate,
+				activeRS:   replicassetOld,
+				now:        now,
 			},
 			want:  replicassetUpToDate,
 			want1: 0,
@@ -285,11 +281,9 @@ func Test_selectCurrentReplicaSet(t *testing.T) {
 			name: "two RS, update to date, canary set not done",
 			args: args{
 				daemonset:  daemonsetWithCanary,
-				rsUpToDate: replicassetUpToDate,
-				replicaSetList: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSetList{
-					Items: []datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{*replicassetOld, *replicassetUpToDate},
-				},
-				now: now,
+				upToDateRS: replicassetUpToDate,
+				activeRS:   replicassetOld,
+				now:        now,
 			},
 
 			want:  replicassetOld,
@@ -299,11 +293,9 @@ func Test_selectCurrentReplicaSet(t *testing.T) {
 			name: "two RS, update to date, canary set and done",
 			args: args{
 				daemonset:  daemonsetWithCanary,
-				rsUpToDate: replicassetUpToDateDone,
-				replicaSetList: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSetList{
-					Items: []datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{*replicassetOld, *replicassetUpToDateDone},
-				},
-				now: now,
+				upToDateRS: replicassetUpToDateDone,
+				activeRS:   replicassetOld,
+				now:        now,
 			},
 			want:  replicassetUpToDateDone,
 			want1: -time.Minute,
@@ -312,11 +304,9 @@ func Test_selectCurrentReplicaSet(t *testing.T) {
 			name: "two RS, update to date, canary set, canary duration not done, canary valid",
 			args: args{
 				daemonset:  daemonsetWithCanaryValid,
-				rsUpToDate: replicassetUpToDate,
-				replicaSetList: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSetList{
-					Items: []datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{*replicassetOld, *replicassetUpToDate},
-				},
-				now: now,
+				upToDateRS: replicassetUpToDate,
+				activeRS:   replicassetOld,
+				now:        now,
 			},
 			want:  replicassetUpToDate,
 			want1: 5 * time.Minute,
@@ -325,11 +315,9 @@ func Test_selectCurrentReplicaSet(t *testing.T) {
 			name: "two RS, update to date, canary set, canary duration done, canary valid",
 			args: args{
 				daemonset:  daemonsetWithCanaryValid,
-				rsUpToDate: replicassetUpToDateDone,
-				replicaSetList: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSetList{
-					Items: []datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{*replicassetOld, *replicassetUpToDateDone},
-				},
-				now: now,
+				upToDateRS: replicassetUpToDateDone,
+				activeRS:   replicassetOld,
+				now:        now,
 			},
 			want:  replicassetUpToDateDone,
 			want1: -time.Minute,
@@ -338,7 +326,7 @@ func Test_selectCurrentReplicaSet(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Logf("daemonset: %v", tt.args.daemonset)
-			got, got1 := selectCurrentReplicaSet(tt.args.daemonset, tt.args.replicaSetList, tt.args.rsUpToDate, tt.args.now)
+			got, got1 := selectCurrentReplicaSet(tt.args.daemonset, tt.args.activeRS, tt.args.upToDateRS, tt.args.now)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("selectCurrentReplicaSet() got = %v, want %v", got, tt.want)
 			}

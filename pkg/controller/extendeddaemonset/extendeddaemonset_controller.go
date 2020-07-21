@@ -165,14 +165,14 @@ func (r *ReconcileExtendedDaemonSet) Reconcile(request reconcile.Request) (recon
 	}
 
 	if upToDateRS == nil {
-		// if no ReplicaSet is up to date, create a new one and return to apply again the reconcile loop
+		// If there is no ReplicaSet that matches the EDS Spec, create a new one and return to apply the reconcile loop again
 		return r.createNewReplicaSet(reqLogger, instance)
 	}
 
 	// Select the ReplicaSet that should be current
-	currentRS, requeueAfter := selectCurrentReplicaSet(reqLogger, instance, activeRS, upToDateRS, now)
+	currentRS, requeueAfter := selectCurrentReplicaSet(instance, activeRS, upToDateRS, now)
 
-	// Remove all replicasets if not used anymore
+	// Remove all ReplicaSets if not used anymore
 	if err = r.cleanupReplicaSet(reqLogger, replicaSetList, currentRS, upToDateRS); err != nil {
 		return reconcile.Result{RequeueAfter: requeueAfter}, nil
 	}
@@ -204,13 +204,15 @@ func (r *ReconcileExtendedDaemonSet) createNewReplicaSet(logger logr.Logger, dae
 }
 
 // selectCurrentReplicaSet selects the replicaset that should be active
-func selectCurrentReplicaSet(logger logr.Logger, daemonset *datadoghqv1alpha1.ExtendedDaemonSet, activeRS, upToDateRS *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, now time.Time) (*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, time.Duration) {
+func selectCurrentReplicaSet(daemonset *datadoghqv1alpha1.ExtendedDaemonSet, activeRS, upToDateRS *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, now time.Time) (*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, time.Duration) {
 	var requeueAfter time.Duration
 
 	// If active and latest ReplicaSets are the same, nothing to do
 	if activeRS == upToDateRS {
 		return activeRS, requeueAfter
 	}
+
+	// If activeRS is nil (this can occur when an ERS exists while the operator is re-deployed), then use the latest ReplicaSet
 	if activeRS == nil {
 		return upToDateRS, requeueAfter
 	}
