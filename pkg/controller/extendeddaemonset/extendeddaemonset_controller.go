@@ -291,7 +291,7 @@ func (r *ReconcileExtendedDaemonSet) selectNodes(logger logr.Logger, daemonsetSp
 
 	listOptions := []client.ListOption{}
 	if replicaset.Spec.Selector != nil {
-		selector, err := utils.LabelSelector2LabelSelector(logger, replicaset.Spec.Selector)
+		selector, err := utils.ConvertLabelSelector(logger, replicaset.Spec.Selector)
 		if err != nil {
 			logger.Error(err, "Failed to parse label selector")
 		} else {
@@ -301,7 +301,7 @@ func (r *ReconcileExtendedDaemonSet) selectNodes(logger logr.Logger, daemonsetSp
 		}
 	}
 	if daemonsetSpec.Strategy.Canary.NodeSelector != nil {
-		selector, err := utils.LabelSelector2LabelSelector(logger, daemonsetSpec.Strategy.Canary.NodeSelector)
+		selector, err := utils.ConvertLabelSelector(logger, daemonsetSpec.Strategy.Canary.NodeSelector)
 		if err != nil {
 			logger.Error(err, "Failed to parse label selector")
 		} else {
@@ -352,14 +352,14 @@ func (r *ReconcileExtendedDaemonSet) selectNodes(logger logr.Logger, daemonsetSp
 		if len(daemonsetSpec.Strategy.Canary.NodeAntiAffinityKeys) != 0 {
 			for _, node := range nodeList.Items {
 
-				antiAffinityKeysValueString := antiAffinityKeysValue(&node, daemonsetSpec)
-				if _, found := antiAffinityKeysValues[antiAffinityKeysValueString]; !found {
-					antiAffinityKeysValues[antiAffinityKeysValueString] = 0
+				antiAffinityKeysValue := getAntiAffinityKeysValue(&node, daemonsetSpec)
+				if _, found := antiAffinityKeysValues[antiAffinityKeysValue]; !found {
+					antiAffinityKeysValues[antiAffinityKeysValue] = 0
 				}
 
 				for _, currentNode := range currentNodes {
 					if node.Name == currentNode {
-						antiAffinityKeysValues[antiAffinityKeysValueString]++
+						antiAffinityKeysValues[antiAffinityKeysValue]++
 						break
 					}
 				}
@@ -380,13 +380,26 @@ func (r *ReconcileExtendedDaemonSet) selectNodes(logger logr.Logger, daemonsetSp
 				continue
 			}
 
-			// Check if the node labels selected by `NodeAntiAffinityKeys` are different from the ones of the already selected canary nodes.
+			// Ensure that the selected canary nodes are evenly chosen regarding the value of their labels selected by the `NodeAntiAffinityKeys` canary property
+			//
+			// For example, if a cluster has 100 nodes labeled `service=A` and 10 nodes labeled `service=B` and we have to choose 4 canary nodes, we want to choose 2 canary nodes labeled `service=B` and 2 canary nodes labeled `service=B`.
+			// For that purpose, we use the `antiAffinityKeysValues` map that count the number of selected nodes per label value.
+			// In our example, that map would have two entries: `A` and `B`.
+			// We want a maximum of `nb_canaries / nb_different_values` (4/2=2) for each value.
+			// So, we want to reject a node if it would make the selection unbalanced, i.e. if
+			// antiAffinityKeysValues[getAntiAffinityKeysValue(&node, daemonsetSpec)] >= nbCanaryPod / len(antiAffinityKeysValues)
+			//
+			// In the above mathematical expression, we want the division result to be rounded up.
+			// In our example, if we want 5 canary nodes, we will want 3 nodes labeled `service=A` and 2 nodes labeled `service=B` or the other way round
+			// so, we want to reject nodes as soon as the number of selected nodes with that label value exceeds 3 = ceil(5/2)
+			//
+			// An efficient way to compute `ceil(a/b)` with only integer computing is to compute `(a+b-1)/b`.
 			if len(daemonsetSpec.Strategy.Canary.NodeAntiAffinityKeys) != 0 {
-				antiAffinityKeysValueString := antiAffinityKeysValue(&node, daemonsetSpec)
-				if nb := antiAffinityKeysValues[antiAffinityKeysValueString]; nb >= (nbCanaryPod+len(antiAffinityKeysValues)-1)/len(antiAffinityKeysValues) {
+				antiAffinityKeysValue := getAntiAffinityKeysValue(&node, daemonsetSpec)
+				if nb := antiAffinityKeysValues[antiAffinityKeysValue]; nb >= (nbCanaryPod+len(antiAffinityKeysValues)-1)/len(antiAffinityKeysValues) {
 					continue
 				}
-				antiAffinityKeysValues[antiAffinityKeysValueString]++
+				antiAffinityKeysValues[antiAffinityKeysValue]++
 			}
 
 			currentNodes = append(currentNodes, node.Name)
@@ -406,7 +419,7 @@ func (r *ReconcileExtendedDaemonSet) selectNodes(logger logr.Logger, daemonsetSp
 	return nil
 }
 
-func antiAffinityKeysValue(node *corev1.Node, daemonsetSpec *datadoghqv1alpha1.ExtendedDaemonSetSpec) string {
+func getAntiAffinityKeysValue(node *corev1.Node, daemonsetSpec *datadoghqv1alpha1.ExtendedDaemonSetSpec) string {
 	values := make([]string, 0, len(daemonsetSpec.Strategy.Canary.NodeAntiAffinityKeys))
 	for _, antiAffinityKey := range daemonsetSpec.Strategy.Canary.NodeAntiAffinityKeys {
 		values = append(values, node.Labels[antiAffinityKey])

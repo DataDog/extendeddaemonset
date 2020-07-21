@@ -897,7 +897,7 @@ func newRequest(ns, name string) reconcile.Request {
 	}
 }
 
-func Test_antiAffinityKeysValue(t *testing.T) {
+func Test_getAntiAffinityKeysValue(t *testing.T) {
 	node := commontest.NewNode("node", &commontest.NewNodeOptions{
 		Labels: map[string]string{
 			"app":     "foo",
@@ -931,9 +931,9 @@ func Test_antiAffinityKeysValue(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := antiAffinityKeysValue(&tt.node, &tt.daemonsetSpec)
+			got := getAntiAffinityKeysValue(&tt.node, &tt.daemonsetSpec)
 			if got != tt.want {
-				t.Errorf("antiAffinityKeysValue(%#v, %#v) = %s, want %s", tt.node, tt.daemonsetSpec, got, tt.want)
+				t.Errorf("getAntiAffinityKeysValue(%#v, %#v) = %s, want %s", tt.node, tt.daemonsetSpec, got, tt.want)
 			}
 		})
 	}

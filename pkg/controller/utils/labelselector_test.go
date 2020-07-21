@@ -10,9 +10,9 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
-func TestLabelSelector2LabelSelector(t *testing.T) {
+func TestConvertLabelSelector(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
-	log := logf.Log.WithName("TestLabelSelector2LabelSelector")
+	log := logf.Log.WithName("TestConvertLabelSelector")
 
 	foobarReq, _ := labels.NewRequirement("foo", selection.In, []string{"bar"})
 	bazquxReq, _ := labels.NewRequirement("baz", selection.In, []string{"qux"})
@@ -57,13 +57,13 @@ func TestLabelSelector2LabelSelector(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			reqLogger := log.WithValues("test:", tt.name)
-			got, err := LabelSelector2LabelSelector(reqLogger, &tt.input)
+			got, err := ConvertLabelSelector(reqLogger, &tt.input)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("LabelSelector2LabelSelector() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ConvertLabelSelector() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("LabelSelector2LabelSelector() = %#v, want %#v", got, tt.want)
+				t.Errorf("ConvertLabelSelector() = %#v, want %#v", got, tt.want)
 			}
 		})
 	}

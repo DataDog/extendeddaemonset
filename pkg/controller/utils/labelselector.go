@@ -8,8 +8,8 @@ import (
 	"k8s.io/apimachinery/pkg/selection"
 )
 
-// LabelSelector2LabelSelector converts a "k8s.io/apimachinery/pkg/apis/meta/v1".LabelSelector as found in manifests spec section into a "k8s.io/apimachinery/pkg/labels".Selector to be used to filter list operations.
-func LabelSelector2LabelSelector(logger logr.Logger, inSelector *metav1.LabelSelector) (outSelector labels.Selector, err error) {
+// ConvertLabelSelector converts a "k8s.io/apimachinery/pkg/apis/meta/v1".LabelSelector as found in manifests spec section into a "k8s.io/apimachinery/pkg/labels".Selector to be used to filter list operations.
+func ConvertLabelSelector(logger logr.Logger, inSelector *metav1.LabelSelector) (outSelector labels.Selector, err error) {
 	outSelector = labels.NewSelector()
 	if inSelector != nil {
 		for key, value := range inSelector.MatchLabels {

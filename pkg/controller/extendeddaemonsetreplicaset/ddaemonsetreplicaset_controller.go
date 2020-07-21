@@ -367,7 +367,7 @@ func (r *ReconcileExtendedDaemonSetReplicaSet) getNodeList(eds *datadoghqv1alpha
 
 	listOptions := []client.ListOption{}
 	if replicaset.Spec.Selector != nil {
-		selector, err := utils.LabelSelector2LabelSelector(log, replicaset.Spec.Selector)
+		selector, err := utils.ConvertLabelSelector(log, replicaset.Spec.Selector)
 		if err != nil {
 			return nil, err
 		}
@@ -427,7 +427,7 @@ func (r *ReconcileExtendedDaemonSetReplicaSet) getOldDaemonsetPodList(ds *datado
 	}
 	podListOptions := []client.ListOption{}
 	if oldDaemonset.Spec.Selector != nil {
-		selector, err2 := utils.LabelSelector2LabelSelector(log, oldDaemonset.Spec.Selector)
+		selector, err2 := utils.ConvertLabelSelector(log, oldDaemonset.Spec.Selector)
 		if err2 != nil {
 			return nil, err2
 		}
