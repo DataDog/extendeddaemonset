@@ -248,7 +248,6 @@ func (r *ReconcileExtendedDaemonSet) updateStatusWithNewRS(logger logr.Logger, d
 		newDaemonset.Status.IgnoredUnresponsiveNodes = current.Status.IgnoredUnresponsiveNodes
 	}
 
-	// If the deployment is in Canary phase, then update status, strategy and state as needed
 	if daemonset.Spec.Strategy.Canary != nil {
 		if newDaemonset.Status.Canary == nil {
 			newDaemonset.Status.Canary = &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{}
@@ -257,12 +256,6 @@ func (r *ReconcileExtendedDaemonSet) updateStatusWithNewRS(logger logr.Logger, d
 			// Canary deployment is no longer needed because it completed without issue
 			newDaemonset.Status.Canary = nil
 			newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateRunning
-		} else if isFailed, reason := IsCanaryDeploymentFailed(daemonset.Spec.Strategy.Canary); isFailed {
-			// Canary deployment is no longer needed because it was marked as failed
-			newDaemonset.Status.Canary = nil
-			newDaemonset.Spec.Strategy.Canary = nil
-			newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryFailed
-			newDaemonset.Status.Reason = reason
 		} else {
 			// Else compute the Canary status
 			newDaemonset.Status.Desired += upToDate.Status.Desired
