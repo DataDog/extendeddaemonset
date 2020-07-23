@@ -78,6 +78,8 @@ type ExtendedDaemonSetSpecStrategyCanary struct {
 	// +optional
 	Paused bool `json:"paused,omitempty"`
 	// +optional
+	Failed bool `json:"failed,omitempty"`
+	// +optional
 	Reason ExtendedDaemonSetStatusReason `json:"reason,omitempty"`
 }
 
