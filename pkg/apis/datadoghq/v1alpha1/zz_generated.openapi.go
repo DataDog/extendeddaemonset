@@ -396,12 +396,6 @@ func schema_pkg_apis_datadoghq_v1alpha1_ExtendedDaemonSetSpecStrategyCanary(ref 
 							Format: "",
 						},
 					},
-					"failed": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
-						},
-					},
 					"reason": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
@@ -524,7 +518,7 @@ func schema_pkg_apis_datadoghq_v1alpha1_ExtendedDaemonSetStatus(ref common.Refer
 					},
 					"reason": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Reason provides an explanation for deployment failure",
+							Description: "Reason provides an explanation for canary deployment autopause",
 							Type:        []string{"string"},
 							Format:      "",
 						},

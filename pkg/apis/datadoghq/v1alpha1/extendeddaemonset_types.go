@@ -121,7 +121,7 @@ type ExtendedDaemonSetStatus struct {
 	ActiveReplicaSet string                         `json:"activeReplicaSet"`
 	Canary           *ExtendedDaemonSetStatusCanary `json:"canary,omitempty"`
 
-	// Reason provides an explanation for deployment failure
+	// Reason provides an explanation for canary deployment autopause
 	// +optional
 	Reason ExtendedDaemonSetStatusReason `json:"reason,omitempty"`
 }

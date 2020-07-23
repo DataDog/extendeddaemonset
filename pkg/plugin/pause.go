@@ -165,11 +165,9 @@ func (o *PauseOptions) Run() error {
 
 	newEds := eds.DeepCopy()
 
-	var isPaused string
-	var ok bool
 	if newEds.Annotations == nil {
 		newEds.Annotations = make(map[string]string)
-	} else if isPaused, ok = newEds.Annotations[v1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]; ok {
+	} else if isPaused, ok := newEds.Annotations[v1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]; ok {
 		if o.pauseStatus && isPaused == "true" {
 			return fmt.Errorf("canary deployment already paused")
 		} else if !o.pauseStatus && isPaused == "false" {

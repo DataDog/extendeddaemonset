@@ -26,7 +26,6 @@ func IsCanaryDeploymentEnded(specCanary *datadoghqv1alpha1.ExtendedDaemonSetSpec
 	if specCanary == nil {
 		return true, pendingDuration
 	}
-	// if specCanary.Paused || specCanary.Duration == nil {
 	if specCanary.Duration == nil {
 		// in this case, it means the canary never ends
 		return false, pendingDuration

@@ -64,22 +64,6 @@ func TestIsCanaryDeploymentEnded(t *testing.T) {
 			},
 			want: false,
 		},
-		// {
-		// 	name: "canary paused duration exceeded",
-		// 	args: args{
-		// 		specCanary: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
-		// 			Duration: &metav1.Duration{Duration: time.Hour},
-		// 			Paused:   true,
-		// 		},
-		// 		rs: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{
-		// 			ObjectMeta: metav1.ObjectMeta{
-		// 				CreationTimestamp: metav1.NewTime(now.Add(-2 * time.Hour)),
-		// 			},
-		// 		},
-		// 		now: now,
-		// 	},
-		// 	want: false,
-		// },
 		{
 			name: "not canary done",
 			args: args{

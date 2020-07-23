@@ -120,8 +120,6 @@ spec:
                   properties:
                     duration:
                       type: string
-                    failed:
-                      type: boolean
                     paused:
                       type: boolean
                     reason:
@@ -6126,7 +6124,7 @@ spec:
               format: int32
               type: integer
             reason:
-              description: Reason provides an explanation for deployment failure
+              description: Reason provides an explanation for canary deployment autopause
               type: string
             state:
               description: ExtendedDaemonSetStatusState type representing the ExtendedDaemonSet

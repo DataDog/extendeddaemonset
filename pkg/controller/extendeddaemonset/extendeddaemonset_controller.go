@@ -193,13 +193,13 @@ func (r *ReconcileExtendedDaemonSet) createNewReplicaSet(logger logr.Logger, dae
 	if err = controllerutil.SetControllerReference(daemonset, newRS, r.scheme); err != nil {
 		return reconcile.Result{}, err
 	}
+	logger.Info("Creating a new ReplicaSet", "replicaSet.Namespace", newRS.Namespace, "replicaSet.Name", newRS.Name)
 
 	err = r.client.Create(context.TODO(), newRS)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 	r.recorder.Event(daemonset, corev1.EventTypeNormal, "Create ExtendedDaemonSetReplicaSet", fmt.Sprintf("%s/%s", newRS.Namespace, newRS.Name))
-
 	return reconcile.Result{Requeue: true}, nil
 }
 
