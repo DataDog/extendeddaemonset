@@ -32,8 +32,6 @@ import (
 	"github.com/datadog/extendeddaemonset/pkg/controller/utils/affinity"
 )
 
-// const CLBReason = "CrashLoopBackOff"
-
 // GetContainerStatus extracts the status of container "name" from "statuses".
 // It also returns if "name" exists.
 func GetContainerStatus(statuses []v1.ContainerStatus, name string) (v1.ContainerStatus, bool) {
@@ -123,10 +121,14 @@ func IsPodRestarting(pod *v1.Pod) (bool, datadoghqv1alpha1.ExtendedDaemonSetStat
 	var maxRestartCount int
 	var reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason
 	for _, s := range pod.Status.ContainerStatuses {
-		if maxRestartCount > int(s.RestartCount) {
+		if maxRestartCount < int(s.RestartCount) {
 			maxRestartCount = int(s.RestartCount)
-			if s.State.Waiting.Reason == string(datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB) {
-				reason = datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB
+			if s.LastTerminationState != (v1.ContainerState{}) && *s.LastTerminationState.Terminated != (v1.ContainerStateTerminated{}) {
+				if s.LastTerminationState.Terminated.Reason == string(datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB) {
+					reason = datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB
+				} else if s.LastTerminationState.Terminated.Reason == string(datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM) {
+					reason = datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM
+				}
 			} else {
 				reason = datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown
 			}

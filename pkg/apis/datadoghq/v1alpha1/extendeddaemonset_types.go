@@ -93,6 +93,8 @@ const (
 	ExtendedDaemonSetStatusStateRunning ExtendedDaemonSetStatusState = "Running"
 	// ExtendedDaemonSetStatusStateFailed the current state of the ExtendedDaemonSet is considered as Failing
 	ExtendedDaemonSetStatusStateFailed ExtendedDaemonSetStatusState = "Failed"
+	// ExtendedDaemonSetStatusStateCanaryPaused the Canary deployment of the ExtendedDaemonSet is paused
+	ExtendedDaemonSetStatusStateCanaryPaused ExtendedDaemonSetStatusState = "Canary Paused"
 )
 
 // ExtendedDaemonSetStatusReason type represents the reason for a ExtendedDaemonSet status state
@@ -101,6 +103,8 @@ type ExtendedDaemonSetStatusReason string
 const (
 	// ExtendedDaemonSetStatusReasonCLB represents CrashLoopBackOff as the reason for the ExtendedDaemonSet status state
 	ExtendedDaemonSetStatusReasonCLB ExtendedDaemonSetStatusReason = "CrashLoopBackOff"
+	// ExtendedDaemonSetStatusReasonOOM represents OOMKilled as the reason for the ExtendedDaemonSet status state
+	ExtendedDaemonSetStatusReasonOOM ExtendedDaemonSetStatusReason = "OOMKilled"
 	// ExtendedDaemonSetStatusReasonUnknown represents an Unknown reason for the status state
 	ExtendedDaemonSetStatusReasonUnknown ExtendedDaemonSetStatusReason = "Unknown"
 )

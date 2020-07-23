@@ -224,9 +224,10 @@ func selectCurrentReplicaSet(daemonset *datadoghqv1alpha1.ExtendedDaemonSet, act
 
 	// If in Canary phase, then only update ReplicaSet if it has ended or been declared valid
 	var isEnded bool
-	isEnded, requeueAfter = IsCanaryPhaseEnded(daemonset.Spec.Strategy.Canary, upToDateRS, now)
-	isPaused := IsCanaryPhasePaused(daemonset.Spec.Strategy.Canary)
-	isValid := IsCanaryDeploymentValid(daemonset.GetAnnotations(), upToDateRS.GetName())
+	dsAnnotations := daemonset.GetAnnotations()
+	isEnded, requeueAfter = IsCanaryDeploymentEnded(daemonset.Spec.Strategy.Canary, upToDateRS, now)
+	isPaused, _ := IsCanaryDeploymentPaused(dsAnnotations)
+	isValid := IsCanaryDeploymentValid(dsAnnotations, upToDateRS.GetName())
 	if isValid || (!isPaused && isEnded) {
 		return upToDateRS, requeueAfter
 	}
@@ -255,10 +256,7 @@ func (r *ReconcileExtendedDaemonSet) updateStatusWithNewRS(logger logr.Logger, d
 		if current.Name == upToDate.Name {
 			// Canary deployment is no longer needed because it completed without issue
 			newDaemonset.Status.Canary = nil
-			newDaemonset.Spec.Strategy.Canary = nil
 			newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateRunning
-			// Make sure Reason is empty in case it was populated by Canary failure
-			newDaemonset.Status.Reason = ""
 		} else if isFailed, reason := IsCanaryDeploymentFailed(daemonset.Spec.Strategy.Canary); isFailed {
 			// Canary deployment is no longer needed because it was marked as failed
 			newDaemonset.Status.Canary = nil
@@ -286,7 +284,14 @@ func (r *ReconcileExtendedDaemonSet) updateStatusWithNewRS(logger logr.Logger, d
 					return newDaemonset, reconcile.Result{}, err
 				}
 			}
-			newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanary
+
+			isPaused, reason := IsCanaryDeploymentPaused(daemonset.GetAnnotations())
+			if isPaused {
+				newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryPaused
+				newDaemonset.Status.Reason = reason
+			} else {
+				newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanary
+			}
 		}
 	}
 

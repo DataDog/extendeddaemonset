@@ -13,7 +13,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func TestIsCanaryPhaseEnded(t *testing.T) {
+func TestIsCanaryDeploymentEnded(t *testing.T) {
 	now := time.Now()
 	type args struct {
 		specCanary *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary
@@ -99,12 +99,12 @@ func TestIsCanaryPhaseEnded(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, gotDuration := IsCanaryPhaseEnded(tt.args.specCanary, tt.args.rs, tt.args.now)
+			got, gotDuration := IsCanaryDeploymentEnded(tt.args.specCanary, tt.args.rs, tt.args.now)
 			if got != tt.want {
-				t.Errorf("IsCanaryPhaseEnded() = %v, want %v", got, tt.want)
+				t.Errorf("IsCanaryDeploymentEnded() = %v, want %v", got, tt.want)
 			}
 			if gotDuration != tt.wantDuration {
-				t.Errorf("IsCanaryPhaseEnded() = %v, wantDuration %v", gotDuration, tt.wantDuration)
+				t.Errorf("IsCanaryDeploymenteEnded() = %v, wantDuration %v", gotDuration, tt.wantDuration)
 			}
 		})
 	}
