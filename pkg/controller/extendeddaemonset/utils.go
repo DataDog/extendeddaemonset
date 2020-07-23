@@ -61,16 +61,12 @@ func IsCanaryDeploymentValid(dsAnnotations map[string]string, rsName string) boo
 	return false
 }
 
-// IsCanaryDeploymentFailed checks if the Canary deployment has been declared failed, and also returns the reason
-func IsCanaryDeploymentFailed(specCanary *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary) (bool, datadoghqv1alpha1.ExtendedDaemonSetStatusReason) {
-	if specCanary.Failed {
-		// If the reason exists (due to auto-pausing), then return it; otherwise use Unknown
-		if specCanary.Reason != "" {
-			return specCanary.Failed, specCanary.Reason
-		}
-		return specCanary.Failed, datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown
+// IsCanaryDeploymentFailed checks if the Canary deployment has been failed
+func IsCanaryDeploymentFailed(dsAnnotations map[string]string) bool {
+	if value, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey]; found {
+		return value == "true"
 	}
-	return false, ""
+	return false
 }
 
 func getPodListFromReplicaSet(c client.Client, ds *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) (*corev1.PodList, error) {

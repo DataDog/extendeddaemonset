@@ -89,10 +89,12 @@ type ExtendedDaemonSetStatusState string
 const (
 	// ExtendedDaemonSetStatusStateCanary the ExtendedDaemonSet currently run a new version with a Canary deployment
 	ExtendedDaemonSetStatusStateCanary ExtendedDaemonSetStatusState = "Canary"
-	// ExtendedDaemonSetStatusStateRunning the ExtendedDaemonSet is currently running
+	// ExtendedDaemonSetStatusStateRunning the ExtendedDaemonSet is currently Running
 	ExtendedDaemonSetStatusStateRunning ExtendedDaemonSetStatusState = "Running"
-	// ExtendedDaemonSetStatusStateFailed the current state of the ExtendedDaemonSet is considered as Failing
-	ExtendedDaemonSetStatusStateFailed ExtendedDaemonSetStatusState = "Failed"
+	// // ExtendedDaemonSetStatusStateFailed the current state of the ExtendedDaemonSet is considered as Failing
+	// ExtendedDaemonSetStatusStateFailed ExtendedDaemonSetStatusState = "Failed"
+	// ExtendedDaemonSetStatusStateCanaryFailed the Canary deployment of the ExtendedDaemonSet is considered as Failing
+	ExtendedDaemonSetStatusStateCanaryFailed ExtendedDaemonSetStatusState = "Canary Failed"
 	// ExtendedDaemonSetStatusStateCanaryPaused the Canary deployment of the ExtendedDaemonSet is paused
 	ExtendedDaemonSetStatusStateCanaryPaused ExtendedDaemonSetStatusState = "Canary Paused"
 )

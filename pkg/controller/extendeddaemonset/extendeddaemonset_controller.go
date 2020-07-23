@@ -177,7 +177,7 @@ func (r *ReconcileExtendedDaemonSet) Reconcile(request reconcile.Request) (recon
 		return reconcile.Result{RequeueAfter: requeueAfter}, nil
 	}
 
-	_, result, err := r.updateStatusWithNewRS(reqLogger, instance, currentRS, upToDateRS, podsCounter)
+	_, result, err := r.updateInstanceWithNewRS(reqLogger, instance, currentRS, upToDateRS, podsCounter)
 	result = utils.MergeResult(result, reconcile.Result{RequeueAfter: requeueAfter})
 	return result, err
 }
@@ -203,7 +203,7 @@ func (r *ReconcileExtendedDaemonSet) createNewReplicaSet(logger logr.Logger, dae
 	return reconcile.Result{Requeue: true}, nil
 }
 
-// selectCurrentReplicaSet selects the replicaset that should be active
+// selectCurrentReplicaSet returns the replicaset that should be current
 func selectCurrentReplicaSet(daemonset *datadoghqv1alpha1.ExtendedDaemonSet, activeRS, upToDateRS *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, now time.Time) (*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, time.Duration) {
 	var requeueAfter time.Duration
 
@@ -235,7 +235,7 @@ func selectCurrentReplicaSet(daemonset *datadoghqv1alpha1.ExtendedDaemonSet, act
 	return activeRS, requeueAfter
 }
 
-func (r *ReconcileExtendedDaemonSet) updateStatusWithNewRS(logger logr.Logger, daemonset *datadoghqv1alpha1.ExtendedDaemonSet, current, upToDate *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, podsCounter podsCounterType) (*datadoghqv1alpha1.ExtendedDaemonSet, reconcile.Result, error) {
+func (r *ReconcileExtendedDaemonSet) updateInstanceWithNewRS(logger logr.Logger, daemonset *datadoghqv1alpha1.ExtendedDaemonSet, current, upToDate *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, podsCounter podsCounterType) (*datadoghqv1alpha1.ExtendedDaemonSet, reconcile.Result, error) {
 	newDaemonset := daemonset.DeepCopy()
 	newDaemonset.Status.Current = podsCounter.Current
 	newDaemonset.Status.Ready = podsCounter.Ready
@@ -248,6 +248,7 @@ func (r *ReconcileExtendedDaemonSet) updateStatusWithNewRS(logger logr.Logger, d
 		newDaemonset.Status.IgnoredUnresponsiveNodes = current.Status.IgnoredUnresponsiveNodes
 	}
 
+	var updateDaemonsetSpec bool
 	// If the deployment is in Canary phase, then update status, strategy and state as needed
 	if daemonset.Spec.Strategy.Canary != nil {
 		if newDaemonset.Status.Canary == nil {
@@ -257,12 +258,13 @@ func (r *ReconcileExtendedDaemonSet) updateStatusWithNewRS(logger logr.Logger, d
 			// Canary deployment is no longer needed because it completed without issue
 			newDaemonset.Status.Canary = nil
 			newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateRunning
-		} else if isFailed, reason := IsCanaryDeploymentFailed(daemonset.Spec.Strategy.Canary); isFailed {
+		} else if IsCanaryDeploymentFailed(daemonset.GetAnnotations()) {
 			// Canary deployment is no longer needed because it was marked as failed
+			updateDaemonsetSpec = true
 			newDaemonset.Status.Canary = nil
-			newDaemonset.Spec.Strategy.Canary = nil
 			newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryFailed
-			newDaemonset.Status.Reason = reason
+			// Reset active replicaset
+			newDaemonset.Spec.Template = current.Spec.Template
 		} else {
 			// Else compute the Canary status
 			newDaemonset.Status.Desired += upToDate.Status.Desired
@@ -295,8 +297,16 @@ func (r *ReconcileExtendedDaemonSet) updateStatusWithNewRS(logger logr.Logger, d
 		}
 	}
 
+	// CELENE TODO add a function to reset annotations here (paused, paused-reason, and failed)
+
 	// compare
 	if !apiequality.Semantic.DeepEqual(daemonset, newDaemonset) {
+		// Daemonset needs to be updated first, if necessary
+		if updateDaemonsetSpec {
+			if err := r.client.Update(context.TODO(), newDaemonset); err != nil {
+				return newDaemonset, reconcile.Result{}, err
+			}
+		}
 		if err := r.client.Status().Update(context.TODO(), newDaemonset); err != nil {
 			return newDaemonset, reconcile.Result{}, err
 		}

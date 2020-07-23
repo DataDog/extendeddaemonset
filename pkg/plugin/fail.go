@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/spf13/cobra"
 
@@ -20,10 +21,15 @@ import (
 	"github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
 )
 
+const (
+	cmdFail  = true
+	cmdReset = false
+)
+
 var (
 	failExample = `
-    # Fail a canary deployment
-    kubectl eds fail foo
+    # %[1]s a canary deployment
+    kubectl eds %[1]s foo
 `
 )
 
@@ -38,25 +44,53 @@ type FailOptions struct {
 
 	userNamespace             string
 	userExtendedDaemonSetName string
+	failStatus                bool
 }
 
 // NewFailOptions provides an instance of GetOptions with default values
-func NewFailOptions(streams genericclioptions.IOStreams) *FailOptions {
+func NewFailOptions(streams genericclioptions.IOStreams, failStatus bool) *FailOptions {
 	return &FailOptions{
 		configFlags: genericclioptions.NewConfigFlags(false),
 
 		IOStreams: streams,
+
+		failStatus: failStatus,
 	}
 }
 
 // NewCmdFail provides a cobra command wrapping FailOptions
 func NewCmdFail(streams genericclioptions.IOStreams) *cobra.Command {
-	o := NewFailOptions(streams)
+	o := NewFailOptions(streams, cmdFail)
 
 	cmd := &cobra.Command{
 		Use:          "fail [ExtendedDaemonSet name]",
 		Short:        "fail canary deployment",
-		Example:      failExample,
+		Example:      fmt.Sprintf(failExample, "fail"),
+		SilenceUsage: true,
+		RunE: func(c *cobra.Command, args []string) error {
+			if err := o.Complete(c, args); err != nil {
+				return err
+			}
+			if err := o.Validate(); err != nil {
+				return err
+			}
+			return o.Run()
+		},
+	}
+
+	o.configFlags.AddFlags(cmd.Flags())
+
+	return cmd
+}
+
+// NewCmdReset provides a cobra command wrapping FailOptions
+func NewCmdReset(streams genericclioptions.IOStreams) *cobra.Command {
+	o := NewFailOptions(streams, cmdReset)
+
+	cmd := &cobra.Command{
+		Use:          "reset [ExtendedDaemonSet name]",
+		Short:        "reset failed status of canary deployment",
+		Example:      fmt.Sprintf(failExample, "reset"),
 		SilenceUsage: true,
 		RunE: func(c *cobra.Command, args []string) error {
 			if err := o.Complete(c, args); err != nil {
@@ -131,13 +165,37 @@ func (o *FailOptions) Run() error {
 	}
 
 	newEds := eds.DeepCopy()
-	newEds.Spec.Strategy.Canary.Failed = true
+	if newEds.Annotations == nil {
+		newEds.Annotations = make(map[string]string)
+	} else if isFailed, ok := newEds.Annotations[v1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey]; ok {
+		if o.failStatus && isFailed == "true" {
+			return fmt.Errorf("canary deployment already failed")
+		} else if !o.failStatus && isFailed == "false" {
+			return fmt.Errorf("canary deployment already reset")
+		}
+	}
+	newEds.Annotations[v1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey] = fmt.Sprintf("%v", o.failStatus)
 
-	if err = o.client.Update(context.TODO(), newEds); err != nil {
+	replicaSetList := &v1alpha1.ExtendedDaemonSetReplicaSetList{}
+	selector := labels.Set{
+		v1alpha1.ExtendedDaemonSetNameLabelKey: o.userExtendedDaemonSetName,
+	}
+	listOpts := []client.ListOption{
+		&client.MatchingLabelsSelector{Selector: selector.AsSelectorPreValidated()},
+	}
+	err = o.client.List(context.TODO(), replicaSetList, listOpts...)
+	if err != nil {
 		return fmt.Errorf("unable to fail ExtendedDaemonset deployment, err: %v", err)
 	}
 
-	fmt.Fprintf(o.Out, "ExtendedDaemonset '%s/%s' canary deployment set to failed\n", o.userNamespace, o.userExtendedDaemonSetName)
+	if err = o.client.Update(context.TODO(), newEds); err != nil {
+		return fmt.Errorf("unable to fail or reset ExtendedDaemonset deployment, err: %v", err)
+	}
+	action := "set to failed"
+	if !o.failStatus {
+		action = "reset"
+	}
+	fmt.Fprintf(o.Out, "ExtendedDaemonset '%s/%s' canary deployment %s\n", o.userNamespace, o.userExtendedDaemonSetName, action)
 
 	return nil
 }
