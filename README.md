@@ -208,6 +208,34 @@ spec:
         memory: "300m"
 ```
 
+#### Remove a pod on a given node using `matchExpressions`
+
+In some cases, it could be useful to remove a daemon pod on a given node. This can be done using the `selector` field.
+
+First set the `selector` field
+
+```yaml
+apiVersion: datadoghq.com/v1alpha1
+kind: ExtendedDaemonSet
+metadata:
+  name: foo
+spec:
+  selector:
+    matchExpressions:
+      - {key: extendeddaemonset.datadoghq.com/exclude, operator: NotIn, values: [foo]}
+  template:
+    spec:
+      containers:
+      - name: daemon
+        image: k8s.gcr.io/pause:3.0
+      tolerations:
+      - operator: Exists
+```
+
+Then add the label `extendeddaemonset.datadoghq.com/exclude=foo` to the node in question
+
+`kubectl label nodes <your-node-name> extendeddaemonset.datadoghq.com/exclude=foo`
+
 ### Kubectl plugin
 
 To build the the kubectl ExtendedDaemonSet plugin, you can run the command: `make build-plugin`. This will create the `kubectl-eds` Go binary, corresponding to your local OS and architecture.
