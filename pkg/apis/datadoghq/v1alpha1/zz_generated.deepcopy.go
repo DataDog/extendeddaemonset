@@ -282,6 +282,16 @@ func (in *ExtendedDaemonSetSpecStrategyCanary) DeepCopyInto(out *ExtendedDaemonS
 		*out = new(v1.Duration)
 		**out = **in
 	}
+	if in.NodeSelector != nil {
+		in, out := &in.NodeSelector, &out.NodeSelector
+		*out = new(v1.LabelSelector)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.NodeAntiAffinityKeys != nil {
+		in, out := &in.NodeAntiAffinityKeys, &out.NodeAntiAffinityKeys
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 

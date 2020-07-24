@@ -82,6 +82,9 @@ func IsDefaultedExtendedDaemonSetSpecStrategyCanary(canary *ExtendedDaemonSetSpe
 	if canary.Duration == nil {
 		return false
 	}
+	if canary.NodeSelector == nil {
+		return false
+	}
 	return true
 }
 
@@ -121,6 +124,11 @@ func DefaultExtendedDaemonSetSpecStrategyCanary(c *ExtendedDaemonSetSpecStrategy
 	if c.Replicas == nil {
 		replicas := intstr.FromInt(defaultCanaryReplica)
 		c.Replicas = &replicas
+	}
+	if c.NodeSelector == nil {
+		c.NodeSelector = &metav1.LabelSelector{
+			MatchLabels: map[string]string{},
+		}
 	}
 	return c
 }

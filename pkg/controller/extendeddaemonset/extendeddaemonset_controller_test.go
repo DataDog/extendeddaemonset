@@ -53,6 +53,10 @@ func TestReconcileExtendedDaemonSet_selectNodes(t *testing.T) {
 	node3 := commontest.NewNode("node3", nodeOptions)
 	intString3 := intstr.FromInt(3)
 
+	node2.Labels = map[string]string{
+		"canary": "true",
+	}
+
 	options1 := &test.NewExtendedDaemonSetOptions{
 		Canary: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
 			Replicas: &intString3,
@@ -67,6 +71,27 @@ func TestReconcileExtendedDaemonSet_selectNodes(t *testing.T) {
 	}
 	extendeddaemonset1 := test.NewExtendedDaemonSet("bar", "foo", options1)
 
+	intString1 := intstr.FromInt(1)
+
+	options2 := &test.NewExtendedDaemonSetOptions{
+		Canary: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
+			Replicas: &intString1,
+			NodeSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"canary": "true",
+				},
+			},
+		},
+		Status: &datadoghqv1alpha1.ExtendedDaemonSetStatus{
+			ActiveReplicaSet: "foo-1",
+			Canary: &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{
+				ReplicaSet: "foo-2",
+				Nodes:      []string{},
+			},
+		},
+	}
+	extendeddaemonset2 := test.NewExtendedDaemonSet("bar", "foo", options2)
+
 	type fields struct {
 		client client.Client
 		scheme *runtime.Scheme
@@ -77,10 +102,11 @@ func TestReconcileExtendedDaemonSet_selectNodes(t *testing.T) {
 		canaryStatus *datadoghqv1alpha1.ExtendedDaemonSetStatusCanary
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
+		name     string
+		fields   fields
+		args     args
+		wantErr  bool
+		wantFunc func(*datadoghqv1alpha1.ExtendedDaemonSetStatusCanary) bool
 	}{
 		{
 			name: "enough nodes",
@@ -130,6 +156,25 @@ func TestReconcileExtendedDaemonSet_selectNodes(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "dedicated canary nodes",
+			fields: fields{
+				scheme: s,
+				client: fake.NewFakeClient([]runtime.Object{node1, node2, node3}...),
+			},
+			args: args{
+				spec:       &extendeddaemonset2.Spec,
+				replicaset: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{},
+				canaryStatus: &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{
+					ReplicaSet: "foo",
+					Nodes:      []string{},
+				},
+			},
+			wantErr: false,
+			wantFunc: func(canaryStatus *datadoghqv1alpha1.ExtendedDaemonSetStatusCanary) bool {
+				return len(canaryStatus.Nodes) == 1 && canaryStatus.Nodes[0] == "node2"
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -140,6 +185,9 @@ func TestReconcileExtendedDaemonSet_selectNodes(t *testing.T) {
 			}
 			if err := r.selectNodes(reqLogger, tt.args.spec, tt.args.replicaset, tt.args.canaryStatus); (err != nil) != tt.wantErr {
 				t.Errorf("ReconcileExtendedDaemonSet.selectNodes() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if tt.wantFunc != nil && !tt.wantFunc(tt.args.canaryStatus) {
+				t.Errorf("ReconcileExtendedDaemonSet.selectNodes() didn’t pass the post-run checks")
 			}
 		})
 	}
@@ -420,7 +468,7 @@ func TestReconcileExtendedDaemonSet_createNewReplicaSet(t *testing.T) {
 	eventBroadcaster := record.NewBroadcaster()
 
 	logf.SetLogger(logf.ZapLogger(true))
-	log = logf.Log.WithName("TestReconcileExtendedDaemonSet_selectNodes")
+	log = logf.Log.WithName("TestReconcileExtendedDaemonSet_createNewReplicaSet")
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
@@ -479,7 +527,7 @@ func TestReconcileExtendedDaemonSet_updateStatusWithNewRS(t *testing.T) {
 	eventBroadcaster := record.NewBroadcaster()
 
 	logf.SetLogger(logf.ZapLogger(true))
-	log = logf.Log.WithName("TestReconcileExtendedDaemonSet_selectNodes")
+	log = logf.Log.WithName("TestReconcileExtendedDaemonSet_updateStatusWithNewRS")
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
@@ -834,5 +882,47 @@ func newRequest(ns, name string) reconcile.Request {
 			Namespace: ns,
 			Name:      name,
 		},
+	}
+}
+
+func Test_getAntiAffinityKeysValue(t *testing.T) {
+	node := commontest.NewNode("node", &commontest.NewNodeOptions{
+		Labels: map[string]string{
+			"app":     "foo",
+			"service": "bar",
+			"unused":  "baz",
+		},
+	})
+
+	tests := []struct {
+		name          string
+		node          corev1.Node
+		daemonsetSpec datadoghqv1alpha1.ExtendedDaemonSetSpec
+		want          string
+	}{
+		{
+			name: "basic",
+			node: *node,
+			daemonsetSpec: datadoghqv1alpha1.ExtendedDaemonSetSpec{
+				Strategy: datadoghqv1alpha1.ExtendedDaemonSetSpecStrategy{
+					Canary: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
+						NodeAntiAffinityKeys: []string{
+							"app",
+							"missing",
+							"service",
+						},
+					},
+				},
+			},
+			want: "foo$$bar",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := getAntiAffinityKeysValue(&tt.node, &tt.daemonsetSpec)
+			if got != tt.want {
+				t.Errorf("getAntiAffinityKeysValue(%#v, %#v) = %s, want %s", tt.node, tt.daemonsetSpec, got, tt.want)
+			}
+		})
 	}
 }
