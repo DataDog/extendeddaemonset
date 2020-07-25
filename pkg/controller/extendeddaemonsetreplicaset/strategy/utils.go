@@ -29,6 +29,8 @@ import (
 	podutils "github.com/datadog/extendeddaemonset/pkg/controller/utils/pod"
 )
 
+const pausedValueTrue = "true"
+
 func compareCurrentPodWithNewPod(params *Parameters, pod *corev1.Pod, node *NodeItem) bool {
 	// check that the pod corresponds to the replicaset. if not return false
 	if !compareSpecTemplateMD5Hash(params.Replicaset.Spec.TemplateGeneration, pod) {
@@ -144,11 +146,11 @@ func pauseCanaryDeployment(client client.Client, eds *datadoghqv1alpha1.Extended
 	}
 
 	if isPaused, ok := newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]; ok {
-		if isPaused == "true" {
+		if isPaused == pausedValueTrue {
 			return fmt.Errorf("canary deployment already paused")
 		}
 	}
-	newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey] = "true"
+	newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey] = pausedValueTrue
 	newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey] = string(reason)
 
 	if err := client.Update(context.TODO(), newEds); err != nil {
