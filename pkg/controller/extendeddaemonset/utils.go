@@ -18,7 +18,7 @@ import (
 	datadoghqv1alpha1 "github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
 )
 
-// IsCanaryPhaseEnded used to know if the Canary duration has finished.
+// IsCanaryDeploymentEnded used to know if the Canary duration has finished.
 // If the duration is completed: return true
 // If the duration is not completed: return false and the remaining duration.
 func IsCanaryDeploymentEnded(specCanary *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary, rs *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, now time.Time) (bool, time.Duration) {
@@ -38,7 +38,7 @@ func IsCanaryDeploymentEnded(specCanary *datadoghqv1alpha1.ExtendedDaemonSetSpec
 	return true, pendingDuration
 }
 
-// IsCanaryPhasePaused checks if the Canary deployment has been paused
+// IsCanaryDeploymentPaused checks if the Canary deployment has been paused
 func IsCanaryDeploymentPaused(dsAnnotations map[string]string) (bool, datadoghqv1alpha1.ExtendedDaemonSetStatusReason) {
 	isPaused, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]
 	if found && isPaused == "true" {
