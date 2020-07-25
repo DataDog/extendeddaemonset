@@ -13,6 +13,91 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+func TestIsCanaryDeploymentPaused(t *testing.T) {
+	type args struct {
+		dsAnnotations map[string]string
+	}
+
+	tests := []struct {
+		name       string
+		args       args
+		want       bool
+		wantReason datadoghqv1alpha1.ExtendedDaemonSetStatusReason
+	}{
+		{
+			name: "pause annotation is false, expect false",
+			args: args{
+				dsAnnotations: map[string]string{
+					"extendeddaemonset.datadoghq.com/canary-paused": "false",
+				},
+			},
+			want:       false,
+			wantReason: "",
+		},
+		{
+			name: "pause annotation doesn't exist, expect false",
+			args: args{
+				dsAnnotations: map[string]string{},
+			},
+			want:       false,
+			wantReason: "",
+		},
+		{
+			name: "pause annotation is `truee`, expect false",
+			args: args{
+				dsAnnotations: map[string]string{
+					"extendeddaemonset.datadoghq.com/canary-paused": "truee",
+				},
+			},
+			want:       false,
+			wantReason: "",
+		},
+		{
+			name: "pause annotation is `true` and has a reason, expect true and the reason",
+			args: args{
+				dsAnnotations: map[string]string{
+					"extendeddaemonset.datadoghq.com/canary-paused":        "true",
+					"extendeddaemonset.datadoghq.com/canary-paused-reason": string(datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM),
+				},
+			},
+			want:       true,
+			wantReason: datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM,
+		},
+		{
+			name: "pause annotation is `true` and has no reason, expect true and `unknown` reason",
+			args: args{
+				dsAnnotations: map[string]string{
+					"extendeddaemonset.datadoghq.com/canary-paused": "true",
+				},
+			},
+			want:       true,
+			wantReason: datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown,
+		},
+		{
+			name: "pause annotation is `true` and has an unsupported reason, expect true and `unknown` reason",
+			args: args{
+				dsAnnotations: map[string]string{
+					"extendeddaemonset.datadoghq.com/canary-paused":        "true",
+					"extendeddaemonset.datadoghq.com/canary-paused-reason": "SomeUnsupportedReason",
+				},
+			},
+			want:       true,
+			wantReason: datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, gotReason := IsCanaryDeploymentPaused(tt.args.dsAnnotations)
+			if got != tt.want {
+				t.Errorf("IsCanaryDeploymentPaused() = %v, want %v", got, tt.want)
+			}
+			if gotReason != tt.wantReason {
+				t.Errorf("IsCanaryDeploymentePaused() = %v, wantReason %v", gotReason, tt.wantReason)
+			}
+		})
+	}
+}
+
 func TestIsCanaryDeploymentEnded(t *testing.T) {
 	now := time.Now()
 	type args struct {
