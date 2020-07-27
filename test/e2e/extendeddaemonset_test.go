@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes/scheme"
 	dynclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -176,16 +177,25 @@ func InitialDeployment(t *testing.T) {
 		// set low resource limits so pod will restart
 		resourceLimits := corev1.ResourceRequirements{
 			Limits: corev1.ResourceList{
-				corev1.ResourceCPU:    resource.MustParse("0.001"),
+				// corev1.ResourceCPU:    resource.MustParse("0.001"),
 				corev1.ResourceMemory: resource.MustParse("1M"),
 			},
 		}
 		eds.Spec.Template.Spec.Containers[0].Resources = resourceLimits
 	}
+	t.Logf("CELENE updating EDS")
 	err = utils.UpdateExtendedDaemonSetFunc(f, namespace, daemonset.Name, updateImage, retryInterval, timeout)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	t.Logf("CELENE checking EDS update")
+	edsTest := &datadoghqv1alpha1.ExtendedDaemonSet{}
+	if err := f.Client.Get(goctx.TODO(), types.NamespacedName{Name: daemonset.Name, Namespace: namespace}, edsTest); err != nil {
+		return false, nil
+	}
+	t.Logf("CELENE output of EDS update, edsTest.Spec.Template.Spec.Containers:")
+	t.Logf(edsTest.Spec.Template.Spec.Containers)
 
 	isPaused := func(dd *datadoghqv1alpha1.ExtendedDaemonSet) (bool, error) {
 		if val, ok := dd.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]; ok {
@@ -194,6 +204,7 @@ func InitialDeployment(t *testing.T) {
 		return false, nil
 	}
 
+	t.Logf("CELENE checking isPaused")
 	err = utils.WaitForFuncOnExtendedDaemonset(t, f.Client, namespace, name, isPaused, retryInterval, timeout)
 	if err != nil {
 		t.Fatal(err)
