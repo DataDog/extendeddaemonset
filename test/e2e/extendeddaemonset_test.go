@@ -144,7 +144,7 @@ func InitialDeployment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// update the Extendeddaemonset and check that the status is updated
+	// update the Extendeddaemonset and check that the status is updated to reflect Canary deployment
 	updateImage := func(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
 		updatedImageTag := "3.1"
 		eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("k8s.gcr.io/pause:%s", updatedImageTag)
@@ -161,6 +161,37 @@ func InitialDeployment(t *testing.T) {
 		return false, nil
 	}
 	err = utils.WaitForFuncOnExtendedDaemonset(t, f.Client, namespace, name, isUpdated, retryInterval, timeout)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// update the Extendeddaemonset and check that Canary autopauses when a canary pod restarts
+	updateImage = func(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
+		updatedImageTag := "3.0"
+		eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("k8s.gcr.io/pause:%s", updatedImageTag)
+
+		// set low resource limits so pod will restart
+		resourceLimits := corev1.ResourceRequirements{
+			Limits: corev1.ResourceList{
+				corev1.ResourceCPU:    resource.MustParse("0.001"),
+				corev1.ResourceMemory: resource.MustParse("512"),
+			},
+		}
+		eds.Spec.Template.Spec.Containers[0].Resources = resourceLimits
+	}
+	err = utils.UpdateExtendedDaemonSetFunc(f, namespace, daemonset.Name, updateImage, retryInterval, timeout)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	isPaused := func(dd *datadoghqv1alpha1.ExtendedDaemonSet) (bool, error) {
+		if val, ok := dd.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]; ok {
+			return val == "true", nil
+		}
+		return false, nil
+	}
+
+	err = utils.WaitForFuncOnExtendedDaemonset(t, f.Client, namespace, name, isPaused, retryInterval, timeout)
 	if err != nil {
 		t.Fatal(err)
 	}
