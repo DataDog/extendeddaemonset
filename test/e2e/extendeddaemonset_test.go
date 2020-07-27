@@ -92,7 +92,7 @@ func InitialDeployment(t *testing.T) {
 	intString1 := intstr.FromInt(1)
 	newOptions := &utils.NewExtendedDaemonsetOptions{
 		CanaryStrategy: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
-			Duration: &metav1.Duration{Duration: 1 * time.Minute},
+			Duration: &metav1.Duration{Duration: 5 * time.Minute},
 			Replicas: &intString1,
 		},
 		RollingUpdate: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate{
