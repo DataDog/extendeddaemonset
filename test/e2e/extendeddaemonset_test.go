@@ -175,13 +175,13 @@ func InitialDeployment(t *testing.T) {
 		eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("k8s.gcr.io/pause:%s", updatedImageTag)
 
 		// set low resource limits so pod will restart
-		resourceLimits := corev1.ResourceRequirements{
-			Limits: corev1.ResourceList{
-				// corev1.ResourceCPU:    resource.MustParse("0.001"),
-				corev1.ResourceMemory: resource.MustParse("1M"),
-			},
-		}
-		eds.Spec.Template.Spec.Containers[0].Resources = resourceLimits
+		// resourceLimits := corev1.ResourceRequirements{
+		// 	Limits: corev1.ResourceList{
+		// 		// corev1.ResourceCPU:    resource.MustParse("0.001"),
+		// 		corev1.ResourceMemory: resource.MustParse("1M"),
+		// 	},
+		// }
+		// eds.Spec.Template.Spec.Containers[0].Resources = resourceLimits
 	}
 	t.Logf("CELENE updating EDS")
 	err = utils.UpdateExtendedDaemonSetFunc(f, namespace, daemonset.Name, updateImage, retryInterval, timeout)
@@ -189,24 +189,24 @@ func InitialDeployment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	t.Logf("CELENE checking EDS update")
-	edsTest := &datadoghqv1alpha1.ExtendedDaemonSet{}
-	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: daemonset.Name, Namespace: namespace}, edsTest)
-	if err != nil {
-		t.Logf("CELENE failed to get updated EDS")
-	}
-	resourceLimits := corev1.ResourceRequirements{
-		Limits: corev1.ResourceList{
-			// corev1.ResourceCPU:    resource.MustParse("0.001"),
-			corev1.ResourceMemory: resource.MustParse("1M"),
-		},
-	}
-	if diff := cmp.Diff(resourceLimits, edsTest.Spec.Template.Spec.Containers[0].Resources); diff != "" {
-		t.Logf("CELENE output of EDS diff:")
-		t.Logf(diff)
-	} else {
-		t.Logf("CELENE no diff between EDSs")
-	}
+	// t.Logf("CELENE checking EDS update")
+	// edsTest := &datadoghqv1alpha1.ExtendedDaemonSet{}
+	// err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: daemonset.Name, Namespace: namespace}, edsTest)
+	// if err != nil {
+	// 	t.Logf("CELENE failed to get updated EDS")
+	// }
+	// resourceLimits := corev1.ResourceRequirements{
+	// 	Limits: corev1.ResourceList{
+	// 		// corev1.ResourceCPU:    resource.MustParse("0.001"),
+	// 		corev1.ResourceMemory: resource.MustParse("1M"),
+	// 	},
+	// }
+	// if diff := cmp.Diff(resourceLimits, edsTest.Spec.Template.Spec.Containers[0].Resources); diff != "" {
+	// 	t.Logf("CELENE output of EDS diff:")
+	// 	t.Logf(diff)
+	// } else {
+	// 	t.Logf("CELENE no diff between EDSs")
+	// }
 
 	isPaused := func(dd *datadoghqv1alpha1.ExtendedDaemonSet) (bool, error) {
 		if val, ok := dd.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]; ok {
