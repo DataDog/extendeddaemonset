@@ -128,6 +128,7 @@ func InitialDeployment(t *testing.T) {
 	}
 
 	// check if 2 the replicaset was created properly and the status is ok
+	t.Logf("CELENE beginning replicaset check")
 	isReplicaSetOK := func(rs *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) (bool, error) {
 		t.Logf("%s %d %d %d", rs.Status.Status, rs.Status.Desired, rs.Status.Ready, rs.Status.Available)
 		if rs.Status.Status != "active" {
@@ -145,6 +146,7 @@ func InitialDeployment(t *testing.T) {
 	}
 
 	// // update the Extendeddaemonset and check that the status is updated to reflect Canary deployment
+	// t.Logf("CELENE beginning Canary status check")
 	// updateImage := func(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
 	// 	updatedImageTag := "3.1"
 	// 	eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("k8s.gcr.io/pause:%s", updatedImageTag)
@@ -166,7 +168,8 @@ func InitialDeployment(t *testing.T) {
 	// }
 
 	// update the Extendeddaemonset and check that Canary autopauses when a canary pod restarts
-	updateImage = func(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
+	t.Logf("CELENE beginning Canary autopause check")
+	updateImage := func(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
 		updatedImageTag := "3.1" // CELENE
 		eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("k8s.gcr.io/pause:%s", updatedImageTag)
 
