@@ -17,7 +17,7 @@ import (
 	apis "github.com/datadog/extendeddaemonset/pkg/apis"
 	datadoghqv1alpha1 "github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
 	"github.com/datadog/extendeddaemonset/pkg/controller/extendeddaemonset"
-	"github.com/datadog/extendeddaemonset/pkg/controller/extendeddaemonsetreplicaset/strategy"
+	// "github.com/datadog/extendeddaemonset/pkg/controller/extendeddaemonsetreplicaset/strategy"
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/prometheus/common/log"
@@ -28,7 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/types"
+	// "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes/scheme"
 	dynclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -171,13 +171,26 @@ func InitialDeployment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = strategy.PauseCanaryDeployment(f.client, daemonset, datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown)
-	if err != nil {
+	// err = strategy.PauseCanaryDeployment(f.Client, daemonset, datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown)
+	newEds := daemonset.DeepCopy()
+	if newEds.Annotations == nil {
+		newEds.Annotations = make(map[string]string)
+	}
+	newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey] = "true"
+	newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey] = string(datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown)
+
+	if err := f.Client.Update(goctx.TODO(), newEds); err != nil {
 		t.Logf("CELENE could not pause")
 		t.Fatal(err)
 	} else {
 		t.Logf("CELENE paused!")
 	}
+	// if err != nil {
+	// 	t.Logf("CELENE could not pause")
+	// 	t.Fatal(err)
+	// } else {
+	// 	t.Logf("CELENE paused!")
+	// }
 
 	// update the Extendeddaemonset and check that Canary autopauses when a canary pod restarts
 	// t.Logf("CELENE beginning Canary autopause check")
@@ -220,7 +233,7 @@ func InitialDeployment(t *testing.T) {
 	// }
 
 	isPaused := func(dd *datadoghqv1alpha1.ExtendedDaemonSet) (bool, error) {
-		if extendeddaemonset.IsCanaryDeploymentPaused(dd.GetAnnotations()) {
+		if ok, _ := extendeddaemonset.IsCanaryDeploymentPaused(dd.GetAnnotations()); ok {
 			return val == "true", nil
 		}
 		return false, nil
