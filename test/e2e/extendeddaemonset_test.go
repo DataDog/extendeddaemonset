@@ -230,6 +230,7 @@ func InitialDeployment(t *testing.T) {
 	err = utils.WaitForFuncOnExtendedDaemonset(t, f.Client, namespace, name, isUpdated, retryInterval, timeout)
 	if err != nil {
 		t.Fatal(err)
+	}
 
 }
 
