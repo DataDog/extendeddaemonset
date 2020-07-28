@@ -101,7 +101,7 @@ func InitialDeployment(t *testing.T) {
 			MaxParallelPodCreation: datadoghqv1alpha1.NewInt32(20),
 		},
 	}
-	daemonset := utils.NewExtendedDaemonset(namespace, name, fmt.Sprintf("k8s.gcr.io/pause:%s", "latest"), newOptions)
+	daemonset := utils.NewExtendedDaemonset(namespace, name, fmt.Sprintf("k8s.gcr.io/pause:%s", "3.0"), newOptions) // CELENE
 	err := f.Client.Create(goctx.TODO(), daemonset, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
 	if err != nil {
 		t.Fatal(err)
