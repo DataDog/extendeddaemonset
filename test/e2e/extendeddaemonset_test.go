@@ -234,7 +234,7 @@ func InitialDeployment(t *testing.T) {
 
 	isPaused := func(dd *datadoghqv1alpha1.ExtendedDaemonSet) (bool, error) {
 		if ok, _ := extendeddaemonset.IsCanaryDeploymentPaused(dd.GetAnnotations()); ok {
-			return val == "true", nil
+			return true, nil
 		}
 		return false, nil
 	}
