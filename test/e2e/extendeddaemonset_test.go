@@ -208,18 +208,28 @@ func InitialDeployment(t *testing.T) {
 	// 	t.Logf("CELENE no diff between EDSs")
 	// }
 
-	isPaused := func(dd *datadoghqv1alpha1.ExtendedDaemonSet) (bool, error) {
-		if val, ok := dd.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]; ok {
-			return val == "true", nil
+	// isPaused := func(dd *datadoghqv1alpha1.ExtendedDaemonSet) (bool, error) {
+	// 	if val, ok := dd.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]; ok {
+	// 		return val == "true", nil
+	// 	}
+	// 	return false, nil
+	// }
+
+	// t.Logf("CELENE checking isPaused")
+	// err = utils.WaitForFuncOnExtendedDaemonset(t, f.Client, namespace, name, isPaused, retryInterval, timeout)
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
+
+	isUpdated := func(dd *datadoghqv1alpha1.ExtendedDaemonSet) (bool, error) {
+		if dd.Status.Canary != nil && dd.Status.Canary.ReplicaSet != "" {
+			return true, nil
 		}
 		return false, nil
 	}
-
-	t.Logf("CELENE checking isPaused")
-	err = utils.WaitForFuncOnExtendedDaemonset(t, f.Client, namespace, name, isPaused, retryInterval, timeout)
+	err = utils.WaitForFuncOnExtendedDaemonset(t, f.Client, namespace, name, isUpdated, retryInterval, timeout)
 	if err != nil {
 		t.Fatal(err)
-	}
 
 }
 
