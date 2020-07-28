@@ -16,6 +16,8 @@ import (
 
 	apis "github.com/datadog/extendeddaemonset/pkg/apis"
 	datadoghqv1alpha1 "github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
+	"github.com/datadog/extendeddaemonset/pkg/controller/extendeddaemonset"
+	"github.com/datadog/extendeddaemonset/pkg/controller/extendeddaemonset/strategy"
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/prometheus/common/log"
@@ -101,6 +103,7 @@ func InitialDeployment(t *testing.T) {
 			MaxParallelPodCreation: datadoghqv1alpha1.NewInt32(20),
 		},
 	}
+	t.Logf("CELENE creating first EDS")
 	daemonset := utils.NewExtendedDaemonset(namespace, name, fmt.Sprintf("k8s.gcr.io/pause:%s", "3.0"), newOptions) // CELENE
 	err := f.Client.Create(goctx.TODO(), daemonset, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
 	if err != nil {
@@ -146,55 +149,63 @@ func InitialDeployment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// // update the Extendeddaemonset and check that the status is updated to reflect Canary deployment
-	// t.Logf("CELENE beginning Canary status check")
-	// updateImage := func(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
-	// 	updatedImageTag := "3.1"
-	// 	eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("k8s.gcr.io/pause:%s", updatedImageTag)
-	// }
-	// err = utils.UpdateExtendedDaemonSetFunc(f, namespace, daemonset.Name, updateImage, retryInterval, timeout)
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
-
-	// isUpdated := func(dd *datadoghqv1alpha1.ExtendedDaemonSet) (bool, error) {
-	// 	if dd.Status.Canary != nil && dd.Status.Canary.ReplicaSet != "" {
-	// 		return true, nil
-	// 	}
-	// 	return false, nil
-	// }
-	// err = utils.WaitForFuncOnExtendedDaemonset(t, f.Client, namespace, name, isUpdated, retryInterval, timeout)
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
-
-	// update the Extendeddaemonset and check that Canary autopauses when a canary pod restarts
-	t.Logf("CELENE beginning Canary autopause check")
+	// update the Extendeddaemonset and check that the status is updated to reflect Canary deployment
+	t.Logf("CELENE beginning Canary status check")
 	updateImage := func(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
-		updatedImageTag := "3.1" // CELENE
+		updatedImageTag := "3.1"
 		eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("k8s.gcr.io/pause:%s", updatedImageTag)
-
-		// set low resource limits so pod will restart
-		resourceLimits := corev1.ResourceRequirements{
-			Limits: corev1.ResourceList{
-				// corev1.ResourceCPU:    resource.MustParse("0.001"),
-				corev1.ResourceMemory: resource.MustParse("1M"),
-			},
-		}
-		eds.Spec.Template.Spec.Containers[0].Resources = resourceLimits
 	}
-	t.Logf("CELENE updating EDS")
 	err = utils.UpdateExtendedDaemonSetFunc(f, namespace, daemonset.Name, updateImage, retryInterval, timeout)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	t.Logf("CELENE checking EDS update")
-	edsTest := &datadoghqv1alpha1.ExtendedDaemonSet{}
-	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: daemonset.Name, Namespace: namespace}, edsTest)
-	if err != nil {
-		t.Logf("CELENE failed to get updated EDS")
+	isUpdated := func(dd *datadoghqv1alpha1.ExtendedDaemonSet) (bool, error) {
+		if dd.Status.Canary != nil && dd.Status.Canary.ReplicaSet != "" {
+			return true, nil
+		}
+		return false, nil
 	}
+	err = utils.WaitForFuncOnExtendedDaemonset(t, f.Client, namespace, name, isUpdated, retryInterval, timeout)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = strategy.PauseCanaryDeployment(f.client, daemonset, datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown)
+	if err != nil {
+		t.Logf("CELENE could not pause")
+		t.Fatal(err)
+	} else {
+		t.Logf("CELENE paused!")
+	}
+
+	// update the Extendeddaemonset and check that Canary autopauses when a canary pod restarts
+	// t.Logf("CELENE beginning Canary autopause check")
+	// updateImage := func(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
+	// 	updatedImageTag := "3.1" // CELENE
+	// 	eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("k8s.gcr.io/pause:%s", updatedImageTag)
+
+	// 	// set low resource limits so pod will restart
+	// 	resourceLimits := corev1.ResourceRequirements{
+	// 		Limits: corev1.ResourceList{
+	// 			// corev1.ResourceCPU:    resource.MustParse("0.001"),
+	// 			corev1.ResourceMemory: resource.MustParse("1M"),
+	// 		},
+	// 	}
+	// 	eds.Spec.Template.Spec.Containers[0].Resources = resourceLimits
+	// }
+	// t.Logf("CELENE updating EDS")
+	// err = utils.UpdateExtendedDaemonSetFunc(f, namespace, daemonset.Name, updateImage, retryInterval, timeout)
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
+
+	// t.Logf("CELENE checking EDS update")
+	// edsTest := &datadoghqv1alpha1.ExtendedDaemonSet{}
+	// err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: daemonset.Name, Namespace: namespace}, edsTest)
+	// if err != nil {
+	// 	t.Logf("CELENE failed to get updated EDS")
+	// }
 	// resourceLimits := corev1.ResourceRequirements{
 	// 	Limits: corev1.ResourceList{
 	// 		// corev1.ResourceCPU:    resource.MustParse("0.001"),
@@ -208,40 +219,18 @@ func InitialDeployment(t *testing.T) {
 	// 	t.Logf("CELENE no diff between EDSs")
 	// }
 
-	// isPaused := func(dd *datadoghqv1alpha1.ExtendedDaemonSet) (bool, error) {
-	// 	if val, ok := dd.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]; ok {
-	// 		return val == "true", nil
-	// 	}
-	// 	return false, nil
-	// }
-
-	t.Logf("CELENE checking annotations in EDS update: %v", edsTest.GetAnnotations())
-
-	// t.Logf("CELENE checking isPaused")
-	// err = utils.WaitForFuncOnExtendedDaemonset(t, f.Client, namespace, name, isPaused, retryInterval, timeout)
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
-
-	isUpdated := func(dd *datadoghqv1alpha1.ExtendedDaemonSet) (bool, error) {
-		if dd.Status.Canary != nil && dd.Status.Canary.ReplicaSet != "" {
-			return true, nil
+	isPaused := func(dd *datadoghqv1alpha1.ExtendedDaemonSet) (bool, error) {
+		if extendeddaemonset.IsCanaryDeploymentPaused(dd.GetAnnotations()) {
+			return val == "true", nil
 		}
 		return false, nil
 	}
-	err = utils.WaitForFuncOnExtendedDaemonset(t, f.Client, namespace, name, isUpdated, retryInterval, timeout)
+
+	t.Logf("CELENE checking isPaused")
+	err = utils.WaitForFuncOnExtendedDaemonset(t, f.Client, namespace, name, isPaused, retryInterval, timeout)
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	edsTest2 := &datadoghqv1alpha1.ExtendedDaemonSet{}
-	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: daemonset.Name, Namespace: namespace}, edsTest2)
-	if err != nil {
-		t.Logf("CELENE failed to get updated EDS")
-	}
-
-	t.Logf("CELENE checking annotations in EDS update again: %v", edsTest2.GetAnnotations())
-
 }
 
 func MigrationFromDaemonSet(t *testing.T) {
