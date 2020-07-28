@@ -189,12 +189,12 @@ func InitialDeployment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// t.Logf("CELENE checking EDS update")
-	// edsTest := &datadoghqv1alpha1.ExtendedDaemonSet{}
-	// err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: daemonset.Name, Namespace: namespace}, edsTest)
-	// if err != nil {
-	// 	t.Logf("CELENE failed to get updated EDS")
-	// }
+	t.Logf("CELENE checking EDS update")
+	edsTest := &datadoghqv1alpha1.ExtendedDaemonSet{}
+	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: daemonset.Name, Namespace: namespace}, edsTest)
+	if err != nil {
+		t.Logf("CELENE failed to get updated EDS")
+	}
 	// resourceLimits := corev1.ResourceRequirements{
 	// 	Limits: corev1.ResourceList{
 	// 		// corev1.ResourceCPU:    resource.MustParse("0.001"),
@@ -215,6 +215,8 @@ func InitialDeployment(t *testing.T) {
 	// 	return false, nil
 	// }
 
+	t.Logf("CELENE checking annotations in EDS update: %v", edsTest.GetAnnotations())
+
 	// t.Logf("CELENE checking isPaused")
 	// err = utils.WaitForFuncOnExtendedDaemonset(t, f.Client, namespace, name, isPaused, retryInterval, timeout)
 	// if err != nil {
@@ -231,6 +233,14 @@ func InitialDeployment(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	edsTest2 := &datadoghqv1alpha1.ExtendedDaemonSet{}
+	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: daemonset.Name, Namespace: namespace}, edsTest2)
+	if err != nil {
+		t.Logf("CELENE failed to get updated EDS")
+	}
+
+	t.Logf("CELENE checking annotations in EDS update again: %v", edsTest2.GetAnnotations())
 
 }
 
