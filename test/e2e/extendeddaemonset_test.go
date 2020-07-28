@@ -174,7 +174,7 @@ func InitialDeployment(t *testing.T) {
 		updatedImageTag := "3.1" // CELENE
 		eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("k8s.gcr.io/pause:%s", updatedImageTag)
 
-		set low resource limits so pod will restart
+		// set low resource limits so pod will restart
 		resourceLimits := corev1.ResourceRequirements{
 			Limits: corev1.ResourceList{
 				// corev1.ResourceCPU:    resource.MustParse("0.001"),
