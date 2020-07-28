@@ -17,7 +17,7 @@ import (
 	apis "github.com/datadog/extendeddaemonset/pkg/apis"
 	datadoghqv1alpha1 "github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
 	"github.com/datadog/extendeddaemonset/pkg/controller/extendeddaemonset"
-	"github.com/datadog/extendeddaemonset/pkg/controller/extendeddaemonset/strategy"
+	"github.com/datadog/extendeddaemonset/pkg/controller/extendeddaemonsetreplicaset/strategy"
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/prometheus/common/log"
