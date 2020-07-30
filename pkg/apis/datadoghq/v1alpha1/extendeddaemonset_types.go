@@ -91,8 +91,6 @@ const (
 	ExtendedDaemonSetStatusStateCanary ExtendedDaemonSetStatusState = "Canary"
 	// ExtendedDaemonSetStatusStateCanaryFailed the Canary deployment of the ExtendedDaemonSet is considered as Failing
 	ExtendedDaemonSetStatusStateCanaryFailed ExtendedDaemonSetStatusState = "Canary Failed"
-	// ExtendedDaemonSetStatusStateCanaryPaused the Canary deployment of the ExtendedDaemonSet is paused
-	ExtendedDaemonSetStatusStateCanaryPaused ExtendedDaemonSetStatusState = "Canary Paused"
 )
 
 // ExtendedDaemonSetStatus defines the observed state of ExtendedDaemonSet

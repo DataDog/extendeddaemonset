@@ -62,7 +62,6 @@ func ManageCanaryDeployment(client client.Client, params *Parameters) (*Result, 
 	// Populate list of unscheduled pods on nodes due to resource limitation
 	result.UnscheduledNodesDueToResourcesConstraints = manageUnscheduledPodNodes(params.UnscheduledPods)
 	var err error
-
 	// Cleanup Pods
 	result.NewStatus, result.Result, err = cleanupPods(client, params.Logger, result.NewStatus, params.PodToCleanUp)
 	if result.NewStatus.Desired != result.NewStatus.Ready || needRequeue {
