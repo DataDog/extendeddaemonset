@@ -174,7 +174,6 @@ spec:
                             only "value". The requirements are ANDed.
                           type: object
                       type: object
->>>>>>> master
                     paused:
                       type: boolean
                     replicas:

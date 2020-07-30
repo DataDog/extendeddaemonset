@@ -250,7 +250,8 @@ func (r *ReconcileExtendedDaemonSet) updateInstanceWithCurrentRS(logger logr.Log
 	var updateDaemonsetSpec bool
 	// If the deployment is in Canary phase, then update status (and spec as needed)
 	if daemonset.Spec.Strategy.Canary != nil {
-		if IsCanaryDeploymentFailed(daemonset.GetAnnotations()) {
+		switch {
+		case IsCanaryDeploymentFailed(daemonset.GetAnnotations()):
 			// Canary deployment is no longer needed because it was marked as failed
 			// This `if` block needs to be first to respect Failed Canary state until annotation is removed
 			newDaemonset.Status.Canary = nil
@@ -258,11 +259,11 @@ func (r *ReconcileExtendedDaemonSet) updateInstanceWithCurrentRS(logger logr.Log
 			// Restore active replicaset template. Note: this requires a full daemonset update
 			newDaemonset.Spec.Template = current.Spec.Template
 			updateDaemonsetSpec = true
-		} else if current.Name == upToDate.Name {
+		case current.Name == upToDate.Name:
 			// Canary deployment is no longer needed because it completed without issue
 			newDaemonset.Status.Canary = nil
 			newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateRunning
-		} else {
+		default:
 			// Else compute the Canary status
 			if newDaemonset.Status.Canary == nil {
 				newDaemonset.Status.Canary = &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{}
