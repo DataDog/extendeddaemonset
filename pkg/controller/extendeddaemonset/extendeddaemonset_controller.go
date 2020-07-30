@@ -8,6 +8,7 @@ package extendeddaemonset
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -312,12 +313,27 @@ func (r *ReconcileExtendedDaemonSet) selectNodes(logger logr.Logger, daemonsetSp
 	newPod, _ := podutils.CreatePodFromDaemonSetReplicaSet(r.scheme, replicaset, nil, nil, false)
 
 	nodeList := &corev1.NodeList{}
-	nodeSelector := labels.Set{}
+
+	listOptions := []client.ListOption{}
 	if replicaset.Spec.Selector != nil {
-		nodeSelector = labels.Set(replicaset.Spec.Selector.MatchLabels)
+		selector, err := utils.ConvertLabelSelector(logger, replicaset.Spec.Selector)
+		if err != nil {
+			logger.Error(err, "Failed to parse label selector")
+		} else {
+			listOptions = append(listOptions, &client.MatchingLabelsSelector{
+				Selector: selector,
+			})
+		}
 	}
-	listOptions := []client.ListOption{
-		&client.MatchingLabelsSelector{Selector: nodeSelector.AsSelectorPreValidated()},
+	if daemonsetSpec.Strategy.Canary.NodeSelector != nil {
+		selector, err := utils.ConvertLabelSelector(logger, daemonsetSpec.Strategy.Canary.NodeSelector)
+		if err != nil {
+			logger.Error(err, "Failed to parse label selector")
+		} else {
+			listOptions = append(listOptions, &client.MatchingLabelsSelector{
+				Selector: selector,
+			})
+		}
 	}
 	err := r.client.List(context.TODO(), nodeList, listOptions...)
 	if err != nil {
@@ -332,30 +348,92 @@ func (r *ReconcileExtendedDaemonSet) selectNodes(logger logr.Logger, daemonsetSp
 	if err != nil {
 		return err
 	}
+
+	// Filter Nodes Unschedulable
+	for _, node := range nodeList.Items {
+		found := false
+		var id int
+		for id = range currentNodes {
+			if node.Name == currentNodes[id] {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			continue
+		}
+
+		if !scheduler.CheckNodeFitness(logger.WithValues("filter", "Nodes Unschedulabled"), newPod, &node, false) {
+			currentNodes = append(currentNodes[:id], currentNodes[id+1:]...)
+		}
+	}
+
+	// Look for other nodes to use as canary
 	if len(currentNodes) < nbCanaryPod {
+		antiAffinityKeysValues := make(map[string]int)
+
+		// Look for the values of the labels set as NodeAntiAffinityKeys of the nodes already selected as canary
+		if len(daemonsetSpec.Strategy.Canary.NodeAntiAffinityKeys) != 0 {
+			for _, node := range nodeList.Items {
+
+				antiAffinityKeysValue := getAntiAffinityKeysValue(&node, daemonsetSpec)
+				if _, found := antiAffinityKeysValues[antiAffinityKeysValue]; !found {
+					antiAffinityKeysValues[antiAffinityKeysValue] = 0
+				}
+
+				for _, currentNode := range currentNodes {
+					if node.Name == currentNode {
+						antiAffinityKeysValues[antiAffinityKeysValue]++
+						break
+					}
+				}
+			}
+		}
+
+		// Look for new canary nodes
 		for _, node := range nodeList.Items {
-			found := false
-			var id int
-			for id = range currentNodes {
-				if node.Name == currentNodes[id] {
-					found = true
+			// Check if that node is already selected
+			alreadySelected := false
+			for _, currentNode := range currentNodes {
+				if node.Name == currentNode {
+					alreadySelected = true
 					break
 				}
 			}
-			// Filter Nodes Unschedulabled
-			if !scheduler.CheckNodeFitness(logger.WithValues("filter", "Nodes Unschedulabled"), newPod, &node, false) {
-				if found {
-					currentNodes = append(currentNodes[:id], currentNodes[id+1:]...)
-				}
+			if alreadySelected {
 				continue
 			}
-			if !found {
-				currentNodes = append(currentNodes, node.Name)
+
+			// Ensure that the selected canary nodes are evenly chosen regarding the value of their labels selected by the `NodeAntiAffinityKeys` canary property
+			//
+			// For example, if a cluster has 100 nodes labeled `service=A` and 10 nodes labeled `service=B` and we have to choose 4 canary nodes, we want to choose 2 canary nodes labeled `service=B` and 2 canary nodes labeled `service=B`.
+			// For that purpose, we use the `antiAffinityKeysValues` map that count the number of selected nodes per label value.
+			// In our example, that map would have two entries: `A` and `B`.
+			// We want a maximum of `nb_canaries / nb_different_values` (4/2=2) for each value.
+			// So, we want to reject a node if it would make the selection unbalanced, i.e. if
+			// antiAffinityKeysValues[getAntiAffinityKeysValue(&node, daemonsetSpec)] >= nbCanaryPod / len(antiAffinityKeysValues)
+			//
+			// In the above mathematical expression, we want the division result to be rounded up.
+			// In our example, if we want 5 canary nodes, we will want 3 nodes labeled `service=A` and 2 nodes labeled `service=B` or the other way round
+			// so, we want to reject nodes as soon as the number of selected nodes with that label value exceeds 3 = ceil(5/2)
+			//
+			// An efficient way to compute `ceil(a/b)` with only integer computing is to compute `(a+b-1)/b`.
+			if len(daemonsetSpec.Strategy.Canary.NodeAntiAffinityKeys) != 0 {
+				antiAffinityKeysValue := getAntiAffinityKeysValue(&node, daemonsetSpec)
+				if nb := antiAffinityKeysValues[antiAffinityKeysValue]; nb >= (nbCanaryPod+len(antiAffinityKeysValues)-1)/len(antiAffinityKeysValues) {
+					continue
+				}
+				antiAffinityKeysValues[antiAffinityKeysValue]++
 			}
+
+			currentNodes = append(currentNodes, node.Name)
+			// All nodes are found. We can exit now!
 			if len(currentNodes) == nbCanaryPod {
 				logger.V(1).Info("All nodes were found")
 				break
 			}
+
 		}
 	}
 
@@ -364,6 +442,14 @@ func (r *ReconcileExtendedDaemonSet) selectNodes(logger logr.Logger, daemonsetSp
 		return fmt.Errorf("unable to select enough node for canary, current: %d, wanted: %d", len(canaryStatus.Nodes), nbCanaryPod)
 	}
 	return nil
+}
+
+func getAntiAffinityKeysValue(node *corev1.Node, daemonsetSpec *datadoghqv1alpha1.ExtendedDaemonSetSpec) string {
+	values := make([]string, 0, len(daemonsetSpec.Strategy.Canary.NodeAntiAffinityKeys))
+	for _, antiAffinityKey := range daemonsetSpec.Strategy.Canary.NodeAntiAffinityKeys {
+		values = append(values, node.Labels[antiAffinityKey])
+	}
+	return strings.Join(values, "$")
 }
 
 func newReplicaSetFromInstance(daemonset *datadoghqv1alpha1.ExtendedDaemonSet) (*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, error) {

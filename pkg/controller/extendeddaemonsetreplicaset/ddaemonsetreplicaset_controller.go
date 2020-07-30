@@ -38,6 +38,7 @@ import (
 	"github.com/datadog/extendeddaemonset/pkg/config"
 	"github.com/datadog/extendeddaemonset/pkg/controller/extendeddaemonsetreplicaset/conditions"
 	"github.com/datadog/extendeddaemonset/pkg/controller/extendeddaemonsetreplicaset/strategy"
+	"github.com/datadog/extendeddaemonset/pkg/controller/utils"
 	"github.com/datadog/extendeddaemonset/pkg/controller/utils/enqueue"
 )
 
@@ -363,14 +364,19 @@ func (r *ReconcileExtendedDaemonSetReplicaSet) getPodList(ds *datadoghqv1alpha1.
 
 func (r *ReconcileExtendedDaemonSetReplicaSet) getNodeList(eds *datadoghqv1alpha1.ExtendedDaemonSet, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) (*strategy.NodeList, error) {
 	nodeItemList := &strategy.NodeList{}
-	nodeSelector := labels.Set{}
+
+	listOptions := []client.ListOption{}
 	if replicaset.Spec.Selector != nil {
-		nodeSelector = labels.Set(replicaset.Spec.Selector.MatchLabels)
-	}
-	listOptions := []client.ListOption{
-		client.MatchingLabelsSelector{
-			Selector: nodeSelector.AsSelectorPreValidated(),
-		},
+		selector, err := utils.ConvertLabelSelector(log, replicaset.Spec.Selector)
+		if err != nil {
+			return nil, err
+		}
+
+		listOptions = []client.ListOption{
+			client.MatchingLabelsSelector{
+				Selector: selector,
+			},
+		}
 	}
 	nodeList := &corev1.NodeList{}
 	if err := r.client.List(context.TODO(), nodeList, listOptions...); err != nil {
@@ -419,15 +425,20 @@ func (r *ReconcileExtendedDaemonSetReplicaSet) getOldDaemonsetPodList(ds *datado
 		// Error reading the object - requeue the request.
 		return nil, err
 	}
-	var podSelector labels.Set
+	podListOptions := []client.ListOption{}
 	if oldDaemonset.Spec.Selector != nil {
-		podSelector = labels.Set(oldDaemonset.Spec.Selector.MatchLabels)
+		selector, err2 := utils.ConvertLabelSelector(log, oldDaemonset.Spec.Selector)
+		if err2 != nil {
+			return nil, err2
+		}
+
+		podListOptions = []client.ListOption{
+			client.MatchingLabelsSelector{
+				Selector: selector,
+			},
+		}
 	}
-	podListOptions := []client.ListOption{
-		client.MatchingLabelsSelector{
-			Selector: podSelector.AsSelectorPreValidated(),
-		},
-	}
+
 	if err = r.client.List(context.TODO(), podList, podListOptions...); err != nil {
 		return nil, err
 	}
