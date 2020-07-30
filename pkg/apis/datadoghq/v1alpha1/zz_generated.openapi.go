@@ -419,12 +419,6 @@ func schema_pkg_apis_datadoghq_v1alpha1_ExtendedDaemonSetSpecStrategyCanary(ref 
 							Format: "",
 						},
 					},
-					"failed": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
-						},
-					},
 				},
 			},
 		},

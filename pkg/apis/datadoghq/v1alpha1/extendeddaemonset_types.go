@@ -80,8 +80,6 @@ type ExtendedDaemonSetSpecStrategyCanary struct {
 	NodeAntiAffinityKeys []string `json:"nodeAntiAffinityKeys,omitempty"`
 	// +optional
 	Paused bool `json:"paused,omitempty"`
-	// +optional
-	Failed bool `json:"failed,omitempty"`
 }
 
 // ExtendedDaemonSetStatusState type representing the ExtendedDaemonSet state

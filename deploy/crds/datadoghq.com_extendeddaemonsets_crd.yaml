@@ -120,8 +120,6 @@ spec:
                   properties:
                     duration:
                       type: string
-                    failed:
-                      type: boolean
                     nodeAntiAffinityKeys:
                       items:
                         type: string
