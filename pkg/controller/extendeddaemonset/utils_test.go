@@ -64,22 +64,6 @@ func TestIsCanaryDeploymentEnded(t *testing.T) {
 			},
 			want: false,
 		},
-		// {
-		// 	name: "canary paused duration exceeded",
-		// 	args: args{
-		// 		specCanary: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
-		// 			Duration: &metav1.Duration{Duration: time.Hour},
-		// 			Paused:   true,
-		// 		},
-		// 		rs: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{
-		// 			ObjectMeta: metav1.ObjectMeta{
-		// 				CreationTimestamp: metav1.NewTime(now.Add(-2 * time.Hour)),
-		// 			},
-		// 		},
-		// 		now: now,
-		// 	},
-		// 	want: false,
-		// },
 		{
 			name: "not canary done",
 			args: args{
@@ -104,7 +88,7 @@ func TestIsCanaryDeploymentEnded(t *testing.T) {
 				t.Errorf("IsCanaryDeploymentEnded() = %v, want %v", got, tt.want)
 			}
 			if gotDuration != tt.wantDuration {
-				t.Errorf("IsCanaryDeploymenteEnded() = %v, wantDuration %v", gotDuration, tt.wantDuration)
+				t.Errorf("IsCanaryDeploymentEnded() = %v, wantDuration %v", gotDuration, tt.wantDuration)
 			}
 		})
 	}
@@ -155,6 +139,62 @@ func TestIsCanaryDeploymentValid(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := IsCanaryDeploymentValid(tt.args.dsAnnotations, tt.args.rsName); got != tt.want {
 				t.Errorf("IsCanaryDeploymentValid() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIsCanaryDeploymentFailed(t *testing.T) {
+	type args struct {
+		dsAnnotations map[string]string
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "annotation found - correct rs name",
+			args: args{
+				dsAnnotations: map[string]string{
+					"extendeddaemonset.datadoghq.com/canary-failed": "true",
+				},
+			},
+			want: true,
+		},
+		{
+			name: "annotation found - incorrect rs name",
+			args: args{
+				dsAnnotations: map[string]string{
+					"extendeddaemonset.datadoghq.com/canary-failed": "false",
+				},
+			},
+			want: false,
+		},
+		{
+			name: "annotation not found",
+			args: args{
+				dsAnnotations: map[string]string{
+					"extendeddaemonset.datadoghq.com/canary-failed": "random",
+				},
+			},
+			want: false,
+		},
+		{
+			name: "annotation not found",
+			args: args{
+				dsAnnotations: map[string]string{
+					"extendeddaemonset.datadoghq.com/canary-something-else": "true",
+				},
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsCanaryDeploymentFailed(tt.args.dsAnnotations); got != tt.want {
+				t.Errorf("IsCanaryDeploymentFailed() = %v, want %v", got, tt.want)
 			}
 		})
 	}

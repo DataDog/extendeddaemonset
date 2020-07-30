@@ -176,18 +176,6 @@ func (o *FailOptions) Run() error {
 	}
 	newEds.Annotations[v1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey] = fmt.Sprintf("%v", o.failStatus)
 
-	replicaSetList := &v1alpha1.ExtendedDaemonSetReplicaSetList{}
-	selector := labels.Set{
-		v1alpha1.ExtendedDaemonSetNameLabelKey: o.userExtendedDaemonSetName,
-	}
-	listOpts := []client.ListOption{
-		&client.MatchingLabelsSelector{Selector: selector.AsSelectorPreValidated()},
-	}
-	err = o.client.List(context.TODO(), replicaSetList, listOpts...)
-	if err != nil {
-		return fmt.Errorf("unable to fail ExtendedDaemonset deployment, err: %v", err)
-	}
-
 	if err = o.client.Update(context.TODO(), newEds); err != nil {
 		return fmt.Errorf("unable to fail or reset ExtendedDaemonset deployment, err: %v", err)
 	}

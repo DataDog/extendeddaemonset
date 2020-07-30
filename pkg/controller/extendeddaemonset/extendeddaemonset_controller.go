@@ -177,7 +177,7 @@ func (r *ReconcileExtendedDaemonSet) Reconcile(request reconcile.Request) (recon
 		return reconcile.Result{RequeueAfter: requeueAfter}, nil
 	}
 
-	_, result, err := r.updateInstanceWithNewRS(reqLogger, instance, currentRS, upToDateRS, podsCounter)
+	_, result, err := r.updateInstanceWithCurrentRS(reqLogger, instance, currentRS, upToDateRS, podsCounter)
 	result = utils.MergeResult(result, reconcile.Result{RequeueAfter: requeueAfter})
 	return result, err
 }
@@ -235,7 +235,7 @@ func selectCurrentReplicaSet(daemonset *datadoghqv1alpha1.ExtendedDaemonSet, act
 	return activeRS, requeueAfter
 }
 
-func (r *ReconcileExtendedDaemonSet) updateInstanceWithNewRS(logger logr.Logger, daemonset *datadoghqv1alpha1.ExtendedDaemonSet, current, upToDate *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, podsCounter podsCounterType) (*datadoghqv1alpha1.ExtendedDaemonSet, reconcile.Result, error) {
+func (r *ReconcileExtendedDaemonSet) updateInstanceWithCurrentRS(logger logr.Logger, daemonset *datadoghqv1alpha1.ExtendedDaemonSet, current, upToDate *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, podsCounter podsCounterType) (*datadoghqv1alpha1.ExtendedDaemonSet, reconcile.Result, error) {
 	newDaemonset := daemonset.DeepCopy()
 	newDaemonset.Status.Current = podsCounter.Current
 	newDaemonset.Status.Ready = podsCounter.Ready
@@ -249,24 +249,25 @@ func (r *ReconcileExtendedDaemonSet) updateInstanceWithNewRS(logger logr.Logger,
 	}
 
 	var updateDaemonsetSpec bool
-	// If the deployment is in Canary phase, then update status, strategy and state as needed
+	// If the deployment is in Canary phase, then update status (and spec as needed)
 	if daemonset.Spec.Strategy.Canary != nil {
-		if newDaemonset.Status.Canary == nil {
-			newDaemonset.Status.Canary = &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{}
-		}
-		if current.Name == upToDate.Name {
+		if IsCanaryDeploymentFailed(daemonset.GetAnnotations()) {
+			// Canary deployment is no longer needed because it was marked as failed
+			// This `if` block needs to be first to respect Failed Canary state until annotation is removed
+			newDaemonset.Status.Canary = nil
+			newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryFailed
+			// Restore active replicaset template. Note: this requires a full daemonset update
+			newDaemonset.Spec.Template = current.Spec.Template
+			updateDaemonsetSpec = true
+		} else if current.Name == upToDate.Name {
 			// Canary deployment is no longer needed because it completed without issue
 			newDaemonset.Status.Canary = nil
 			newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateRunning
-		} else if IsCanaryDeploymentFailed(daemonset.GetAnnotations()) {
-			// Canary deployment is no longer needed because it was marked as failed
-			updateDaemonsetSpec = true
-			newDaemonset.Status.Canary = nil
-			newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryFailed
-			// Reset active replicaset
-			newDaemonset.Spec.Template = current.Spec.Template
 		} else {
 			// Else compute the Canary status
+			if newDaemonset.Status.Canary == nil {
+				newDaemonset.Status.Canary = &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{}
+			}
 			newDaemonset.Status.Desired += upToDate.Status.Desired
 			newDaemonset.Status.UpToDate += upToDate.Status.Available
 			newDaemonset.Status.Available += upToDate.Status.Available
@@ -297,16 +298,15 @@ func (r *ReconcileExtendedDaemonSet) updateInstanceWithNewRS(logger logr.Logger,
 		}
 	}
 
-	// CELENE TODO add a function to reset annotations here (paused, paused-reason, and failed)
-
-	// compare
+	// Check if newDaemonset differs from existing daemonset, and update if so
 	if !apiequality.Semantic.DeepEqual(daemonset, newDaemonset) {
-		// Daemonset needs to be updated first, if necessary
 		if updateDaemonsetSpec {
-			if err := r.client.Update(context.TODO(), newDaemonset); err != nil {
-				return newDaemonset, reconcile.Result{}, err
+			newDaemonsetCopy := newDaemonset.DeepCopy()
+			if err := r.client.Update(context.TODO(), newDaemonsetCopy); err != nil {
+				return newDaemonsetCopy, reconcile.Result{}, err
 			}
 		}
+
 		if err := r.client.Status().Update(context.TODO(), newDaemonset); err != nil {
 			return newDaemonset, reconcile.Result{}, err
 		}

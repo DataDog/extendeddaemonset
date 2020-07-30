@@ -475,7 +475,7 @@ func TestReconcileExtendedDaemonSet_createNewReplicaSet(t *testing.T) {
 	}
 }
 
-func TestReconcileExtendedDaemonSet_updateStatusWithNewRS(t *testing.T) {
+func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 	eventBroadcaster := record.NewBroadcaster()
 
 	logf.SetLogger(logf.ZapLogger(true))
@@ -520,6 +520,20 @@ func TestReconcileExtendedDaemonSet_updateStatusWithNewRS(t *testing.T) {
 			Nodes:      []string{"node1"},
 			ReplicaSet: "foo-1",
 		}
+	}
+	daemonsetWithCanaryFailedOldStatus := daemonsetWithCanaryWithStatus.DeepCopy()
+	{
+		daemonsetWithCanaryFailedOldStatus.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey] = "true"
+		daemonsetWithCanaryFailedOldStatus.Status.Canary = &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{
+			Nodes:      []string{"node1"},
+			ReplicaSet: "foo-1",
+		}
+	}
+	daemonsetWithCanaryFailedNewStatus := daemonsetWithCanaryFailedOldStatus.DeepCopy()
+	{
+		daemonsetWithCanaryFailedNewStatus.ResourceVersion = "3"
+		daemonsetWithCanaryFailedNewStatus.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryFailed
+		daemonsetWithCanaryFailedNewStatus.Status.Canary = nil
 	}
 
 	type fields struct {
@@ -597,6 +611,26 @@ func TestReconcileExtendedDaemonSet_updateStatusWithNewRS(t *testing.T) {
 			wantResult: reconcile.Result{Requeue: false},
 			wantErr:    false,
 		},
+		{
+			name: "canary failed => update",
+			fields: fields{
+				client: fake.NewFakeClient(daemonset, replicassetCurrent, replicassetUpToDate),
+				scheme: s,
+			},
+			args: args{
+				logger:    log,
+				daemonset: daemonsetWithCanaryFailedOldStatus,
+				current:   replicassetCurrent,
+				upToDate:  replicassetUpToDate,
+				podsCounter: podsCounterType{
+					Current: 3,
+					Ready:   2,
+				},
+			},
+			want:       daemonsetWithCanaryFailedNewStatus,
+			wantResult: reconcile.Result{Requeue: false},
+			wantErr:    false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -605,16 +639,16 @@ func TestReconcileExtendedDaemonSet_updateStatusWithNewRS(t *testing.T) {
 				scheme:   tt.fields.scheme,
 				recorder: eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "TestReconcileExtendedDaemonSet_cleanupReplicaSet"}),
 			}
-			got, got1, err := r.updateStatusWithNewRS(tt.args.logger, tt.args.daemonset, tt.args.current, tt.args.upToDate, tt.args.podsCounter)
+			got, got1, err := r.updateInstanceWithCurrentRS(tt.args.logger, tt.args.daemonset, tt.args.current, tt.args.upToDate, tt.args.podsCounter)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("ReconcileExtendedDaemonSet.updateStatusWithNewRS() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ReconcileExtendedDaemonSet.updateInstanceWithCurrentRS() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !apiequality.Semantic.DeepEqual(got, tt.want) {
-				t.Errorf("ReconcileExtendedDaemonSet.updateStatusWithNewRS() got = %#v, \n want %#v", got, tt.want)
+				t.Errorf("ReconcileExtendedDaemonSet.updateInstanceWithCurrentRS() got = %#v, \n want %#v", got, tt.want)
 			}
 			if !reflect.DeepEqual(got1, tt.wantResult) {
-				t.Errorf("ReconcileExtendedDaemonSet.updateStatusWithNewRS() gotResult = %v, \n wantResult %v", got1, tt.wantResult)
+				t.Errorf("ReconcileExtendedDaemonSet.updateInstanceWithCurrentRS() gotResult = %v, \n wantResult %v", got1, tt.wantResult)
 			}
 		})
 	}
