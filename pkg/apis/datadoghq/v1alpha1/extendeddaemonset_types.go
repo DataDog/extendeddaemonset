@@ -147,9 +147,9 @@ type ExtendedDaemonSetStatusCanary struct {
 // +kubebuilder:printcolumn:name="available",type="integer",JSONPath=".status.available"
 // +kubebuilder:printcolumn:name="ignored unresponsive nodes",type="integer",JSONPath=".status.ignoredunresponsivenodes"
 // +kubebuilder:printcolumn:name="status",type="string",JSONPath=".status.state"
+// +kubebuilder:printcolumn:name="reason",type="string",JSONPath=".status.reason"
 // +kubebuilder:printcolumn:name="active rs",type="string",JSONPath=".status.activeReplicaSet"
 // +kubebuilder:printcolumn:name="canary rs",type="string",JSONPath=".status.canary.replicaSet"
-// +kubebuilder:printcolumn:name="canary paused",type="boolean",JSONPath=".spec.strategy.canary.paused"
 // +kubebuilder:printcolumn:name="age",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:resource:path=extendeddaemonsets,shortName=eds
 type ExtendedDaemonSet struct {

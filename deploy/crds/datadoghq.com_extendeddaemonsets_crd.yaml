@@ -25,15 +25,15 @@ spec:
   - JSONPath: .status.state
     name: status
     type: string
+  - JSONPath: .status.reason
+    name: reason
+    type: string
   - JSONPath: .status.activeReplicaSet
     name: active rs
     type: string
   - JSONPath: .status.canary.replicaSet
     name: canary rs
     type: string
-  - JSONPath: .spec.strategy.canary.paused
-    name: canary paused
-    type: boolean
   - JSONPath: .metadata.creationTimestamp
     name: age
     type: date
