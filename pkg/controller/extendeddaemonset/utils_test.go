@@ -13,7 +13,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func TestIsCanaryDeploymentEnded(t *testing.T) {
+func TestIsCanaryPhaseEnded(t *testing.T) {
 	now := time.Now()
 	type args struct {
 		specCanary *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary
@@ -65,6 +65,22 @@ func TestIsCanaryDeploymentEnded(t *testing.T) {
 			want: false,
 		},
 		{
+			name: "canary paused duration exceeded",
+			args: args{
+				specCanary: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
+					Duration: &metav1.Duration{Duration: time.Hour},
+					Paused:   true,
+				},
+				rs: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{
+					ObjectMeta: metav1.ObjectMeta{
+						CreationTimestamp: metav1.NewTime(now.Add(-2 * time.Hour)),
+					},
+				},
+				now: now,
+			},
+			want: false,
+		},
+		{
 			name: "not canary done",
 			args: args{
 				specCanary: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
@@ -83,12 +99,12 @@ func TestIsCanaryDeploymentEnded(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, gotDuration := IsCanaryDeploymentEnded(tt.args.specCanary, tt.args.rs, tt.args.now)
+			got, gotDuration := IsCanaryPhaseEnded(tt.args.specCanary, tt.args.rs, tt.args.now)
 			if got != tt.want {
-				t.Errorf("IsCanaryDeploymentEnded() = %v, want %v", got, tt.want)
+				t.Errorf("IsCanaryPhaseEnded() = %v, want %v", got, tt.want)
 			}
 			if gotDuration != tt.wantDuration {
-				t.Errorf("IsCanaryDeploymentEnded() = %v, wantDuration %v", gotDuration, tt.wantDuration)
+				t.Errorf("IsCanaryPhaseEnded() = %v, wantDuration %v", gotDuration, tt.wantDuration)
 			}
 		})
 	}

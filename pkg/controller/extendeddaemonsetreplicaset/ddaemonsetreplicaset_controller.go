@@ -158,7 +158,7 @@ func (r *ReconcileExtendedDaemonSetReplicaSet) Reconcile(request reconcile.Reque
 	}
 
 	// now apply the strategy depending on the ReplicaSet state
-	strategyResult, err := r.applyStrategy(reqLogger, daemonsetInstance, now, strategyParams)
+	strategyResult, err := r.applyStrategy(reqLogger, now, strategyParams)
 	newStatus := strategyResult.NewStatus
 	result := strategyResult.Result
 
@@ -238,7 +238,7 @@ func (r *ReconcileExtendedDaemonSetReplicaSet) buildStrategyParams(logger logr.L
 	return strategyParams, nil
 }
 
-func (r *ReconcileExtendedDaemonSetReplicaSet) applyStrategy(logger logr.Logger, daemonset *datadoghqv1alpha1.ExtendedDaemonSet, now metav1.Time, strategyParams *strategy.Parameters) (*strategy.Result, error) {
+func (r *ReconcileExtendedDaemonSetReplicaSet) applyStrategy(logger logr.Logger, now metav1.Time, strategyParams *strategy.Parameters) (*strategy.Result, error) {
 	var strategyResult *strategy.Result
 	var err error
 
@@ -252,7 +252,7 @@ func (r *ReconcileExtendedDaemonSetReplicaSet) applyStrategy(logger logr.Logger,
 		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(strategyParams.NewStatus, now, datadoghqv1alpha1.ConditionTypeCanary, corev1.ConditionTrue, "", false, false)
 		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(strategyParams.NewStatus, now, datadoghqv1alpha1.ConditionTypeActive, corev1.ConditionFalse, "", false, false)
 		logger.Info("manage canary deployment")
-		strategyResult, err = strategy.ManageCanaryDeployment(r.client, daemonset, strategyParams)
+		strategyResult, err = strategy.ManageCanaryDeployment(r.client, strategyParams)
 	case strategy.ReplicaSetStatusUnknown:
 		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(strategyParams.NewStatus, now, datadoghqv1alpha1.ConditionTypeCanary, corev1.ConditionFalse, "", false, false)
 		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(strategyParams.NewStatus, now, datadoghqv1alpha1.ConditionTypeActive, corev1.ConditionFalse, "", false, false)

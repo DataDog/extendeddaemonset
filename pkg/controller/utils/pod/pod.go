@@ -28,7 +28,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	datadoghqv1alpha1 "github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
 	"github.com/datadog/extendeddaemonset/pkg/controller/utils/affinity"
 )
 
@@ -44,6 +43,7 @@ func GetContainerStatus(statuses []v1.ContainerStatus, name string) (v1.Containe
 }
 
 // GetExistingContainerStatus extracts the status of container "name" from "statuses",
+// It also returns if "name" exists.
 func GetExistingContainerStatus(statuses []v1.ContainerStatus, name string) v1.ContainerStatus {
 	status, _ := GetContainerStatus(statuses, name)
 	return status
@@ -113,31 +113,6 @@ func GetPodConditionFromList(conditions []v1.PodCondition, conditionType v1.PodC
 		}
 	}
 	return -1, nil
-}
-
-// IsPodRestarting checks if a pod in the Canary deployment is restarting
-// This returns the "reason" for the pod with the most restarts
-func IsPodRestarting(pod *v1.Pod) (bool, datadoghqv1alpha1.ExtendedDaemonSetStatusReason) {
-	var maxRestartCount int
-	var reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason
-	for _, s := range pod.Status.ContainerStatuses {
-		if maxRestartCount < int(s.RestartCount) {
-			maxRestartCount = int(s.RestartCount)
-			if s.LastTerminationState != (v1.ContainerState{}) && *s.LastTerminationState.Terminated != (v1.ContainerStateTerminated{}) {
-				if s.LastTerminationState.Terminated.Reason == string(datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB) {
-					reason = datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB
-				} else if s.LastTerminationState.Terminated.Reason == string(datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM) {
-					reason = datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM
-				}
-			} else {
-				reason = datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown
-			}
-		}
-	}
-	if maxRestartCount > 0 {
-		return true, reason
-	}
-	return false, ""
 }
 
 // HasPodSchedulerIssue returns true if a pod remained unscheduled for more than 10 minutes

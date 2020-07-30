@@ -124,10 +124,6 @@ spec:
                       type: boolean
                     paused:
                       type: boolean
-                    reason:
-                      description: ExtendedDaemonSetStatusReason type represents the
-                        reason for a ExtendedDaemonSet status state
-                      type: string
                     replicas:
                       anyOf:
                       - type: integer
@@ -6125,9 +6121,6 @@ spec:
             ready:
               format: int32
               type: integer
-            reason:
-              description: Reason provides an explanation for deployment failure
-              type: string
             state:
               description: ExtendedDaemonSetStatusState type representing the ExtendedDaemonSet
                 state

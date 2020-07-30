@@ -79,36 +79,20 @@ type ExtendedDaemonSetSpecStrategyCanary struct {
 	Paused bool `json:"paused,omitempty"`
 	// +optional
 	Failed bool `json:"failed,omitempty"`
-	// +optional
-	Reason ExtendedDaemonSetStatusReason `json:"reason,omitempty"`
 }
 
 // ExtendedDaemonSetStatusState type representing the ExtendedDaemonSet state
 type ExtendedDaemonSetStatusState string
 
 const (
-	// ExtendedDaemonSetStatusStateCanary the ExtendedDaemonSet currently run a new version with a Canary deployment
-	ExtendedDaemonSetStatusStateCanary ExtendedDaemonSetStatusState = "Canary"
 	// ExtendedDaemonSetStatusStateRunning the ExtendedDaemonSet is currently Running
 	ExtendedDaemonSetStatusStateRunning ExtendedDaemonSetStatusState = "Running"
-	// // ExtendedDaemonSetStatusStateFailed the current state of the ExtendedDaemonSet is considered as Failing
-	// ExtendedDaemonSetStatusStateFailed ExtendedDaemonSetStatusState = "Failed"
+	// ExtendedDaemonSetStatusStateCanary the ExtendedDaemonSet currently run a new version with a Canary deployment
+	ExtendedDaemonSetStatusStateCanary ExtendedDaemonSetStatusState = "Canary"
 	// ExtendedDaemonSetStatusStateCanaryFailed the Canary deployment of the ExtendedDaemonSet is considered as Failing
 	ExtendedDaemonSetStatusStateCanaryFailed ExtendedDaemonSetStatusState = "Canary Failed"
 	// ExtendedDaemonSetStatusStateCanaryPaused the Canary deployment of the ExtendedDaemonSet is paused
 	ExtendedDaemonSetStatusStateCanaryPaused ExtendedDaemonSetStatusState = "Canary Paused"
-)
-
-// ExtendedDaemonSetStatusReason type represents the reason for a ExtendedDaemonSet status state
-type ExtendedDaemonSetStatusReason string
-
-const (
-	// ExtendedDaemonSetStatusReasonCLB represents CrashLoopBackOff as the reason for the ExtendedDaemonSet status state
-	ExtendedDaemonSetStatusReasonCLB ExtendedDaemonSetStatusReason = "CrashLoopBackOff"
-	// ExtendedDaemonSetStatusReasonOOM represents OOMKilled as the reason for the ExtendedDaemonSet status state
-	ExtendedDaemonSetStatusReasonOOM ExtendedDaemonSetStatusReason = "OOMKilled"
-	// ExtendedDaemonSetStatusReasonUnknown represents an Unknown reason for the status state
-	ExtendedDaemonSetStatusReasonUnknown ExtendedDaemonSetStatusReason = "Unknown"
 )
 
 // ExtendedDaemonSetStatus defines the observed state of ExtendedDaemonSet
@@ -124,10 +108,6 @@ type ExtendedDaemonSetStatus struct {
 	State            ExtendedDaemonSetStatusState   `json:"state,omitempty"`
 	ActiveReplicaSet string                         `json:"activeReplicaSet"`
 	Canary           *ExtendedDaemonSetStatusCanary `json:"canary,omitempty"`
-
-	// Reason provides an explanation for deployment failure
-	// +optional
-	Reason ExtendedDaemonSetStatusReason `json:"reason,omitempty"`
 }
 
 // ExtendedDaemonSetStatusCanary defines the observed state of ExtendedDaemonSet canary deployment

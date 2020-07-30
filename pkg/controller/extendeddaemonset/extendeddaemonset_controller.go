@@ -193,13 +193,13 @@ func (r *ReconcileExtendedDaemonSet) createNewReplicaSet(logger logr.Logger, dae
 	if err = controllerutil.SetControllerReference(daemonset, newRS, r.scheme); err != nil {
 		return reconcile.Result{}, err
 	}
+	logger.Info("Creating a new ReplicaSet", "replicaSet.Namespace", newRS.Namespace, "replicaSet.Name", newRS.Name)
 
 	err = r.client.Create(context.TODO(), newRS)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 	r.recorder.Event(daemonset, corev1.EventTypeNormal, "Create ExtendedDaemonSetReplicaSet", fmt.Sprintf("%s/%s", newRS.Namespace, newRS.Name))
-
 	return reconcile.Result{Requeue: true}, nil
 }
 
@@ -224,11 +224,9 @@ func selectCurrentReplicaSet(daemonset *datadoghqv1alpha1.ExtendedDaemonSet, act
 
 	// If in Canary phase, then only update ReplicaSet if it has ended or been declared valid
 	var isEnded bool
-	dsAnnotations := daemonset.GetAnnotations()
-	isEnded, requeueAfter = IsCanaryDeploymentEnded(daemonset.Spec.Strategy.Canary, upToDateRS, now)
-	isPaused, _ := IsCanaryDeploymentPaused(dsAnnotations)
-	isValid := IsCanaryDeploymentValid(dsAnnotations, upToDateRS.GetName())
-	if isValid || (!isPaused && isEnded) {
+	isEnded, requeueAfter = IsCanaryPhaseEnded(daemonset.Spec.Strategy.Canary, upToDateRS, now)
+	isValid := IsCanaryDeploymentValid(daemonset.GetAnnotations(), upToDateRS.GetName())
+	if isEnded || isValid {
 		return upToDateRS, requeueAfter
 	}
 
@@ -287,14 +285,7 @@ func (r *ReconcileExtendedDaemonSet) updateInstanceWithCurrentRS(logger logr.Log
 					return newDaemonset, reconcile.Result{}, err
 				}
 			}
-
-			isPaused, reason := IsCanaryDeploymentPaused(daemonset.GetAnnotations())
-			if isPaused {
-				newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryPaused
-				newDaemonset.Status.Reason = reason
-			} else {
-				newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanary
-			}
+			newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanary
 		}
 	}
 

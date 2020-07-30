@@ -10,13 +10,10 @@ import (
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/labels"
-
-	"github.com/spf13/cobra"
-
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"github.com/spf13/cobra"
 
 	"github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
 )

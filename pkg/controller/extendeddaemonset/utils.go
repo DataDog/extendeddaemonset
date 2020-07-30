@@ -21,13 +21,12 @@ import (
 // IsCanaryPhaseEnded used to know if the Canary duration has finished.
 // If the duration is completed: return true
 // If the duration is not completed: return false and the remaining duration.
-func IsCanaryDeploymentEnded(specCanary *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary, rs *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, now time.Time) (bool, time.Duration) {
+func IsCanaryPhaseEnded(specCanary *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary, rs *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, now time.Time) (bool, time.Duration) {
 	var pendingDuration time.Duration
 	if specCanary == nil {
 		return true, pendingDuration
 	}
-	// if specCanary.Paused || specCanary.Duration == nil {
-	if specCanary.Duration == nil {
+	if specCanary.Paused || specCanary.Duration == nil {
 		// in this case, it means the canary never ends
 		return false, pendingDuration
 	}
@@ -37,18 +36,6 @@ func IsCanaryDeploymentEnded(specCanary *datadoghqv1alpha1.ExtendedDaemonSetSpec
 	}
 
 	return true, pendingDuration
-}
-
-// IsCanaryPhasePaused checks if the Canary deployment has been paused
-func IsCanaryDeploymentPaused(dsAnnotations map[string]string) (bool, datadoghqv1alpha1.ExtendedDaemonSetStatusReason) {
-	isPaused, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]
-	if found && isPaused == "true" {
-		if reason, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey]; found {
-			return true, datadoghqv1alpha1.ExtendedDaemonSetStatusReason(reason)
-		}
-		return true, datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown
-	}
-	return false, ""
 }
 
 // IsCanaryDeploymentValid used to know if the Canary deployment has been declared

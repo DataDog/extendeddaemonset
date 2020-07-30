@@ -7,7 +7,6 @@ package strategy
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -134,25 +133,4 @@ func manageUnscheduledPodNodes(pods []*corev1.Pod) []string {
 		}
 	}
 	return output
-}
-
-// pauseCanaryDeployment updates two annotations so that the Canary deployment is marked as paused, along with a reason
-func pauseCanaryDeployment(client client.Client, eds *datadoghqv1alpha1.ExtendedDaemonSet, reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason) error {
-	newEds := eds.DeepCopy()
-	if newEds.Annotations == nil {
-		newEds.Annotations = make(map[string]string)
-	}
-
-	if isPaused, ok := newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]; ok {
-		if isPaused == "true" {
-			return fmt.Errorf("canary deployment already paused")
-		}
-	}
-	newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey] = "true"
-	newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey] = string(reason)
-
-	if err := client.Update(context.TODO(), newEds); err != nil {
-		return err
-	}
-	return nil
 }
