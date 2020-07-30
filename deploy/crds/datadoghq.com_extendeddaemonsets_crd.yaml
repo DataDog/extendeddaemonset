@@ -120,12 +120,6 @@ spec:
                   properties:
                     duration:
                       type: string
-                    paused:
-                      type: boolean
-                    reason:
-                      description: ExtendedDaemonSetStatusReason type represents the
-                        reason for a ExtendedDaemonSet status state
-                      type: string
                     replicas:
                       anyOf:
                       - type: integer
