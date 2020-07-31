@@ -13,7 +13,92 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func TestIsCanaryPhaseEnded(t *testing.T) {
+func TestIsCanaryDeploymentPaused(t *testing.T) {
+	type args struct {
+		dsAnnotations map[string]string
+	}
+
+	tests := []struct {
+		name       string
+		args       args
+		want       bool
+		wantReason datadoghqv1alpha1.ExtendedDaemonSetStatusReason
+	}{
+		{
+			name: "pause annotation is false, expect false",
+			args: args{
+				dsAnnotations: map[string]string{
+					"extendeddaemonset.datadoghq.com/canary-paused": "false",
+				},
+			},
+			want:       false,
+			wantReason: "",
+		},
+		{
+			name: "pause annotation doesn't exist, expect false",
+			args: args{
+				dsAnnotations: map[string]string{},
+			},
+			want:       false,
+			wantReason: "",
+		},
+		{
+			name: "pause annotation is `truee`, expect false",
+			args: args{
+				dsAnnotations: map[string]string{
+					"extendeddaemonset.datadoghq.com/canary-paused": "truee",
+				},
+			},
+			want:       false,
+			wantReason: "",
+		},
+		{
+			name: "pause annotation is `true` and has a reason, expect true and the reason",
+			args: args{
+				dsAnnotations: map[string]string{
+					"extendeddaemonset.datadoghq.com/canary-paused":        "true",
+					"extendeddaemonset.datadoghq.com/canary-paused-reason": string(datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM),
+				},
+			},
+			want:       true,
+			wantReason: datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM,
+		},
+		{
+			name: "pause annotation is `true` and has no reason, expect true and `unknown` reason",
+			args: args{
+				dsAnnotations: map[string]string{
+					"extendeddaemonset.datadoghq.com/canary-paused": "true",
+				},
+			},
+			want:       true,
+			wantReason: datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown,
+		},
+		{
+			name: "pause annotation is `true` and has an unsupported reason, expect true and `unknown` reason",
+			args: args{
+				dsAnnotations: map[string]string{
+					"extendeddaemonset.datadoghq.com/canary-paused":        "true",
+					"extendeddaemonset.datadoghq.com/canary-paused-reason": "SomeUnsupportedReason",
+				},
+			},
+			want:       true,
+			wantReason: datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, gotReason := IsCanaryDeploymentPaused(tt.args.dsAnnotations)
+			if got != tt.want {
+				t.Errorf("IsCanaryDeploymentPaused() = %v, want %v", got, tt.want)
+			}
+			if gotReason != tt.wantReason {
+				t.Errorf("IsCanaryDeploymentePaused() = %v, wantReason %v", gotReason, tt.wantReason)
+			}
+		})
+	}
+}
+
+func TestIsCanaryDeploymentEnded(t *testing.T) {
 	now := time.Now()
 	type args struct {
 		specCanary *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary
@@ -65,22 +150,6 @@ func TestIsCanaryPhaseEnded(t *testing.T) {
 			want: false,
 		},
 		{
-			name: "canary paused duration exceeded",
-			args: args{
-				specCanary: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
-					Duration: &metav1.Duration{Duration: time.Hour},
-					Paused:   true,
-				},
-				rs: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{
-					ObjectMeta: metav1.ObjectMeta{
-						CreationTimestamp: metav1.NewTime(now.Add(-2 * time.Hour)),
-					},
-				},
-				now: now,
-			},
-			want: false,
-		},
-		{
 			name: "not canary done",
 			args: args{
 				specCanary: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
@@ -99,12 +168,12 @@ func TestIsCanaryPhaseEnded(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, gotDuration := IsCanaryPhaseEnded(tt.args.specCanary, tt.args.rs, tt.args.now)
+			got, gotDuration := IsCanaryDeploymentEnded(tt.args.specCanary, tt.args.rs, tt.args.now)
 			if got != tt.want {
-				t.Errorf("IsCanaryPhaseEnded() = %v, want %v", got, tt.want)
+				t.Errorf("IsCanaryDeploymentEnded() = %v, want %v", got, tt.want)
 			}
 			if gotDuration != tt.wantDuration {
-				t.Errorf("IsCanaryPhaseEnded() = %v, wantDuration %v", gotDuration, tt.wantDuration)
+				t.Errorf("IsCanaryDeploymenteEnded() = %v, wantDuration %v", gotDuration, tt.wantDuration)
 			}
 		})
 	}

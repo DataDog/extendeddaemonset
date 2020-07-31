@@ -7,6 +7,7 @@ package strategy
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -27,6 +28,8 @@ import (
 	"github.com/datadog/extendeddaemonset/pkg/controller/utils/comparison"
 	podutils "github.com/datadog/extendeddaemonset/pkg/controller/utils/pod"
 )
+
+const pausedValueTrue = "true"
 
 func compareCurrentPodWithNewPod(params *Parameters, pod *corev1.Pod, node *NodeItem) bool {
 	// check that the pod corresponds to the replicaset. if not return false
@@ -133,4 +136,25 @@ func manageUnscheduledPodNodes(pods []*corev1.Pod) []string {
 		}
 	}
 	return output
+}
+
+// pauseCanaryDeployment updates two annotations so that the Canary deployment is marked as paused, along with a reason
+func pauseCanaryDeployment(client client.Client, eds *datadoghqv1alpha1.ExtendedDaemonSet, reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason) error {
+	newEds := eds.DeepCopy()
+	if newEds.Annotations == nil {
+		newEds.Annotations = make(map[string]string)
+	}
+
+	if isPaused, ok := newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]; ok {
+		if isPaused == pausedValueTrue {
+			return fmt.Errorf("canary deployment already paused")
+		}
+	}
+	newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey] = pausedValueTrue
+	newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey] = string(reason)
+
+	if err := client.Update(context.TODO(), newEds); err != nil {
+		return err
+	}
+	return nil
 }

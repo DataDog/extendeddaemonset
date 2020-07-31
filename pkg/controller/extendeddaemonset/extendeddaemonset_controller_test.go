@@ -290,6 +290,18 @@ func Test_selectCurrentReplicaSet(t *testing.T) {
 			ActiveReplicaSet: replicassetOld.Name,
 		},
 	})
+	daemonsetWithCanaryPaused := test.NewExtendedDaemonSet("bar", "foo", &test.NewExtendedDaemonSetOptions{
+		CreationTime: &creationTimeDaemonset,
+		Labels:       map[string]string{"foo-key": "bar-value"},
+		Annotations:  map[string]string{datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey: "true"},
+		Canary: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
+			Replicas: &intString1,
+			Duration: &metav1.Duration{Duration: 5 * time.Minute},
+		},
+		Status: &datadoghqv1alpha1.ExtendedDaemonSetStatus{
+			ActiveReplicaSet: replicassetOld.Name,
+		},
+	})
 
 	type args struct {
 		daemonset  *datadoghqv1alpha1.ExtendedDaemonSet
@@ -368,6 +380,28 @@ func Test_selectCurrentReplicaSet(t *testing.T) {
 				now:        now,
 			},
 			want:  replicassetUpToDateDone,
+			want1: -time.Minute,
+		},
+		{
+			name: "two RS, update to date, canary set, canary duration not done, canary paused",
+			args: args{
+				daemonset:  daemonsetWithCanaryPaused,
+				upToDateRS: replicassetUpToDate,
+				activeRS:   replicassetOld,
+				now:        now,
+			},
+			want:  replicassetOld,
+			want1: 5 * time.Minute,
+		},
+		{
+			name: "two RS, update to date, canary set, canary duration done, canary paused",
+			args: args{
+				daemonset:  daemonsetWithCanaryPaused,
+				upToDateRS: replicassetUpToDateDone,
+				activeRS:   replicassetOld,
+				now:        now,
+			},
+			want:  replicassetOld,
 			want1: -time.Minute,
 		},
 	}
@@ -569,6 +603,37 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 			ReplicaSet: "foo-1",
 		}
 	}
+
+	daemonsetWithCanaryPaused := test.NewExtendedDaemonSet(
+		"bar",
+		"foo",
+		&test.NewExtendedDaemonSetOptions{
+			Labels: map[string]string{"foo-key": "bar-value"},
+			Annotations: map[string]string{
+				datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey:       "true",
+				datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey: string(datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB),
+			},
+			Canary: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
+				Replicas: &intString1,
+				Duration: &metav1.Duration{Duration: 10 * time.Minute},
+			},
+			Status: &datadoghqv1alpha1.ExtendedDaemonSetStatus{
+				ActiveReplicaSet: "current",
+				Desired:          3,
+				Current:          3,
+				Available:        3,
+				Ready:            2,
+				UpToDate:         3,
+				Canary: &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{
+					Nodes:      []string{"node1"},
+					ReplicaSet: "foo-1",
+				},
+				State:  datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryPaused,
+				Reason: datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB,
+			},
+		},
+	)
+
 	daemonsetWithCanaryFailedOldStatus := daemonsetWithCanaryWithStatus.DeepCopy()
 	{
 		daemonsetWithCanaryFailedOldStatus.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey] = "true"
@@ -656,6 +721,26 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 				},
 			},
 			want:       daemonsetWithCanaryWithStatus,
+			wantResult: reconcile.Result{Requeue: false},
+			wantErr:    false,
+		},
+		{
+			name: "current != upToDate; canary paused => update",
+			fields: fields{
+				client: fake.NewFakeClient(daemonset, replicassetCurrent, replicassetUpToDate),
+				scheme: s,
+			},
+			args: args{
+				logger:    log,
+				daemonset: daemonsetWithCanaryPaused,
+				current:   replicassetCurrent,
+				upToDate:  replicassetUpToDate,
+				podsCounter: podsCounterType{
+					Current: 3,
+					Ready:   2,
+				},
+			},
+			want:       daemonsetWithCanaryPaused,
 			wantResult: reconcile.Result{Requeue: false},
 			wantErr:    false,
 		},

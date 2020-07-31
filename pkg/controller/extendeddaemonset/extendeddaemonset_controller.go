@@ -225,9 +225,11 @@ func selectCurrentReplicaSet(daemonset *datadoghqv1alpha1.ExtendedDaemonSet, act
 
 	// If in Canary phase, then only update ReplicaSet if it has ended or been declared valid
 	var isEnded bool
-	isEnded, requeueAfter = IsCanaryPhaseEnded(daemonset.Spec.Strategy.Canary, upToDateRS, now)
-	isValid := IsCanaryDeploymentValid(daemonset.GetAnnotations(), upToDateRS.GetName())
-	if isEnded || isValid {
+	dsAnnotations := daemonset.GetAnnotations()
+	isEnded, requeueAfter = IsCanaryDeploymentEnded(daemonset.Spec.Strategy.Canary, upToDateRS, now)
+	isPaused, _ := IsCanaryDeploymentPaused(dsAnnotations)
+	isValid := IsCanaryDeploymentValid(dsAnnotations, upToDateRS.GetName())
+	if isValid || (!isPaused && isEnded) {
 		return upToDateRS, requeueAfter
 	}
 
@@ -287,7 +289,14 @@ func (r *ReconcileExtendedDaemonSet) updateInstanceWithCurrentRS(logger logr.Log
 					return newDaemonset, reconcile.Result{}, err
 				}
 			}
-			newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanary
+
+			isPaused, reason := IsCanaryDeploymentPaused(daemonset.GetAnnotations())
+			if isPaused {
+				newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryPaused
+				newDaemonset.Status.Reason = reason
+			} else {
+				newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanary
+			}
 		}
 	}
 

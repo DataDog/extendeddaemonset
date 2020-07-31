@@ -25,15 +25,15 @@ spec:
   - JSONPath: .status.state
     name: status
     type: string
+  - JSONPath: .status.reason
+    name: reason
+    type: string
   - JSONPath: .status.activeReplicaSet
     name: active rs
     type: string
   - JSONPath: .status.canary.replicaSet
     name: canary rs
     type: string
-  - JSONPath: .spec.strategy.canary.paused
-    name: canary paused
-    type: boolean
   - JSONPath: .metadata.creationTimestamp
     name: age
     type: date
@@ -172,8 +172,6 @@ spec:
                             only "value". The requirements are ANDed.
                           type: object
                       type: object
-                    paused:
-                      type: boolean
                     replicas:
                       anyOf:
                       - type: integer
@@ -6171,6 +6169,9 @@ spec:
             ready:
               format: int32
               type: integer
+            reason:
+              description: Reason provides an explanation for canary deployment autopause
+              type: string
             state:
               description: ExtendedDaemonSetStatusState type representing the ExtendedDaemonSet
                 state

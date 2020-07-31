@@ -12,11 +12,13 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
+	eds "github.com/datadog/extendeddaemonset/pkg/controller/extendeddaemonset"
 	podUtils "github.com/datadog/extendeddaemonset/pkg/controller/utils/pod"
 )
 
 // ManageCanaryDeployment used to manage ReplicaSet in Canary state
-func ManageCanaryDeployment(client client.Client, params *Parameters) (*Result, error) {
+func ManageCanaryDeployment(client client.Client, daemonset *v1alpha1.ExtendedDaemonSet, params *Parameters) (*Result, error) {
 	result := &Result{}
 
 	now := time.Now()
@@ -24,6 +26,9 @@ func ManageCanaryDeployment(client client.Client, params *Parameters) (*Result, 
 	var desiredPods, currentPods, availablePods, readyPods int32
 
 	var needRequeue bool
+	var err error
+	isPaused, _ := eds.IsCanaryDeploymentPaused(daemonset.GetAnnotations())
+
 	// Canary mode
 	for _, nodeName := range params.CanaryNodes {
 		node := params.NodeByName[nodeName]
@@ -46,6 +51,18 @@ func ManageCanaryDeployment(client client.Client, params *Parameters) (*Result, 
 					if podUtils.IsPodReady(pod) {
 						readyPods++
 					}
+					if !isPaused {
+						// Check if deploy should be paused due to restarts. Note that pausing the canary will have no effect if it has been validated or failed
+						if isRestarting, reason := podUtils.IsPodRestarting(pod); isRestarting {
+							err = pauseCanaryDeployment(client, daemonset, reason)
+							if err != nil {
+								params.Logger.Error(err, "Failed to pause canary deployment")
+							} else {
+								params.Logger.V(1).Info("Canary deployment paused")
+							}
+							isPaused = true
+						}
+					}
 				}
 			}
 		}
@@ -61,7 +78,7 @@ func ManageCanaryDeployment(client client.Client, params *Parameters) (*Result, 
 
 	// Populate list of unscheduled pods on nodes due to resource limitation
 	result.UnscheduledNodesDueToResourcesConstraints = manageUnscheduledPodNodes(params.UnscheduledPods)
-	var err error
+
 	// Cleanup Pods
 	result.NewStatus, result.Result, err = cleanupPods(client, params.Logger, result.NewStatus, params.PodToCleanUp)
 	if result.NewStatus.Desired != result.NewStatus.Ready || needRequeue {

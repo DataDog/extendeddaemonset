@@ -14,6 +14,10 @@ const (
 	MD5ExtendedDaemonSetAnnotationKey = "extendeddaemonset.datadoghq.com/templatehash"
 	// ExtendedDaemonSetCanaryValidAnnotationKey annotation key used on Pods in order to detect if a canary deployment is considered valid.
 	ExtendedDaemonSetCanaryValidAnnotationKey = "extendeddaemonset.datadoghq.com/canary-valid"
+	// ExtendedDaemonSetCanaryPausedAnnotationKey annotation key used on ExtendedDaemonset in order to detect if a canary deployment is paused.
+	ExtendedDaemonSetCanaryPausedAnnotationKey = "extendeddaemonset.datadoghq.com/canary-paused"
+	// ExtendedDaemonSetCanaryPausedReasonAnnotationKey annotation key used on ExtendedDaemonset to provide a reason that the a canary deployment is paused.
+	ExtendedDaemonSetCanaryPausedReasonAnnotationKey = "extendeddaemonset.datadoghq.com/canary-paused-reason"
 	// ExtendedDaemonSetCanaryFailedAnnotationKey annotation key used on ExtendedDaemonset in order to detect if a canary deployment has failed.
 	ExtendedDaemonSetCanaryFailedAnnotationKey = "extendeddaemonset.datadoghq.com/canary-failed"
 	// ExtendedDaemonSetOldDaemonsetAnnotationKey annotation key used on ExtendedDaemonset in order to inform the controller that old Daemonset's pod.
