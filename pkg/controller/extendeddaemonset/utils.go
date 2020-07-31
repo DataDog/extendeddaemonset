@@ -18,15 +18,15 @@ import (
 	datadoghqv1alpha1 "github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
 )
 
-// IsCanaryPhaseEnded used to know if the Canary duration has finished.
+// IsCanaryDeploymentEnded used to know if the Canary duration has finished.
 // If the duration is completed: return true
 // If the duration is not completed: return false and the remaining duration.
-func IsCanaryPhaseEnded(specCanary *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary, rs *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, now time.Time) (bool, time.Duration) {
+func IsCanaryDeploymentEnded(specCanary *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary, rs *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, now time.Time) (bool, time.Duration) {
 	var pendingDuration time.Duration
 	if specCanary == nil {
 		return true, pendingDuration
 	}
-	if specCanary.Paused || specCanary.Duration == nil {
+	if specCanary.Duration == nil {
 		// in this case, it means the canary never ends
 		return false, pendingDuration
 	}
@@ -36,6 +36,23 @@ func IsCanaryPhaseEnded(specCanary *datadoghqv1alpha1.ExtendedDaemonSetSpecStrat
 	}
 
 	return true, pendingDuration
+}
+
+// IsCanaryDeploymentPaused checks if the Canary deployment has been paused
+func IsCanaryDeploymentPaused(dsAnnotations map[string]string) (bool, datadoghqv1alpha1.ExtendedDaemonSetStatusReason) {
+	isPaused, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]
+	if found && isPaused == "true" {
+		if reason, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey]; found {
+			switch reason {
+			case
+				string(datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB),
+				string(datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM):
+				return true, datadoghqv1alpha1.ExtendedDaemonSetStatusReason(reason)
+			}
+		}
+		return true, datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown
+	}
+	return false, ""
 }
 
 // IsCanaryDeploymentValid used to know if the Canary deployment has been declared

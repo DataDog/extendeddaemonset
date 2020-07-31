@@ -78,8 +78,6 @@ type ExtendedDaemonSetSpecStrategyCanary struct {
 	NodeSelector *metav1.LabelSelector `json:"nodeSelector,omitempty"`
 	// +listType=set
 	NodeAntiAffinityKeys []string `json:"nodeAntiAffinityKeys,omitempty"`
-	// +optional
-	Paused bool `json:"paused,omitempty"`
 }
 
 // ExtendedDaemonSetStatusState type representing the ExtendedDaemonSet state
@@ -92,6 +90,20 @@ const (
 	ExtendedDaemonSetStatusStateRunning ExtendedDaemonSetStatusState = "Running"
 	// ExtendedDaemonSetStatusStateFailed the current state of the ExtendedDaemonSet is considered as Failing
 	ExtendedDaemonSetStatusStateFailed ExtendedDaemonSetStatusState = "Failed"
+	// ExtendedDaemonSetStatusStateCanaryPaused the Canary deployment of the ExtendedDaemonSet is paused
+	ExtendedDaemonSetStatusStateCanaryPaused ExtendedDaemonSetStatusState = "Canary Paused"
+)
+
+// ExtendedDaemonSetStatusReason type represents the reason for a ExtendedDaemonSet status state
+type ExtendedDaemonSetStatusReason string
+
+const (
+	// ExtendedDaemonSetStatusReasonCLB represents CrashLoopBackOff as the reason for the ExtendedDaemonSet status state
+	ExtendedDaemonSetStatusReasonCLB ExtendedDaemonSetStatusReason = "CrashLoopBackOff"
+	// ExtendedDaemonSetStatusReasonOOM represents OOMKilled as the reason for the ExtendedDaemonSet status state
+	ExtendedDaemonSetStatusReasonOOM ExtendedDaemonSetStatusReason = "OOMKilled"
+	// ExtendedDaemonSetStatusReasonUnknown represents an Unknown reason for the status state
+	ExtendedDaemonSetStatusReasonUnknown ExtendedDaemonSetStatusReason = "Unknown"
 )
 
 // ExtendedDaemonSetStatus defines the observed state of ExtendedDaemonSet
@@ -107,6 +119,10 @@ type ExtendedDaemonSetStatus struct {
 	State            ExtendedDaemonSetStatusState   `json:"state,omitempty"`
 	ActiveReplicaSet string                         `json:"activeReplicaSet"`
 	Canary           *ExtendedDaemonSetStatusCanary `json:"canary,omitempty"`
+
+	// Reason provides an explanation for canary deployment autopause
+	// +optional
+	Reason ExtendedDaemonSetStatusReason `json:"reason,omitempty"`
 }
 
 // ExtendedDaemonSetStatusCanary defines the observed state of ExtendedDaemonSet canary deployment
@@ -130,9 +146,9 @@ type ExtendedDaemonSetStatusCanary struct {
 // +kubebuilder:printcolumn:name="available",type="integer",JSONPath=".status.available"
 // +kubebuilder:printcolumn:name="ignored unresponsive nodes",type="integer",JSONPath=".status.ignoredunresponsivenodes"
 // +kubebuilder:printcolumn:name="status",type="string",JSONPath=".status.state"
+// +kubebuilder:printcolumn:name="reason",type="string",JSONPath=".status.reason"
 // +kubebuilder:printcolumn:name="active rs",type="string",JSONPath=".status.activeReplicaSet"
 // +kubebuilder:printcolumn:name="canary rs",type="string",JSONPath=".status.canary.replicaSet"
-// +kubebuilder:printcolumn:name="canary paused",type="boolean",JSONPath=".spec.strategy.canary.paused"
 // +kubebuilder:printcolumn:name="age",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:resource:path=extendeddaemonsets,shortName=eds
 type ExtendedDaemonSet struct {

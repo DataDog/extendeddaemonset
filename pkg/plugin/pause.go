@@ -164,10 +164,20 @@ func (o *PauseOptions) Run() error {
 	}
 
 	newEds := eds.DeepCopy()
-	newEds.Spec.Strategy.Canary.Paused = o.pauseStatus
+
+	if newEds.Annotations == nil {
+		newEds.Annotations = make(map[string]string)
+	} else if isPaused, ok := newEds.Annotations[v1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]; ok {
+		if o.pauseStatus && isPaused == "true" {
+			return fmt.Errorf("canary deployment already paused")
+		} else if !o.pauseStatus && isPaused == "false" {
+			return fmt.Errorf("canary deployment already unpaused")
+		}
+	}
+	newEds.Annotations[v1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey] = fmt.Sprintf("%v", o.pauseStatus)
 
 	if err = o.client.Update(context.TODO(), newEds); err != nil {
-		return fmt.Errorf("unable to pause ExtendedDaemonset deployment, err: %v", err)
+		return fmt.Errorf("unable to %s ExtendedDaemonset deployment, err: %v", fmt.Sprintf("%v", o.pauseStatus), err)
 	}
 
 	fmt.Fprintf(o.Out, "ExtendedDaemonset '%s/%s' deployment paused set to %t\n", o.userNamespace, o.userExtendedDaemonSetName, o.pauseStatus)
