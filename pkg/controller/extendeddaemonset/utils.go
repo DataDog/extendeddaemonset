@@ -41,7 +41,7 @@ func IsCanaryDeploymentEnded(specCanary *datadoghqv1alpha1.ExtendedDaemonSetSpec
 // IsCanaryDeploymentPaused checks if the Canary deployment has been paused
 func IsCanaryDeploymentPaused(dsAnnotations map[string]string) (bool, datadoghqv1alpha1.ExtendedDaemonSetStatusReason) {
 	isPaused, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]
-	if found && isPaused == "true" {
+	if found && isPaused == "true" { //nolint:goconst
 		if reason, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey]; found {
 			switch reason {
 			case
@@ -61,6 +61,14 @@ func IsCanaryDeploymentPaused(dsAnnotations map[string]string) (bool, datadoghqv
 func IsCanaryDeploymentValid(dsAnnotations map[string]string, rsName string) bool {
 	if value, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryValidAnnotationKey]; found {
 		return value == rsName
+	}
+	return false
+}
+
+// IsCanaryDeploymentFailed checks if the Canary deployment has been failed
+func IsCanaryDeploymentFailed(dsAnnotations map[string]string) bool {
+	if value, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey]; found {
+		return value == "true"
 	}
 	return false
 }

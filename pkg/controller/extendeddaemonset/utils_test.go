@@ -228,3 +228,59 @@ func TestIsCanaryDeploymentValid(t *testing.T) {
 		})
 	}
 }
+
+func TestIsCanaryDeploymentFailed(t *testing.T) {
+	type args struct {
+		dsAnnotations map[string]string
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "annotation found - correct rs name",
+			args: args{
+				dsAnnotations: map[string]string{
+					"extendeddaemonset.datadoghq.com/canary-failed": "true",
+				},
+			},
+			want: true,
+		},
+		{
+			name: "annotation found - incorrect rs name",
+			args: args{
+				dsAnnotations: map[string]string{
+					"extendeddaemonset.datadoghq.com/canary-failed": "false",
+				},
+			},
+			want: false,
+		},
+		{
+			name: "annotation not found",
+			args: args{
+				dsAnnotations: map[string]string{
+					"extendeddaemonset.datadoghq.com/canary-failed": "random",
+				},
+			},
+			want: false,
+		},
+		{
+			name: "annotation not found",
+			args: args{
+				dsAnnotations: map[string]string{
+					"extendeddaemonset.datadoghq.com/canary-something-else": "true",
+				},
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsCanaryDeploymentFailed(tt.args.dsAnnotations); got != tt.want {
+				t.Errorf("IsCanaryDeploymentFailed() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
