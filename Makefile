@@ -75,7 +75,7 @@ generate: bin/operator-sdk bin/openapi-gen bin/client-gen bin/informer-gen bin/l
   --go-header-file ./hack/boilerplate.go.txt
 
 generate-olm: bin/operator-sdk
-	bin/operator-sdk generate csv --csv-version $(VERSION:v%=%) --update-crds
+	bin/operator-sdk generate packagemanifests --version $(VERSION:v%=%) --update-crds --interactive=false
 
 pre-release: bin/yq
 	hack/pre-release.sh $(VERSION) $(RELEASE_CANDIDATE)
