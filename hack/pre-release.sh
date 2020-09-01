@@ -1,12 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Parse parameters
-if [[ "$#" -ne 1 ]]; then
-    echo "Usage: $(basename "$0") VERSION" >&2
-    exit 1
-fi
-
 # Locate project root
 ROOT=$(git rev-parse --show-toplevel)
 
