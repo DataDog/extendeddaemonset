@@ -78,7 +78,7 @@ generate-olm: bin/operator-sdk
 	bin/operator-sdk generate csv --csv-version $(VERSION:v%=%) --update-crds
 
 pre-release: bin/yq
-	hack/pre-release.sh $(VERSION)
+	hack/pre-release.sh $(VERSION) $(RELEASE_CANDIDATE)
 
 CRDS = $(wildcard deploy/crds/*_crd.yaml)
 local-load: $(CRDS)
