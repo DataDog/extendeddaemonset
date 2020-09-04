@@ -1,7 +1,7 @@
 apiVersion: krew.googlecontainertools.github.com/v1alpha2
 kind: Plugin
 metadata:
-  name: extendeddaemonset
+  name: eds
 spec:
   version: "PLACEHOLDER_TAG"
   shortDescription: Easily interact and manage ExtendedDaemonset resources.
