@@ -107,6 +107,7 @@ func TestFilterPodsByNode(t *testing.T) {
 }
 
 func TestFilterAndMapPodsByNode(t *testing.T) {
+	ignoreEvictedPods = true
 	now := time.Now()
 	logf.SetLogger(logf.ZapLogger(true))
 	log := logf.Log.WithName("TestFilterAndMapPodsByNode")
@@ -430,16 +431,18 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 
 func Test_shouldIgnorePod(t *testing.T) {
 	tests := []struct {
-		name   string
-		status corev1.PodStatus
-		want   bool
+		name              string
+		ignoreEvictedPods bool
+		status            corev1.PodStatus
+		want              bool
 	}{
 		{
 			name: "unknown",
 			status: corev1.PodStatus{
 				Phase: corev1.PodUnknown,
 			},
-			want: true,
+			ignoreEvictedPods: true,
+			want:              true,
 		},
 		{
 			name: "evicted",
@@ -447,18 +450,46 @@ func Test_shouldIgnorePod(t *testing.T) {
 				Phase:  corev1.PodFailed,
 				Reason: "Evicted",
 			},
-			want: true,
+			ignoreEvictedPods: true,
+			want:              true,
 		},
 		{
 			name: "running",
 			status: corev1.PodStatus{
 				Phase: corev1.PodRunning,
 			},
-			want: false,
+			ignoreEvictedPods: true,
+			want:              false,
+		},
+		{
+			name: "unknown",
+			status: corev1.PodStatus{
+				Phase: corev1.PodUnknown,
+			},
+			ignoreEvictedPods: false,
+			want:              true,
+		},
+		{
+			name: "evicted",
+			status: corev1.PodStatus{
+				Phase:  corev1.PodFailed,
+				Reason: "Evicted",
+			},
+			ignoreEvictedPods: false,
+			want:              false,
+		},
+		{
+			name: "running",
+			status: corev1.PodStatus{
+				Phase: corev1.PodRunning,
+			},
+			ignoreEvictedPods: false,
+			want:              false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ignoreEvictedPods = tt.ignoreEvictedPods
 			if got := shouldIgnorePod(tt.status); got != tt.want {
 				t.Errorf("shouldIgnorePod() = %v, want %v", got, tt.want)
 			}
