@@ -9,6 +9,7 @@ import (
 	"sort"
 
 	"github.com/go-logr/logr"
+	"github.com/spf13/pflag"
 	corev1 "k8s.io/api/core/v1"
 
 	datadoghqv1alpha1 "github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
@@ -17,6 +18,14 @@ import (
 	"github.com/datadog/extendeddaemonset/pkg/controller/utils/pod"
 	podutils "github.com/datadog/extendeddaemonset/pkg/controller/utils/pod"
 )
+
+var (
+	ignoreEvictedPods = false
+)
+
+func init() {
+	pflag.BoolVarP(&ignoreEvictedPods, "ignoreEvictedPods", "i", ignoreEvictedPods, "Enabling this will force new pods creation on nodes where pods are evicted")
+}
 
 // FilterAndMapPodsByNode used to map pods by associated node. It also return the list of pods that
 // should be deleted (not needed anymore), and pods that are not scheduled yet (created but not scheduled)
@@ -123,12 +132,10 @@ func FilterPodsByNode(podsByNodeName map[string][]*corev1.Pod, nodesMap map[stri
 	return podByNodeName, duplicatedPods
 }
 
-// shouldIgnorePod returns true if the pod is in an unknown phase or was evited
+// shouldIgnorePod returns true if the pod is in an unknown phase or was evicted
+// if ignoreEvictedPods is disabled, only the unknown phase will be considered
 func shouldIgnorePod(status corev1.PodStatus) bool {
-	if status.Phase == corev1.PodUnknown {
-		return true
-	}
-	return pod.IsEvicted(&status)
+	return status.Phase == corev1.PodUnknown || (ignoreEvictedPods && pod.IsEvicted(&status))
 }
 
 type sortPodByNodeName []*corev1.Pod
