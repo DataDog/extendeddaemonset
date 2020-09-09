@@ -325,16 +325,6 @@ func (r *ReconcileExtendedDaemonSet) selectNodes(logger logr.Logger, daemonsetSp
 	nodeList := &corev1.NodeList{}
 
 	listOptions := []client.ListOption{}
-	if replicaset.Spec.Selector != nil {
-		selector, err := utils.ConvertLabelSelector(logger, replicaset.Spec.Selector)
-		if err != nil {
-			logger.Error(err, "Failed to parse label selector")
-		} else {
-			listOptions = append(listOptions, &client.MatchingLabelsSelector{
-				Selector: selector,
-			})
-		}
-	}
 	if daemonsetSpec.Strategy.Canary.NodeSelector != nil {
 		selector, err := utils.ConvertLabelSelector(logger, daemonsetSpec.Strategy.Canary.NodeSelector)
 		if err != nil {
