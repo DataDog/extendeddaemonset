@@ -54,12 +54,28 @@ func ReplaceNodeNameNodeAffinity(affinity *v1.Affinity, nodename string) *v1.Aff
 		return affinity
 	}
 
-	// Replace node selector with the new one.
-	nodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = []v1.NodeSelectorTerm{
-		{
-			MatchFields: []v1.NodeSelectorRequirement{nodeSelReq},
-		},
+	// Build new NodeSelectorTerm list to add the Node name field selector
+	newSelectorTerms := []v1.NodeSelectorTerm{}
+	for _, term := range nodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms {
+		newTerm := term.DeepCopy()
+
+		if len(newTerm.MatchFields) == 0 {
+			newTerm.MatchFields = []v1.NodeSelectorRequirement{nodeSelReq}
+		} else {
+			keyNodeNameFound := false
+			for id, matchField := range newTerm.MatchFields {
+				if matchField.Key == NodeFieldSelectorKeyNodeName {
+					newTerm.MatchFields[id] = nodeSelReq
+					keyNodeNameFound = true
+				}
+			}
+			if !keyNodeNameFound {
+				newTerm.MatchFields = append(newTerm.MatchFields, nodeSelReq)
+			}
+		}
+		newSelectorTerms = append(newSelectorTerms, *newTerm)
 	}
+	nodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = newSelectorTerms
 
 	return affinity
 }
