@@ -1,0 +1,207 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: |-
+      [{
+        "apiVersion": "datadoghq.com/v1alpha1",
+        "kind": "ExtendedDaemonSet",
+        "metadata": {
+          "name": "foo"
+        },
+        "spec": {
+          "strategy": {
+            "canary": {
+              "replicas": 1,
+              "duration": "5m"
+            },
+            "rollingUpdate": {
+              "maxParallelPodCreation": 1,
+              "slowStartIntervalDuration": "1m"
+            }
+          },
+          "template": {
+            "spec": {
+              "containers": [
+                {
+                  "name": "daemon",
+                  "image": "k8s.gcr.io/pause:3.0"
+                }
+              ],
+              "tolerations": [
+                {
+                  "operator": "Exists"
+                }
+              ]
+            }
+          }
+        }
+      }]
+    capabilities: Full Lifecycle
+    operators.operatorframework.io/builder: operator-sdk-v0.19.0
+    operators.operatorframework.io/project_layout: go
+    categories: Application Runtime
+    certified: "true"
+    containerImage: datadog/extendeddaemonset:0.2.0
+    description: |-
+      ExtendedDaemonSet aims to provide a new implementation of the Kubernetes DaemonSet resource with key features:
+
+        * Canary Deployment: Deploy a new DaemonSet version with only a few nodes.
+        * Custom Rolling Update: Improve the default rolling update logic available in Kubernetes batch/v1 Daemonset.
+    repository: https://github.com/DataDog/extendeddaemonset
+    support: Datadog Inc.
+    createdAt: 2020-009-14 14:40:27
+  name: extendeddaemonset.v0.2.0
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: ExtendedDaemonSetReplicaSet is the Schema for the extendeddaemonsetreplicasets
+        API
+      kind: ExtendedDaemonSetReplicaSet
+      name: extendeddaemonsetreplicasets.datadoghq.com
+      version: v1alpha1
+      displayName: ExtendedDaemonset
+    - description: ExtendedDaemonSet is the Schema for the extendeddaemonsets API
+      kind: ExtendedDaemonSet
+      name: extendeddaemonsets.datadoghq.com
+      version: v1alpha1
+    - description: ExtendedDaemonsetSetting is the Schema for the extendeddaemonsetsettings
+        API
+      kind: ExtendedDaemonsetSetting
+      name: extendeddaemonsetsettings.datadoghq.com
+      version: v1alpha1
+  description: ExtendedDaemonSet aims to provide a new implementation of the Kubernetes
+    DaemonSet resource with key features such as canary deployment and custom rolling
+    update strategy.
+  displayName: Extendeddaemonset
+  icon:
+  install:
+    spec:
+      clusterPermissions:
+      - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - nodes
+          verbs:
+          - get
+          - watch
+          - list
+        serviceAccountName: extendeddaemonset
+      deployments:
+      - name: extendeddaemonset
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              name: extendeddaemonset
+          strategy: {}
+          template:
+            metadata:
+              labels:
+                name: extendeddaemonset
+            spec:
+              containers:
+              - args:
+                - --zap-level=2
+                - --zap-encoder=console
+                - --zap-stacktrace-level=error
+                command:
+                - extendeddaemonset
+                env:
+                - name: WATCH_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.annotations['olm.targetNamespaces']
+                - name: POD_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.name
+                - name: OPERATOR_NAME
+                  value: extendeddaemonset
+                image: datadog/extendeddaemonset:v0.2.0
+                imagePullPolicy: IfNotPresent
+                name: extendeddaemonset
+                resources: {}
+              serviceAccountName: extendeddaemonset
+              tolerations:
+              - effect: NoSchedule
+                operator: Exists
+      permissions:
+      - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - events
+          verbs:
+          - create
+        - apiGroups:
+          - ""
+          resources:
+          - pods
+          verbs:
+          - '*'
+        - apiGroups:
+          - ""
+          resources:
+          - configmaps
+          verbs:
+          - create
+        - apiGroups:
+          - ""
+          resourceNames:
+          - extendeddaemonset-lock
+          resources:
+          - configmaps
+          verbs:
+          - update
+          - get
+          - watch
+        - apiGroups:
+          - ""
+          resources:
+          - services
+          verbs:
+          - get
+          - watch
+        - apiGroups:
+          - datadoghq.com
+          resources:
+          - extendeddaemonsets
+          - extendeddaemonsets/status
+          - extendeddaemonsetreplicasets
+          - extendeddaemonsetreplicasets/status
+          - extendeddaemonsetsettings
+          - extendeddaemonsetsettings/status
+          verbs:
+          - '*'
+        serviceAccountName: extendeddaemonset
+    strategy: deployment
+  installModes:
+  - supported: true
+    type: OwnNamespace
+  - supported: true
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - Daemonset
+  - Canary
+  - ExtendedDaemonset
+  - Deployment
+  links:
+  - name: Documentation
+    url: https://github.com/DataDog/extendeddaemonset
+  maintainers:
+  - email: cedric@datadoghq.com
+    name: Cedric Lamoriniere
+  maturity: alpha
+  provider:
+    name: Datadog
+    url: https://your.domain
+  version: 0.2.0
+  replaces: extendeddaemonset.v0.2.0-rc.4
