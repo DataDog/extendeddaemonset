@@ -13,7 +13,7 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
-	"github.com/datadog/extendeddaemonset/pkg/plugin"
+	"github.com/DataDog/extendeddaemonset/pkg/plugin"
 )
 
 func main() {

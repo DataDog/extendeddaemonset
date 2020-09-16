@@ -1,4 +1,4 @@
 /bin
-/controller
-/deploy
-/kubectl-eds
+/chart
+/vendor
+/hack

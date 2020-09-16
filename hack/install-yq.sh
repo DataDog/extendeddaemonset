@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-set -e
 
 set -o errexit
 set -o nounset
@@ -12,8 +11,14 @@ cleanup() {
 }
 trap "cleanup" EXIT SIGINT
 
-VERSION=3.3.0
+VERSION=$1
 BINARY="yq_$(uname)_amd64"
+
+if [ -z "$VERSION" ];
+then
+  echo "usage: bin/install-yq.sh <version>"
+  exit 1
+fi
 
 cd $WORK_DIR
 curl -Lo ${BINARY} https://github.com/mikefarah/yq/releases/download/$VERSION/$BINARY

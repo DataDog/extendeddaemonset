@@ -8,7 +8,7 @@ package enqueue
 import (
 	"context"
 
-	"github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
+	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"

@@ -1,0 +1,17 @@
+domain: com
+layout: go.kubebuilder.io/v2
+projectName: extendeddaemonset
+repo: github.com/DataDog/extendeddaemonset
+resources:
+- group: datadoghq
+  kind: ExtendedDaemonSet
+  version: v1alpha1
+- group: datadoghq
+  kind: ExtendedDaemonsetSetting
+  version: v1alpha1
+- group: datadoghq
+  kind: ExtendedDaemonSetReplicaSet
+  version: v1alpha1
+version: 3-alpha
+plugins:
+  go.sdk.operatorframework.io/v2-alpha: {}

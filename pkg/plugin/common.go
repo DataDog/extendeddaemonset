@@ -12,7 +12,7 @@ import (
 	"github.com/hako/durafmt"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
+	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
 )
 
 func intToString(i int32) string {

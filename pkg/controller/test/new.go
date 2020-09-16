@@ -8,7 +8,7 @@ package test
 import (
 	corev1 "k8s.io/api/core/v1"
 
-	utilaffinity "github.com/datadog/extendeddaemonset/pkg/controller/utils/affinity"
+	utilaffinity "github.com/DataDog/extendeddaemonset/pkg/controller/utils/affinity"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

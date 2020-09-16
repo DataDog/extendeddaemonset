@@ -13,7 +13,7 @@ builds:
   env:
   - CGO_ENABLED=0
   main: ./cmd/kubectl-eds/main.go
-  ldflags: -w -X ${BUILDINFOPKG}.Tag=${TAG} -X ${BUILDINFOPKG}.Commit=${GIT_COMMIT} -X ${BUILDINFOPKG}.Version=${VERSION} -X ${BUILDINFOPKG}.BuildTime=${DATE} -s
+  ldflags: -w -X ${BUILDINFOPKG}.Commit=${GIT_COMMIT} -X ${BUILDINFOPKG}.Version=${VERSION} -X ${BUILDINFOPKG}.BuildTime=${DATE} -s
   binary: kubectl-eds
 archives:
 - id: kubectl-eds

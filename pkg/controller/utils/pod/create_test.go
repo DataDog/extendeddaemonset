@@ -12,8 +12,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
-	datadoghqv1alpha1 "github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
-	ctrltest "github.com/datadog/extendeddaemonset/pkg/controller/test"
+	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
+	ctrltest "github.com/DataDog/extendeddaemonset/pkg/controller/test"
 	"github.com/google/go-cmp/cmp"
 )
 

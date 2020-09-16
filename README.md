@@ -1,7 +1,7 @@
 # ExtendedDaemonSet
 
 ![badge](https://action-badges.now.sh/datadog/extendeddaemonset)
-[![Go Report Card](https://goreportcard.com/badge/github.com/datadog/extendeddaemonset)](https://goreportcard.com/report/github.com/datadog/extendeddaemonset)
+[![Go Report Card](https://goreportcard.com/badge/github.com/DataDog/extendeddaemonset)](https://goreportcard.com/report/github.com/DataDog/extendeddaemonset)
 [![codecov](https://codecov.io/gh/datadog/extendeddaemonset/branch/master/graph/badge.svg)](https://codecov.io/gh/datadog/extendeddaemonset)
 
 > **!!! Alpha version !!!**
@@ -15,21 +15,21 @@
 
 ### Deployment
 
-To use the ExtendedDaemonSet controller in your Kubernetes cluster, deploy its resources definitions in the `/deploy` folder.
+To use the ExtendedDaemonSet controller in your Kubernetes cluster, only two commands are required:
 
 First, deploy the Custom Resources Definitions:
 
 ```console
-$ kubectl apply -f ./deploy/crds
+$ make install
 ```
 
-If you want to deploy a specific controller version, the version can be set in the `deploy/operator.yaml` file. By default, the `latest` docker image tag is used.
+Then deploy default manifest (uses Kustomize)
 
 ```console
-$ kubectl apply -f ./deploy/
+$ make deploy
 ```
 
-By default, the controller only watches the ExtendedDaemonSet resources that are present in its own namespace. If you want to deploy the controller cluster wide, modify the `deploy/operator.yaml` to remove or set an empty value for the `WATCH_NAMESPACE` environment variable:
+By default, the controller only watches the ExtendedDaemonSet resources that are present in its own namespace. If you want to deploy the controller cluster wide, add a Kustomization to the `config/manager`
 
 ```yaml
             env:  
@@ -65,18 +65,10 @@ $ export KUBECONFIG="$(kind get kubeconfig-path --name="kind")"
 
 ```console
 # deploy the controller needed crds
-$ kubectl apply -f ./deploy/crds
-customresourcedefinition.apiextensions.k8s.io/extendeddaemonsets.datadoghq.com created
-customresourcedefinition.apiextensions.k8s.io/extendeddaemonsetreplicasets.datadoghq.com created
+$ make install
 
 # deploy the controller pod
-$ kubectl apply -f ./deploy/
-clusterrole.rbac.authorization.k8s.io/extendeddaemonset created
-clusterrolebinding.rbac.authorization.k8s.io/extendeddaemonset created
-deployment.apps/extendeddaemonset created
-role.rbac.authorization.k8s.io/extendeddaemonset created
-rolebinding.rbac.authorization.k8s.io/extendeddaemonset created
-serviceaccount/extendeddaemonset created
+$ make deploy
 
 # you should see the extendeddaemonset controller pod running
 $ kubectl get pods
@@ -280,7 +272,7 @@ spec:
 
 This project uses ```go module```. Ensure you have it activated: ```export GO111MODULE=on```.
 
-Run ```make install-tools``` to install mandatory tooling, like the `operator-fwk` command line and the `golangci` linter.
+Run ```make install-tools``` to install mandatory tooling, like the `kubebuilder` or the `golangci` linter.
 
 ```console
 $ make build
@@ -289,45 +281,36 @@ CGO_ENABLED=0 go build -i -installsuffix cgo -ldflags '-w' -o controller ./cmd/m
 
 ### How to test it
 
+### Custom image
+
+You can create (and deploy) a custom image easily through the `IMG` environment variable:
+
+```
+IMG=<your_dockerhub_repo>/extendeddaemonset:test make docker-build deploy
+```
+
 #### Unit tests
 
 ```console
 $ make test
-./go.test.sh
-ok      github.com/datadog/extendeddaemonset/pkg/controller/extendeddaemonset   1.107s  coverage: 77.0% of statements
-ok      github.com/datadog/extendeddaemonset/pkg/controller/extendeddaemonsetreplicaset 1.098s  coverage: 63.9% of statements
-ok      github.com/datadog/extendeddaemonset/pkg/controller/extendeddaemonsetreplicaset/strategy        1.036s  coverage: 5.3% of statements
-ok      github.com/datadog/extendeddaemonset/pkg/controller/extendeddaemonsetreplicaset/strategy/limits 1.016s  coverage: 83.3% of statements
-ok      github.com/datadog/extendeddaemonset/pkg/controller/utils       1.015s  coverage: 100.0% of statements
+ok      github.com/DataDog/extendeddaemonset/controllers/extendeddaemonset   1.107s  coverage: 77.0% of statements
+ok      github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset 1.098s  coverage: 63.9% of statements
+ok      github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/strategy        1.036s  coverage: 5.3% of statements
+ok      github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/strategy/limits 1.016s  coverage: 83.3% of statements
+ok      github.com/DataDog/extendeddaemonset/pkg/controller/utils       1.015s  coverage: 100.0% of statements
 ```
-
-#### End to end tests
-
-For end to end tests, consult [```/test/README.md```](./test/README.md)
 
 ### Linter validation
 
 To use the linter, run:
 
 ```console
-$ make validate
+$ make lint
 ./bin/golangci-lint run ./...
 ```
 
+Note that it runs automatically when running the `test` or `build` targets.
+
 ### How to release it
 
-- Checkout the repository on the correct branch (`master`)
-- Run locally the command `make VERSION=x.y.z pre-release`
-- Commit all the changes generated from the previous command:
-    ```console
-    $ git add .
-    $ git commit -s -m "release vX.Y.Z"
-    ```
-- Add the release tag:
-    ```console
-    $ git tag vX.Y.Z
-    ```
-- Push it:
-    ```console
-    $ git push origin vX.Y.Z
-    ```
+See [RELEASING](RELEASING.md)

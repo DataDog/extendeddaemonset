@@ -16,9 +16,9 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	datadoghqv1alpha1 "github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
-	"github.com/datadog/extendeddaemonset/pkg/controller/utils/affinity"
-	"github.com/datadog/extendeddaemonset/pkg/controller/utils/comparison"
+	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
+	"github.com/DataDog/extendeddaemonset/pkg/controller/utils/affinity"
+	"github.com/DataDog/extendeddaemonset/pkg/controller/utils/comparison"
 )
 
 // CreatePodFromDaemonSetReplicaSet use to create a Pod from a ReplicaSet instance and a specific Node name.

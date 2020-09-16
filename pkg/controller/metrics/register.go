@@ -8,30 +8,31 @@ package metrics
 import (
 	"net/http"
 
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-
 	"k8s.io/client-go/tools/cache"
 	ksmetric "k8s.io/kube-state-metrics/pkg/metric"
 	metricsstore "k8s.io/kube-state-metrics/pkg/metrics_store"
-	"sigs.k8s.io/controller-runtime/pkg/metrics"
-
-	"github.com/datadog/extendeddaemonset/pkg/controller/httpserver"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-// NewHandler return new metrics Handler instance
-func NewHandler(mux httpserver.Server) Handler {
-	handler := &storesHandler{
-		mux: mux,
+var (
+	metricsHandler []func(manager.Manager, Handler) error
+)
+
+// RegisterHandlerFunc register a function to be added to endpoint when its registered
+func RegisterHandlerFunc(h func(manager.Manager, Handler) error) {
+	metricsHandler = append(metricsHandler, h)
+}
+
+// RegisterEndpoint add custom metrics endpoint to existing HTTP Listener
+func RegisterEndpoint(mgr ctrl.Manager, register func(string, http.Handler) error) error {
+	handler := &storesHandler{}
+	for _, metricsHandler := range metricsHandler {
+		if err := metricsHandler(mgr, handler); err != nil {
+			return err
+		}
 	}
-
-	promHandler := promhttp.HandlerFor(metrics.Registry, promhttp.HandlerOpts{
-		ErrorHandling: promhttp.HTTPErrorOnError,
-	})
-
-	handler.mux.HandleFunc("/metrics", promHandler.ServeHTTP)
-	handler.mux.HandleFunc("/ksmetrics", handler.serveKsmHTTP)
-
-	return handler
+	return register("/ksmetrics", http.HandlerFunc(handler.serveKsmHTTP))
 }
 
 func (h *storesHandler) serveKsmHTTP(w http.ResponseWriter, r *http.Request) {
@@ -46,12 +47,10 @@ func (h *storesHandler) serveKsmHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (h *storesHandler) RegisterStore(generators []ksmetric.FamilyGenerator, expectedType interface{}, lw cache.ListerWatcher) error {
 	store := newMetricsStore(generators, expectedType, lw)
-
 	h.stores = append(h.stores, store)
 	return nil
 }
 
 type storesHandler struct {
-	mux    httpserver.Server
 	stores []*metricsstore.MetricsStore
 }
