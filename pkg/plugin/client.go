@@ -8,14 +8,13 @@ package plugin
 import (
 	"fmt"
 
+	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	"k8s.io/client-go/tools/clientcmd"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 
 	"k8s.io/client-go/kubernetes/scheme"
-
-	"github.com/datadog/extendeddaemonset/pkg/apis"
 )
 
 // NewClient returns new client instance
@@ -31,7 +30,7 @@ func NewClient(clientConfig clientcmd.ClientConfig) (client.Client, error) {
 		return nil, fmt.Errorf("unable to to instantiate mapper, err: %v", err)
 	}
 
-	if err = apis.AddToScheme(scheme.Scheme); err != nil {
+	if err = v1alpha1.AddToScheme(scheme.Scheme); err != nil {
 		return nil, fmt.Errorf("unable register ExtendedDaemonset apis, err: %v", err)
 	}
 	// Create the Client for Read/Write operations.

@@ -17,7 +17,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
-	datadoghqv1alpha1 "github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
+	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 )
 
 // IsReplicaSetUpToDate returns true if the ExtendedDaemonSetReplicaSet is up to date with the ExtendedDaemonSet pod template.

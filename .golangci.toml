@@ -1,6 +1,5 @@
 [run]
   deadline = "5m"
-  skip-files = ["test/e2e/extendeddaemonset_test.go"]
 
 [linters-settings]
 

@@ -20,7 +20,7 @@ import (
 
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
-	"github.com/datadog/extendeddaemonset/pkg/apis/datadoghq/v1alpha1"
+	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
 )
 
 var (
