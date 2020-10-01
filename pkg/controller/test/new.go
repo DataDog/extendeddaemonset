@@ -17,6 +17,7 @@ type NewNodeOptions struct {
 	Annotations   map[string]string
 	Labels        map[string]string
 	Conditions    []corev1.NodeCondition
+	Taints        []corev1.Taint
 	Unschedulable bool
 }
 
@@ -48,6 +49,7 @@ func NewNode(name string, opts *NewNodeOptions) *corev1.Node {
 
 		node.Spec.Unschedulable = opts.Unschedulable
 		node.Status.Conditions = append(node.Status.Conditions, opts.Conditions...)
+		node.Spec.Taints = append(node.Spec.Taints, opts.Taints...)
 	}
 	return node
 }
@@ -61,6 +63,7 @@ type NewPodOptions struct {
 	Reason            string
 	Resources         corev1.ResourceRequirements
 	NodeSelector      map[string]string
+	Tolerations       []corev1.Toleration
 }
 
 // NewPod used to return new pod instance
@@ -109,6 +112,7 @@ func NewPod(namespace, name, nodeName string, opts *NewPodOptions) *corev1.Pod {
 		}
 		pod.Status.Phase = opts.Phase
 		pod.Status.Reason = opts.Reason
+		pod.Spec.Tolerations = append(pod.Spec.Tolerations, opts.Tolerations...)
 	}
 
 	if nodeName != "" {

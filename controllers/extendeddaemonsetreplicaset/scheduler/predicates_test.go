@@ -14,6 +14,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 
 	ctrltest "github.com/DataDog/extendeddaemonset/pkg/controller/test"
+	"github.com/DataDog/extendeddaemonset/pkg/controller/utils/pod"
 )
 
 func TestCheckNodeFitness(t *testing.T) {
@@ -38,6 +39,12 @@ func TestCheckNodeFitness(t *testing.T) {
 				Status: corev1.ConditionFalse,
 			},
 		},
+		Taints: []corev1.Taint{
+			{
+				Key:    "node.kubernetes.io/not-ready",
+				Effect: corev1.TaintEffectNoExecute,
+			},
+		},
 	}
 	nodeUnscheduledOptions := &ctrltest.NewNodeOptions{
 		Labels:        map[string]string{"app": "foo"},
@@ -45,17 +52,40 @@ func TestCheckNodeFitness(t *testing.T) {
 		Conditions: []corev1.NodeCondition{
 			{
 				Type:   corev1.NodeReady,
-				Status: corev1.ConditionFalse,
+				Status: corev1.ConditionTrue,
+			},
+		},
+		Taints: []corev1.Taint{
+			{
+				Key:    "node.kubernetes.io/unschedulable",
+				Effect: corev1.TaintEffectNoSchedule,
+			},
+		},
+	}
+	nodeTaintedOptions := &ctrltest.NewNodeOptions{
+		Labels: map[string]string{"app": "foo"},
+		Conditions: []corev1.NodeCondition{
+			{
+				Type:   corev1.NodeReady,
+				Status: corev1.ConditionTrue,
+			},
+		},
+		Taints: []corev1.Taint{
+			{
+				Key:    "mytaint",
+				Effect: corev1.TaintEffectNoSchedule,
 			},
 		},
 	}
 	node1 := ctrltest.NewNode("node1", nodeReadyOptions)
 	node2 := ctrltest.NewNode("node2", nodeKOOptions)
 	node3 := ctrltest.NewNode("node3", nodeUnscheduledOptions)
+	node4 := ctrltest.NewNode("node4", nodeTaintedOptions)
 
 	pod1 := ctrltest.NewPod("foo", "pod1", "", &ctrltest.NewPodOptions{
 		CreationTimestamp: metav1.NewTime(now),
 		NodeSelector:      map[string]string{"app": "foo"},
+		Tolerations:       pod.StandardDaemonSetTolerations,
 	})
 
 	type args struct {
@@ -90,6 +120,14 @@ func TestCheckNodeFitness(t *testing.T) {
 				node: node3,
 			},
 			want: true,
+		},
+		{
+			name: "node tainted",
+			args: args{
+				pod:  pod1,
+				node: node4,
+			},
+			want: false,
 		},
 	}
 	for _, tt := range tests {
