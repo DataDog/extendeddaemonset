@@ -323,7 +323,7 @@ func (r *Reconciler) selectNodes(logger logr.Logger, daemonsetSpec *datadoghqv1a
 			continue
 		}
 
-		if !scheduler.CheckNodeFitness(logger.WithValues("filter", "Nodes Unschedulabled"), newPod, &node, false) {
+		if !scheduler.CheckNodeFitness(logger.WithValues("filter", "Nodes Unschedulabled"), newPod, &node) {
 			currentNodes = append(currentNodes[:id], currentNodes[id+1:]...)
 		}
 	}

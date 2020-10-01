@@ -59,9 +59,8 @@ func TestCheckNodeFitness(t *testing.T) {
 	})
 
 	type args struct {
-		pod            *corev1.Pod
-		node           *corev1.Node
-		ignoreNotReady bool
+		pod  *corev1.Pod
+		node *corev1.Node
 	}
 	tests := []struct {
 		name string
@@ -71,34 +70,31 @@ func TestCheckNodeFitness(t *testing.T) {
 		{
 			name: "node ready",
 			args: args{
-				pod:            pod1,
-				node:           node1,
-				ignoreNotReady: false,
+				pod:  pod1,
+				node: node1,
 			},
 			want: true,
 		},
 		{
 			name: "node not ready",
 			args: args{
-				pod:            pod1,
-				node:           node2,
-				ignoreNotReady: false,
+				pod:  pod1,
+				node: node2,
 			},
 			want: true,
 		},
 		{
 			name: "node unschedulable",
 			args: args{
-				pod:            pod1,
-				node:           node3,
-				ignoreNotReady: false,
+				pod:  pod1,
+				node: node3,
 			},
-			want: false,
+			want: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := CheckNodeFitness(log.WithName(tt.name), tt.args.pod, tt.args.node, tt.args.ignoreNotReady); got != tt.want {
+			if got := CheckNodeFitness(log.WithName(tt.name), tt.args.pod, tt.args.node); got != tt.want {
 				t.Errorf("CheckNodeFitness() = %v, want %v", got, tt.want)
 			}
 		})

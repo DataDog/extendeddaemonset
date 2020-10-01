@@ -51,7 +51,7 @@ func FilterAndMapPodsByNode(logger logr.Logger, replicaset *datadoghqv1alpha1.Ex
 			continue
 		}
 		// Filter Nodes Unschedulabled
-		if scheduler.CheckNodeFitness(logger.WithValues("filter", "FilterAndMapPodsByNode"), newPod, nodeItem.Node, false) {
+		if scheduler.CheckNodeFitness(logger.WithValues("filter", "FilterAndMapPodsByNode"), newPod, nodeItem.Node) {
 			podsByNodeName[nodeItem.Node.Name] = nil
 		} else {
 			logger.V(1).Info("CheckNodeFitness not ok", "reason", "DeletionTimestamp==nil", "node.Name", nodeItem.Node.Name)
