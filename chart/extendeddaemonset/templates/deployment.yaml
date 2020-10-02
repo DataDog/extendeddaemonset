@@ -30,11 +30,9 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
-            - --zap-level={{ .Values.logLevel }}
-            - --zap-encoder=console
-            - --zap-stacktrace-level=error
+            - -loglevel={{ .Values.logLevel }}
           {{- if .Values.pprof.enabled }}
-            - --pprof=true
+            - -pprof
           {{- end }}
           env:
             - name: WATCH_NAMESPACE
@@ -53,18 +51,12 @@ spec:
               value: {{ .Chart.Name }}
           ports:
             - name: metrics
-              containerPort: 8383
+              containerPort: 8080
               protocol: TCP
-          readinessProbe:
-            httpGet:
-              path: /ready
-              port: 8080
-            periodSeconds: 10
           livenessProbe:
             httpGet:
-              path: /live
-              port: 8080
-            periodSeconds: 10
+              path: /healthz/
+              port: 8081
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
