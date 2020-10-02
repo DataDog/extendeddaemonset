@@ -23,7 +23,7 @@ import (
 // the predicates include:
 //   - PodMatchNodeSelector: checks pod's NodeSelector and NodeAffinity against node
 //   - PodToleratesNodeTaints: exclude tainted node unless pod has specific toleration
-func CheckNodeFitness(logger logr.Logger, pod *corev1.Pod, node *corev1.Node, ignoreNotReady bool) bool {
+func CheckNodeFitness(logger logr.Logger, pod *corev1.Pod, node *corev1.Node) bool {
 	// Check pod node selector
 	// Check if node.Labels match pod.Spec.NodeSelector.
 	if !checkNodeSelector(pod, node) {
@@ -36,27 +36,7 @@ func CheckNodeFitness(logger logr.Logger, pod *corev1.Pod, node *corev1.Node, ig
 		return false
 	}
 
-	if ignoreNotReady && !chechNodeStatusReady(node) {
-		logger.V(1).Info("CheckNodeFitness return false", "reason", "node not ready")
-		return false
-	}
-
-	if node.Spec.Unschedulable {
-		logger.V(1).Info("CheckNodeFitness return false", "reason", "node unschedulable")
-		return false
-	}
-
 	return true
-}
-
-func chechNodeStatusReady(node *corev1.Node) bool {
-	// Return true only if node ready
-	for _, condition := range node.Status.Conditions {
-		if condition.Type == corev1.NodeReady && condition.Status == corev1.ConditionTrue {
-			return true
-		}
-	}
-	return false
 }
 
 func checkNodeSelector(pod *corev1.Pod, node *corev1.Node) bool {

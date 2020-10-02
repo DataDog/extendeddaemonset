@@ -43,6 +43,8 @@ func CreatePodFromDaemonSetReplicaSet(scheme *runtime.Scheme, replicaset *datado
 	templateCopy.ObjectMeta.Annotations[datadoghqv1alpha1.MD5ExtendedDaemonSetAnnotationKey] = replicaset.Spec.TemplateGeneration
 	templateCopy.ObjectMeta.Annotations[DaemonsetClusterAutoscalerPodAnnotationKey] = "true"
 
+	templateCopy.Spec.Tolerations = append(templateCopy.Spec.Tolerations, StandardDaemonSetTolerations...)
+
 	overwriteResourcesFromEdsNode(templateCopy, edsNode)
 
 	if node != nil {
