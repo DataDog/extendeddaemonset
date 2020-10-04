@@ -85,7 +85,7 @@ func main() {
 		HealthProbeBindAddress: ":8081",
 		Port:                   9443,
 		LeaderElection:         enableLeaderElection,
-		LeaderElectionID:       "e361fbac.datadoghq.com",
+		LeaderElectionID:       "extendeddaemonset-lock",
 	}))
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
