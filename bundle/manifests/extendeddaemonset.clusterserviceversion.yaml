@@ -73,7 +73,7 @@ metadata:
     capabilities: Full Lifecycle
     operators.operatorframework.io/builder: operator-sdk-v1.0.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
-  name: extendeddaemonset.v0.2.0
+  name: extendeddaemonset.v0.3.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -203,7 +203,7 @@ spec:
       deployments:
       - name: eds-controller-manager
         spec:
-          replicas: 1
+          replicas: 2
           selector:
             matchLabels:
               app.kubernetes.io/name: extendeddaemonset
@@ -243,10 +243,10 @@ spec:
                 resources:
                   limits:
                     cpu: 100m
-                    memory: 30Mi
+                    memory: 100Mi
                   requests:
                     cpu: 100m
-                    memory: 20Mi
+                    memory: 100Mi
               terminationGracePeriodSeconds: 10
       permissions:
       - rules:
@@ -303,4 +303,5 @@ spec:
   provider:
     name: Datadog
     url: https://github.com/DataDog/extendeddaemonset
-  version: 0.2.0
+  replaces: extendeddaemonset.v0.2.0
+  version: 0.3.0
