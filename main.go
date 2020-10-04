@@ -61,6 +61,8 @@ func main() {
 
 	// Custom flags
 	var printVersion, pprofActive bool
+	var logEncoder string
+	flag.StringVar(&logEncoder, "logEncoder", "json", "log encoding ('json' or 'console')")
 	logLevel := zap.LevelFlag("loglevel", zapcore.InfoLevel, "Set log level")
 	flag.BoolVar(&printVersion, "version", false, "Print version and exit")
 	flag.BoolVar(&pprofActive, "pprof", false, "Enable pprof endpoint")
@@ -69,7 +71,10 @@ func main() {
 	flag.Parse()
 
 	// Logging setup
-	customSetupLogging(*logLevel)
+	if err := customSetupLogging(*logLevel, logEncoder); err != nil {
+		setupLog.Error(err, "unable to setup the logger")
+		os.Exit(1)
+	}
 
 	// Print version information
 	if printVersion {
@@ -146,12 +151,24 @@ func customSetupEnvironment(mgr manager.Manager) {
 	}
 }
 
-func customSetupLogging(logLevel zapcore.Level) {
+func customSetupLogging(logLevel zapcore.Level, logEncoder string) error {
+	var encoder zapcore.Encoder
+	switch logEncoder {
+	case "console":
+		encoder = zapcore.NewConsoleEncoder(zap.NewProductionEncoderConfig())
+	case "json":
+		encoder = zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig())
+	default:
+		return fmt.Errorf("unknow log encoder: %s", logEncoder)
+	}
+
 	ctrl.SetLogger(ctrlzap.New(
-		ctrlzap.Encoder(zapcore.NewConsoleEncoder(zap.NewProductionEncoderConfig())),
+		ctrlzap.Encoder(encoder),
 		ctrlzap.Level(logLevel),
 		ctrlzap.StacktraceLevel(zapcore.PanicLevel)),
 	)
+
+	return nil
 }
 
 func customSetupHealthChecks(mgr manager.Manager) {
