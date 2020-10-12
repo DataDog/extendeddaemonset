@@ -286,7 +286,7 @@ CGO_ENABLED=0 go build -i -installsuffix cgo -ldflags '-w' -o controller ./cmd/m
 You can create (and deploy) a custom image easily through the `IMG` environment variable:
 
 ```
-IMG=<your_dockerhub_repo>/extendeddaemonset:test make docker-build deploy
+IMG=<your_dockerhub_repo>/extendeddaemonset:test make docker-build docker-push deploy
 ```
 
 #### Unit tests
