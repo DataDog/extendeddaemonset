@@ -272,6 +272,11 @@ func (in *ExtendedDaemonSetSpecStrategyCanary) DeepCopyInto(out *ExtendedDaemonS
 		*out = new(v1.Duration)
 		**out = **in
 	}
+	if in.MaxRestarts != nil {
+		in, out := &in.MaxRestarts, &out.MaxRestarts
+		*out = new(intstr.IntOrString)
+		**out = **in
+	}
 	if in.NodeSelector != nil {
 		in, out := &in.NodeSelector, &out.NodeSelector
 		*out = new(v1.LabelSelector)

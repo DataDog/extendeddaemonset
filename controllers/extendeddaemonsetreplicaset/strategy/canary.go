@@ -17,6 +17,11 @@ import (
 	podUtils "github.com/DataDog/extendeddaemonset/pkg/controller/utils/pod"
 )
 
+const (
+	// defaultMaxRestarts defines the default threshold of tolerable restart counts beyond which the canary deployment should pause
+	defaultMaxRestarts = 2
+)
+
 // ManageCanaryDeployment used to manage ReplicaSet in Canary state
 func ManageCanaryDeployment(client client.Client, daemonset *v1alpha1.ExtendedDaemonSet, params *Parameters) (*Result, error) {
 	result := &Result{}
@@ -28,6 +33,13 @@ func ManageCanaryDeployment(client client.Client, daemonset *v1alpha1.ExtendedDa
 	var needRequeue bool
 	var err error
 	isPaused, _ := eds.IsCanaryDeploymentPaused(daemonset.GetAnnotations())
+
+	var maxRestarts int
+	if daemonset.Spec.Strategy.Canary.MaxRestarts == nil {
+		maxRestarts = defaultMaxRestarts
+	} else {
+		maxRestarts = daemonset.Spec.Strategy.Canary.MaxRestarts.IntValue()
+	}
 
 	// Canary mode
 	for _, nodeName := range params.CanaryNodes {
@@ -53,7 +65,7 @@ func ManageCanaryDeployment(client client.Client, daemonset *v1alpha1.ExtendedDa
 					}
 					if !isPaused {
 						// Check if deploy should be paused due to restarts. Note that pausing the canary will have no effect if it has been validated or failed
-						if isRestarting, reason := podUtils.IsPodRestarting(pod); isRestarting {
+						if isRestarting, reason := podUtils.IsPodRestarting(pod, maxRestarts); isRestarting {
 							err = pauseCanaryDeployment(client, daemonset, reason)
 							if err != nil {
 								params.Logger.Error(err, "Failed to pause canary deployment")

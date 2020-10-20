@@ -123,6 +123,10 @@ spec:
                   properties:
                     duration:
                       type: string
+                    maxRestarts:
+                      anyOf:
+                      - type: integer
+                      - type: string
                     nodeAntiAffinityKeys:
                       items:
                         type: string

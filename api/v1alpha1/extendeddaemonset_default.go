@@ -15,6 +15,7 @@ import (
 const (
 	defaultCanaryReplica             = 1
 	defaultCanaryDuration            = 10
+	defaultCanaryMaxRestarts         = 2
 	defaultSlowStartIntervalDuration = 1
 	defaultMaxParallelPodCreation    = 250
 	defaultReconcileFrequency        = 10 * time.Second
@@ -28,7 +29,7 @@ func IsDefaultedExtendedDaemonSet(dd *ExtendedDaemonSet) bool {
 	}
 
 	if dd.Spec.Strategy.Canary != nil {
-		if defauled := IsDefaultedExtendedDaemonSetSpecStrategyCanary(dd.Spec.Strategy.Canary); !defauled {
+		if defaulted := IsDefaultedExtendedDaemonSetSpecStrategyCanary(dd.Spec.Strategy.Canary); !defaulted {
 			return false
 		}
 	}
@@ -124,6 +125,10 @@ func DefaultExtendedDaemonSetSpecStrategyCanary(c *ExtendedDaemonSetSpecStrategy
 	if c.Replicas == nil {
 		replicas := intstr.FromInt(defaultCanaryReplica)
 		c.Replicas = &replicas
+	}
+	if c.MaxRestarts == nil {
+		maxRestarts := intstr.FromInt(defaultCanaryMaxRestarts)
+		c.MaxRestarts = &maxRestarts
 	}
 	if c.NodeSelector == nil {
 		c.NodeSelector = &metav1.LabelSelector{
