@@ -158,3 +158,29 @@ func pauseCanaryDeployment(client client.Client, eds *datadoghqv1alpha1.Extended
 	}
 	return nil
 }
+
+// addPodLabel adds a given label to a pod, no-op if the pod is nil or if the label exists
+func addPodLabel(c client.Client, pod *corev1.Pod, k, v string) error {
+	if pod == nil {
+		return nil
+	}
+	if label, found := pod.GetLabels()[k]; found && label == v {
+		// The label is there, nothing to do
+		return nil
+	}
+	pod.Labels[k] = v
+	return c.Update(context.TODO(), pod)
+}
+
+// deletePodLabel deletes a given pod label, no-op if the pod is nil or if the label doesn't exists
+func deletePodLabel(c client.Client, pod *corev1.Pod, k string) error {
+	if pod == nil {
+		return nil
+	}
+	if _, found := pod.GetLabels()[k]; !found {
+		// The label is not there, nothing to do
+		return nil
+	}
+	delete(pod.Labels, k)
+	return c.Update(context.TODO(), pod)
+}
