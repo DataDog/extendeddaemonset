@@ -6,6 +6,7 @@
 package strategy
 
 import (
+	"fmt"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,7 +37,12 @@ func ManageCanaryDeployment(client client.Client, daemonset *v1alpha1.ExtendedDa
 		if pod, ok := params.PodByNodeName[node]; ok {
 			if pod == nil {
 				result.PodsToCreate = append(result.PodsToCreate, node)
+				needRequeue = true
 			} else {
+				if err = addPodLabel(client, pod, v1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelKey, v1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelValue); err != nil {
+					params.Logger.Error(err, fmt.Sprintf("Couldn't add the canary label for pod '%s/%s', will retry later", pod.GetNamespace(), pod.GetName()))
+					needRequeue = true
+				}
 				if pod.DeletionTimestamp != nil {
 					needRequeue = true
 					continue

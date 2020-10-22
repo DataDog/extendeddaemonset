@@ -123,6 +123,66 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 				return eds.Status.Canary != nil && eds.Status.Canary.ReplicaSet != ""
 			}, timeout, interval).Should(BeTrue())
 		})
+
+		It("Should add canary labels", func() {
+			Eventually(func() bool {
+				canaryPods := &corev1.PodList{}
+				listOptions := []client.ListOption{
+					client.MatchingLabels{
+						datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelKey: datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelValue,
+					},
+				}
+
+				err = k8sClient.List(context.Background(), canaryPods, listOptions...)
+				if err != nil {
+					fmt.Fprint(GinkgoWriter, err)
+					return false
+				}
+
+				return len(canaryPods.Items) == 2
+			}, timeout, interval).Should(BeTrue())
+		})
+
+		It("Should remove canary labels", func() {
+			Eventually(func() bool {
+				eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
+				err = k8sClient.Get(context.Background(), key, eds)
+				if err != nil {
+					fmt.Fprint(GinkgoWriter, err)
+					return false
+				}
+
+				if eds.Status.Canary == nil {
+					return false
+				}
+
+				eds.Status.ActiveReplicaSet = eds.Status.Canary.ReplicaSet
+
+				if err = k8sClient.Update(context.Background(), eds); err != nil {
+					fmt.Fprint(GinkgoWriter, err)
+					return false
+				}
+
+				return true
+			}, timeout, interval).Should(BeTrue())
+
+			Eventually(func() bool {
+				canaryPods := &corev1.PodList{}
+				listOptions := []client.ListOption{
+					client.MatchingLabels{
+						datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelKey: datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelValue,
+					},
+				}
+
+				err = k8sClient.List(context.Background(), canaryPods, listOptions...)
+				if err != nil {
+					fmt.Fprint(GinkgoWriter, err)
+					return false
+				}
+
+				return len(canaryPods.Items) == 0
+			}, timeout, interval).Should(BeTrue())
+		})
 	})
 
 	Context("Using ExtendedDaemonsetSetting", func() {
