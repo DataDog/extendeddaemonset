@@ -6,13 +6,15 @@
 package strategy
 
 import (
+	"context"
+	"fmt"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	intstrutil "k8s.io/apimachinery/pkg/util/intstr"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	runtimeclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/conditions"
@@ -21,8 +23,12 @@ import (
 	podutils "github.com/DataDog/extendeddaemonset/pkg/controller/utils/pod"
 )
 
+// cleanCanaryLabelsThreshold is the duration since the last transition to a rolling update of a replicaset
+// during which we keep retrying cleaning up the canary labels that were added to the canary pods during the canary phase
+const cleanCanaryLabelsThreshold = 5 * time.Minute
+
 // ManageDeployment used to manage ReplicaSet in rollingupdate state
-func ManageDeployment(client client.Client, params *Parameters) (*Result, error) {
+func ManageDeployment(client runtimeclient.Client, params *Parameters) (*Result, error) {
 	result := &Result{}
 
 	// remove canary node if define
@@ -123,6 +129,29 @@ func ManageDeployment(client client.Client, params *Parameters) (*Result, error)
 	result.NewStatus, result.Result, err = cleanupPods(client, params.Logger, result.NewStatus, params.PodToCleanUp)
 	if result.NewStatus.Desired != result.NewStatus.Ready {
 		result.Result.Requeue = true
+	}
+
+	// Remove canary labels from canary pods (if they exist)
+	// We keep retrying these operations only for the first X minutes after starting the rolling update to avoid Listing pods endlessly.
+	if time.Since(rollingUpdateStartTime) < cleanCanaryLabelsThreshold {
+		canaryPods := &corev1.PodList{}
+		listOptions := []runtimeclient.ListOption{
+			runtimeclient.MatchingLabels{
+				datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelKey: datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelValue,
+				datadoghqv1alpha1.ExtendedDaemonSetReplicaSetNameLabelKey:   params.Replicaset.GetName(),
+			},
+		}
+		if err = client.List(context.TODO(), canaryPods, listOptions...); err != nil {
+			params.Logger.Error(err, "Couldn't get canary pods")
+			result.Result.Requeue = true
+		} else {
+			for _, pod := range canaryPods.Items {
+				if err = deletePodLabel(client, &pod, datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelKey); err != nil {
+					params.Logger.Error(err, fmt.Sprintf("Couldn't remove canary label from pod '%s/%s'", pod.GetNamespace(), pod.GetName()))
+					result.Result.Requeue = true
+				}
+			}
+		}
 	}
 
 	return result, err
