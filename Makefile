@@ -22,6 +22,7 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
 # Image URL to use all building/pushing image targets
 IMG ?= datadog/extendeddaemonset:latest
+IMG_CHECK ?= datadog/extendeddaemonset-check:latest
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -81,14 +82,22 @@ generate: controller-gen generate-openapi
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 # Build the docker image
-docker-build: generate docker-build-ci
+docker-build: generate docker-build-ci docker-build-check-ci
 
 docker-build-ci:
 	docker build . -t ${IMG} --build-arg LDFLAGS="${LDFLAGS}"
 
-# Push the docker image
-docker-push:
+docker-build-check-ci:
+	docker build . -t ${IMG_CHECK} -f check-eds.Dockerfile --build-arg LDFLAGS="${LDFLAGS}"
+
+# Push the docker images
+docker-push: docker-push-ci docker-push-check-ci
+
+docker-push-ci:
 	docker push ${IMG}
+
+docker-push-check-ci:
+	docker push ${IMG_CHECK}
 
 # find or download controller-gen
 # download controller-gen if necessary
@@ -171,6 +180,9 @@ vendor:
 
 kubectl-eds: fmt vet lint
 	go build -ldflags '${LDFLAGS}' -o bin/kubectl-eds ./cmd/kubectl-eds/main.go
+
+check-eds: fmt vet lint
+	go build -ldflags '${LDFLAGS}' -o bin/check-eds ./cmd/check-eds/main.go
 
 bin/kubebuilder:
 	./hack/install-kubebuilder.sh 2.3.1

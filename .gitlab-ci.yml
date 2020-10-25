@@ -2,6 +2,7 @@ image: golang:1.13
 variables:
   GO111MODULE: "on"
   PROJECTNAME: "extendeddaemonset"
+  PROJECTNAME_CHECK: "extendeddaemonset-check"
   GOPATH: "$CI_PROJECT_DIR/.cache"
   TARGET_TAG: v$CI_PIPELINE_ID-$CI_COMMIT_SHORT_SHA
   DOCKER_REGISTRY: "486234852809.dkr.ecr.us-east-1.amazonaws.com/ci"
@@ -40,33 +41,33 @@ generate_code:
   - make generate manifests
   - git diff --exit-code
 
-build_image:
+build_images:
   stage: image
   tags: [ "runner:docker", "size:large" ]
   image: 486234852809.dkr.ecr.us-east-1.amazonaws.com/docker-notary:0.6.1
   before_script: []
   script:
-    - IMG=$DOCKER_REGISTRY/$PROJECTNAME:$TARGET_TAG make docker-build-ci docker-push
+    - IMG=$DOCKER_REGISTRY/$PROJECTNAME:$TARGET_TAG make docker-build-ci docker-push-ci
+    - IMG_CHECK=$DOCKER_REGISTRY/$PROJECTNAME_CHECK:$TARGET_TAG make docker-build-check-ci docker-push-check-ci
 
-push_release_tag:
-  only:
-    - tags
-  stage: release
-  tags: [ "runner:docker", "size:large" ]
-  image: 486234852809.dkr.ecr.us-east-1.amazonaws.com/docker-notary:0.6.1
-  before_script: []
-  script:
-    - IMAGE_NAME=$DOCKER_REGISTRY/$PROJECTNAME:$TARGET_TAG
-    - RELEASE_IMAGE_NAME=$DOCKER_REGISTRY/$PROJECTNAME:$CI_COMMIT_TAG
-    - docker pull $IMAGE_NAME
-    - docker tag $IMAGE_NAME $RELEASE_IMAGE_NAME
-    - docker push $RELEASE_IMAGE_NAME
+push_release_tag_controller:
+  extends: .push_release_tag
+  variables:
+    IMAGE_NAME: $DOCKER_REGISTRY/$PROJECTNAME:$TARGET_TAG
+    RELEASE_IMAGE_NAME: $DOCKER_REGISTRY/$PROJECTNAME:$CI_COMMIT_TAG
+
+.docker_env_tag_check:
+  extends: .push_release_tag
+  variables:
+    IMAGE_NAME: $DOCKER_REGISTRY/$PROJECTNAME_CHECK:$TARGET_TAG
+    RELEASE_IMAGE_NAME: $DOCKER_REGISTRY/$PROJECTNAME_CHECK:$CI_COMMIT_TAG
 
 .docker_hub_variables: &docker_hub_variables
   DOCKER_REGISTRY_LOGIN_SSM_KEY: docker_hub_login
   DOCKER_REGISTRY_PWD_SSM_KEY: docker_hub_pwd
   DOCKER_REGISTRY_URL: docker.io
   DOCKERHUB_REPO: extendeddaemonset
+  DOCKERHUB_REPO_CHECK: extendeddaemonset-check
   DOCKERHUB_ORG: datadog
 
 push_tag_to_docker_hub:
@@ -82,7 +83,8 @@ push_tag_to_docker_hub:
   script:
     - DOCKER_REGISTRY_LOGIN=$(aws ssm get-parameter --region us-east-1 --name ci.datadog-operator.$DOCKER_REGISTRY_LOGIN_SSM_KEY --with-decryption --query "Parameter.Value" --out text)
     - aws ssm get-parameter --region us-east-1 --name ci.datadog-operator.$DOCKER_REGISTRY_PWD_SSM_KEY --with-decryption --query "Parameter.Value" --out text | docker login --username "$DOCKER_REGISTRY_LOGIN" --password-stdin $DOCKER_REGISTRY_URL
-    - IMG=$DOCKERHUB_ORG/$DOCKERHUB_REPO:${CI_COMMIT_TAG:1} make docker-build-ci docker-push
+    - IMG=$DOCKERHUB_ORG/$DOCKERHUB_REPO:${CI_COMMIT_TAG:1} make docker-build-ci docker-push-ci
+    - IMG_CHECK=$DOCKERHUB_ORG/$DOCKERHUB_REPO_CHECK:${CI_COMMIT_TAG:1} make docker-build-check-ci docker-push-check-ci
 
 push_latest_to_docker_hub:
   only:
@@ -97,4 +99,18 @@ push_latest_to_docker_hub:
   script:
     - DOCKER_REGISTRY_LOGIN=$(aws ssm get-parameter --region us-east-1 --name ci.datadog-operator.$DOCKER_REGISTRY_LOGIN_SSM_KEY --with-decryption --query "Parameter.Value" --out text)
     - aws ssm get-parameter --region us-east-1 --name ci.datadog-operator.$DOCKER_REGISTRY_PWD_SSM_KEY --with-decryption --query "Parameter.Value" --out text | docker login --username "$DOCKER_REGISTRY_LOGIN" --password-stdin $DOCKER_REGISTRY_URL
-    - IMG=$DOCKERHUB_ORG/$DOCKERHUB_REPO:latest make docker-build-ci docker-push
+    - IMG=$DOCKERHUB_ORG/$DOCKERHUB_REPO:latest make docker-build-ci docker-push-ci
+    - IMG_CHECK=$DOCKERHUB_ORG/$DOCKERHUB_REPO_CHECK:latest make docker-build-check-ci docker-push-check-ci
+
+
+.push_release_tag:
+  only:
+    - tags
+  stage: release
+  tags: [ "runner:docker", "size:large" ]
+  image: 486234852809.dkr.ecr.us-east-1.amazonaws.com/docker-notary:0.6.1
+  before_script: []
+  script:
+    - docker pull $IMAGE_NAME
+    - docker tag $IMAGE_NAME $RELEASE_IMAGE_NAME
+    - docker push $RELEASE_IMAGE_NAME
