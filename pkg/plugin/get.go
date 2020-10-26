@@ -136,7 +136,7 @@ func (o *GetOptions) Run() error {
 		if err != nil && errors.IsNotFound(err) {
 			return fmt.Errorf("ExtendedDaemonSet %s/%s not found", o.userNamespace, o.userExtendedDaemonSetName)
 		} else if err != nil {
-			return fmt.Errorf("unable to get ExtendedDaemonSet, err: %v", err)
+			return fmt.Errorf("unable to get ExtendedDaemonSet, err: %w", err)
 		}
 		edsList.Items = append(edsList.Items, *eds)
 	}
