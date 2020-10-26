@@ -2,9 +2,9 @@
 
 ## Introduction
 
-This chart allows you to deploy a "dummy" application that used the ExtendedDaemonset.
+This chart allows you to deploy a "dummy" application that uses the ExtendedDaemonset.
 
-thanks to this chart you can test several ExtendedDaemonset features, such as:
+Thanks to this chart you can test several ExtendedDaemonset features, such as:
 
 * The Canary deployment strategy
 * The `extendeddaemonset-check` util pod with the `helm test` command.
@@ -13,8 +13,7 @@ thanks to this chart you can test several ExtendedDaemonset features, such as:
 
 ## Deployment
 
-Before deploying this chart, you should have deployed the `ExtendedDaemonset` Controller with the following.
-command: `helm install eds-controller ./chart/extendeddaemonset`.
+Before deploying this chart, you should have deployed the `ExtendedDaemonset` Controller with the following command: `helm install eds-controller ./chart/extendeddaemonset`.
 
 Now you can deploy the `app-example` with default values this: `helm install foo ./chart/app-example`.
 

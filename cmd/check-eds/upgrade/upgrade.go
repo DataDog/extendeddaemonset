@@ -133,7 +133,7 @@ func (o *Options) Run() error {
 		if err != nil && errors.IsNotFound(err) {
 			return false, fmt.Errorf("ExtendedDaemonSet %s/%s not found", o.userNamespace, o.userExtendedDaemonSetName)
 		} else if err != nil {
-			return false, fmt.Errorf("unable to get ExtendedDaemonSet, err: %v", err)
+			return false, fmt.Errorf("unable to get ExtendedDaemonSet, err: %w", err)
 		}
 
 		if eds.Status.Canary != nil {

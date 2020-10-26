@@ -24,6 +24,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.tolerations }}
       tolerations:
-      - operator: Exists
       {{- toYaml . | nindent 6 }}
+      {{- end }}
