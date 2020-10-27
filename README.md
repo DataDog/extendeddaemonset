@@ -235,10 +235,10 @@ Then add the label `extendeddaemonset.datadoghq.com/exclude=foo` to the node in 
 
 The Canary deployment can be customized in a few ways.
 
-`replicas`: The number of replica pods to participate in the Canary deployment
-`duration`: The duration of the Canary deployment, after which the Canary deployment will end and the active ExtendedReplicaSet will update
-`autoPause.enabled`: Activation of the Canary deployment auto pausing feature (default is `true`)
-`autoPause.maxRestarts`: The maximum number of restarts tolerable before the Canary deployment is automatically paused (default is `2`)
+- `replicas`: The number of replica pods to participate in the Canary deployment
+- `duration`: The duration of the Canary deployment, after which the Canary deployment will end and the active ExtendedReplicaSet will update
+- `autoPause.enabled`: Activation of the Canary deployment auto pausing feature (default is `true`)
+- `autoPause.maxRestarts`: The maximum number of restarts tolerable before the Canary deployment is automatically paused (default is `2`)
 
 Example configuration of the spec canary strategy:
 
@@ -300,6 +300,7 @@ The Canary deployment can be manually failed. This command will restore the curr
 Following failure of the Canary deployment, the `fail` annotation should be reset with this command.
 
 `kubectl-eds canary reset <ExtendedDaemonSet name>`
+
 
 
 ### How to migrate from a DaemonSet
