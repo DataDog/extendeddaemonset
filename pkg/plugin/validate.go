@@ -23,7 +23,7 @@ import (
 var (
 	validateExample = `
 	# validate a canary replicaset
-	%[1]s validate foo
+	%[1]s canary validate foo
 `
 )
 

@@ -8,8 +8,8 @@ spec:
       replicas: 1
       duration: 5m
       autoPause:
-        maxRestarts: 5
         enabled: true
+        maxRestarts: 5
     rollingUpdate:
       maxParallelPodCreation: 1
       slowStartIntervalDuration: 1m
