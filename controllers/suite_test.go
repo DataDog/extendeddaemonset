@@ -7,6 +7,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -33,6 +34,8 @@ import (
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
+
+const nodesCount = 2
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -68,10 +71,10 @@ var _ = BeforeSuite(func(done Done) {
 	Expect(k8sClient).ToNot(BeNil())
 
 	// Create some Nodes
-	node1 := testutils.NewNode("node1", nil)
-	Expect(k8sClient.Create(context.Background(), node1)).Should(Succeed())
-	node2 := testutils.NewNode("node2", nil)
-	Expect(k8sClient.Create(context.Background(), node2)).Should(Succeed())
+	for i := 0; i < nodesCount; i++ {
+		nodei := testutils.NewNode(fmt.Sprintf("node%d", i+1), nil)
+		Expect(k8sClient.Create(context.Background(), nodei)).Should(Succeed())
+	}
 
 	// Start controllers
 	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
