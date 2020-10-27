@@ -157,6 +157,9 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 				}
 
 				eds.Status.ActiveReplicaSet = eds.Status.Canary.ReplicaSet
+				eds.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateRunning
+				eds.Status.Desired = nodesCount
+				eds.Status.Canary = nil
 
 				if err = k8sClient.Update(context.Background(), eds); err != nil {
 					fmt.Fprint(GinkgoWriter, err)
@@ -167,10 +170,18 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 			}, timeout, interval).Should(BeTrue())
 
 			Eventually(func() bool {
+				eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
+				err = k8sClient.Get(context.Background(), key, eds)
+				if err != nil {
+					fmt.Fprint(GinkgoWriter, err)
+					return false
+				}
+
 				canaryPods := &corev1.PodList{}
 				listOptions := []client.ListOption{
 					client.MatchingLabels{
 						datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelKey: datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelValue,
+						datadoghqv1alpha1.ExtendedDaemonSetReplicaSetNameLabelKey:   eds.Status.ActiveReplicaSet,
 					},
 				}
 
