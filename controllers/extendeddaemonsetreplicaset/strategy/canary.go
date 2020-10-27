@@ -18,6 +18,8 @@ import (
 )
 
 const (
+	// defaultAutoPauseEnabled enables the AutoPause feature if the spec field is not defined
+	defaultAutoPauseEnabled = true
 	// defaultMaxRestarts defines the default threshold of tolerable restart counts beyond which the canary deployment should pause
 	defaultMaxRestarts = 2
 )
@@ -34,11 +36,22 @@ func ManageCanaryDeployment(client client.Client, daemonset *v1alpha1.ExtendedDa
 	var err error
 	isPaused, _ := eds.IsCanaryDeploymentPaused(daemonset.GetAnnotations())
 
+	var autoPauseEnabled bool
 	var maxRestarts int
-	if daemonset.Spec.Strategy.Canary.MaxRestarts == nil {
+	if daemonset.Spec.Strategy.Canary == nil || daemonset.Spec.Strategy.Canary.AutoPause == nil {
+		autoPauseEnabled = defaultAutoPauseEnabled
 		maxRestarts = defaultMaxRestarts
 	} else {
-		maxRestarts = daemonset.Spec.Strategy.Canary.MaxRestarts.IntValue()
+		if daemonset.Spec.Strategy.Canary.AutoPause.Enabled == nil {
+			autoPauseEnabled = defaultAutoPauseEnabled
+		} else {
+			autoPauseEnabled = *daemonset.Spec.Strategy.Canary.AutoPause.Enabled
+		}
+		if daemonset.Spec.Strategy.Canary.AutoPause.MaxRestarts == nil {
+			maxRestarts = defaultMaxRestarts
+		} else {
+			maxRestarts = int(*daemonset.Spec.Strategy.Canary.AutoPause.MaxRestarts)
+		}
 	}
 
 	// Canary mode
@@ -63,7 +76,7 @@ func ManageCanaryDeployment(client client.Client, daemonset *v1alpha1.ExtendedDa
 					if podUtils.IsPodReady(pod) {
 						readyPods++
 					}
-					if !isPaused {
+					if autoPauseEnabled && !isPaused {
 						// Check if deploy should be paused due to restarts. Note that pausing the canary will have no effect if it has been validated or failed
 						if isRestarting, reason := podUtils.IsPodRestarting(pod, maxRestarts); isRestarting {
 							err = pauseCanaryDeployment(client, daemonset, reason)

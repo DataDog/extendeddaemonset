@@ -18,21 +18,22 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"./api/v1alpha1.ExtendedDaemonSet":                          schema__api_v1alpha1_ExtendedDaemonSet(ref),
-		"./api/v1alpha1.ExtendedDaemonSetReplicaSet":                schema__api_v1alpha1_ExtendedDaemonSetReplicaSet(ref),
-		"./api/v1alpha1.ExtendedDaemonSetReplicaSetSpec":            schema__api_v1alpha1_ExtendedDaemonSetReplicaSetSpec(ref),
-		"./api/v1alpha1.ExtendedDaemonSetReplicaSetSpecStrategy":    schema__api_v1alpha1_ExtendedDaemonSetReplicaSetSpecStrategy(ref),
-		"./api/v1alpha1.ExtendedDaemonSetReplicaSetStatus":          schema__api_v1alpha1_ExtendedDaemonSetReplicaSetStatus(ref),
-		"./api/v1alpha1.ExtendedDaemonSetSpec":                      schema__api_v1alpha1_ExtendedDaemonSetSpec(ref),
-		"./api/v1alpha1.ExtendedDaemonSetSpecStrategy":              schema__api_v1alpha1_ExtendedDaemonSetSpecStrategy(ref),
-		"./api/v1alpha1.ExtendedDaemonSetSpecStrategyCanary":        schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanary(ref),
-		"./api/v1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate": schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyRollingUpdate(ref),
-		"./api/v1alpha1.ExtendedDaemonSetStatus":                    schema__api_v1alpha1_ExtendedDaemonSetStatus(ref),
-		"./api/v1alpha1.ExtendedDaemonSetStatusCanary":              schema__api_v1alpha1_ExtendedDaemonSetStatusCanary(ref),
-		"./api/v1alpha1.ExtendedDaemonsetSetting":                   schema__api_v1alpha1_ExtendedDaemonsetSetting(ref),
-		"./api/v1alpha1.ExtendedDaemonsetSettingContainerSpec":      schema__api_v1alpha1_ExtendedDaemonsetSettingContainerSpec(ref),
-		"./api/v1alpha1.ExtendedDaemonsetSettingSpec":               schema__api_v1alpha1_ExtendedDaemonsetSettingSpec(ref),
-		"./api/v1alpha1.ExtendedDaemonsetSettingStatus":             schema__api_v1alpha1_ExtendedDaemonsetSettingStatus(ref),
+		"./api/v1alpha1.ExtendedDaemonSet":                            schema__api_v1alpha1_ExtendedDaemonSet(ref),
+		"./api/v1alpha1.ExtendedDaemonSetReplicaSet":                  schema__api_v1alpha1_ExtendedDaemonSetReplicaSet(ref),
+		"./api/v1alpha1.ExtendedDaemonSetReplicaSetSpec":              schema__api_v1alpha1_ExtendedDaemonSetReplicaSetSpec(ref),
+		"./api/v1alpha1.ExtendedDaemonSetReplicaSetSpecStrategy":      schema__api_v1alpha1_ExtendedDaemonSetReplicaSetSpecStrategy(ref),
+		"./api/v1alpha1.ExtendedDaemonSetReplicaSetStatus":            schema__api_v1alpha1_ExtendedDaemonSetReplicaSetStatus(ref),
+		"./api/v1alpha1.ExtendedDaemonSetSpec":                        schema__api_v1alpha1_ExtendedDaemonSetSpec(ref),
+		"./api/v1alpha1.ExtendedDaemonSetSpecStrategy":                schema__api_v1alpha1_ExtendedDaemonSetSpecStrategy(ref),
+		"./api/v1alpha1.ExtendedDaemonSetSpecStrategyCanary":          schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanary(ref),
+		"./api/v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoPause": schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanaryAutoPause(ref),
+		"./api/v1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate":   schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyRollingUpdate(ref),
+		"./api/v1alpha1.ExtendedDaemonSetStatus":                      schema__api_v1alpha1_ExtendedDaemonSetStatus(ref),
+		"./api/v1alpha1.ExtendedDaemonSetStatusCanary":                schema__api_v1alpha1_ExtendedDaemonSetStatusCanary(ref),
+		"./api/v1alpha1.ExtendedDaemonsetSetting":                     schema__api_v1alpha1_ExtendedDaemonsetSetting(ref),
+		"./api/v1alpha1.ExtendedDaemonsetSettingContainerSpec":        schema__api_v1alpha1_ExtendedDaemonsetSettingContainerSpec(ref),
+		"./api/v1alpha1.ExtendedDaemonsetSettingSpec":                 schema__api_v1alpha1_ExtendedDaemonsetSettingSpec(ref),
+		"./api/v1alpha1.ExtendedDaemonsetSettingStatus":               schema__api_v1alpha1_ExtendedDaemonsetSettingStatus(ref),
 	}
 }
 
@@ -340,15 +341,9 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanary(ref common.Referen
 							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
-					"maxRestarts": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("k8s.io/apimachinery/pkg/util/intstr.IntOrString"),
-						},
-					},
 					"nodeSelector": {
 						SchemaProps: spec.SchemaProps{
-							Description: "CELENE",
-							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
 						},
 					},
 					"nodeAntiAffinityKeys": {
@@ -369,11 +364,41 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanary(ref common.Referen
 							},
 						},
 					},
+					"autoPause": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("./api/v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoPause"),
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.Duration", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector", "k8s.io/apimachinery/pkg/util/intstr.IntOrString"},
+			"./api/v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoPause", "k8s.io/apimachinery/pkg/apis/meta/v1.Duration", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector", "k8s.io/apimachinery/pkg/util/intstr.IntOrString"},
+	}
+}
+
+func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanaryAutoPause(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ExtendedDaemonSetSpecStrategyCanaryAutoPause defines the canary deployment AutoPause parameters of the ExtendedDaemonSet",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"enabled": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"maxRestarts": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int32",
+						},
+					},
+				},
+			},
+		},
 	}
 }
 

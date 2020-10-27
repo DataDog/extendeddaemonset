@@ -75,10 +75,17 @@ type ExtendedDaemonSetSpecStrategyRollingUpdate struct {
 type ExtendedDaemonSetSpecStrategyCanary struct {
 	Replicas     *intstr.IntOrString   `json:"replicas,omitempty"`
 	Duration     *metav1.Duration      `json:"duration,omitempty"`
-	MaxRestarts  *intstr.IntOrString   `json:"maxRestarts,omitempty"`
 	NodeSelector *metav1.LabelSelector `json:"nodeSelector,omitempty"`
 	// +listType=set
-	NodeAntiAffinityKeys []string `json:"nodeAntiAffinityKeys,omitempty"`
+	NodeAntiAffinityKeys []string                                      `json:"nodeAntiAffinityKeys,omitempty"`
+	AutoPause            *ExtendedDaemonSetSpecStrategyCanaryAutoPause `json:"autoPause,omitempty"`
+}
+
+// ExtendedDaemonSetSpecStrategyCanaryAutoPause defines the canary deployment AutoPause parameters of the ExtendedDaemonSet
+// +k8s:openapi-gen=true
+type ExtendedDaemonSetSpecStrategyCanaryAutoPause struct {
+	Enabled     *bool  `json:"enabled,omitempty"`
+	MaxRestarts *int32 `json:"maxRestarts,omitempty"`
 }
 
 // ExtendedDaemonSetStatusState type representing the ExtendedDaemonSet state
