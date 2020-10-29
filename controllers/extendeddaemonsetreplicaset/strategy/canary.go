@@ -17,12 +17,12 @@ import (
 	podUtils "github.com/DataDog/extendeddaemonset/pkg/controller/utils/pod"
 )
 
-const (
-	// defaultAutoPauseEnabled enables the AutoPause feature if the spec field is not defined
-	defaultAutoPauseEnabled = true
-	// defaultMaxRestarts defines the default threshold of tolerable restart counts beyond which the canary deployment should pause
-	defaultMaxRestarts = 2
-)
+// const (
+// 	// defaultAutoPauseEnabled enables the AutoPause feature if the spec field is not defined
+// 	defaultAutoPauseEnabled = true
+// 	// defaultMaxRestarts defines the default threshold of tolerable restart counts beyond which the canary deployment should pause
+// 	defaultMaxRestarts = 2
+// )
 
 // ManageCanaryDeployment used to manage ReplicaSet in Canary state
 func ManageCanaryDeployment(client client.Client, daemonset *v1alpha1.ExtendedDaemonSet, params *Parameters) (*Result, error) {
@@ -35,24 +35,8 @@ func ManageCanaryDeployment(client client.Client, daemonset *v1alpha1.ExtendedDa
 	var needRequeue bool
 	var err error
 	isPaused, _ := eds.IsCanaryDeploymentPaused(daemonset.GetAnnotations())
-
-	var autoPauseEnabled bool
-	var maxRestarts int
-	if daemonset.Spec.Strategy.Canary == nil || daemonset.Spec.Strategy.Canary.AutoPause == nil {
-		autoPauseEnabled = defaultAutoPauseEnabled
-		maxRestarts = defaultMaxRestarts
-	} else {
-		if daemonset.Spec.Strategy.Canary.AutoPause.Enabled == nil {
-			autoPauseEnabled = defaultAutoPauseEnabled
-		} else {
-			autoPauseEnabled = *daemonset.Spec.Strategy.Canary.AutoPause.Enabled
-		}
-		if daemonset.Spec.Strategy.Canary.AutoPause.MaxRestarts == nil {
-			maxRestarts = defaultMaxRestarts
-		} else {
-			maxRestarts = int(*daemonset.Spec.Strategy.Canary.AutoPause.MaxRestarts)
-		}
-	}
+	autoPauseEnabled := *daemonset.Spec.Strategy.Canary.AutoPause.Enabled
+	maxRestarts := int(*daemonset.Spec.Strategy.Canary.AutoPause.MaxRestarts)
 
 	// Canary mode
 	for _, nodeName := range params.CanaryNodes {

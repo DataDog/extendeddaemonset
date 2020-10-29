@@ -87,6 +87,9 @@ func IsDefaultedExtendedDaemonSetSpecStrategyCanary(canary *ExtendedDaemonSetSpe
 	if canary.NodeSelector == nil {
 		return false
 	}
+	if canary.AutoPause == nil || canary.AutoPause.Enabled == nil || canary.AutoPause.MaxRestarts == nil {
+		return false
+	}
 	return true
 }
 
