@@ -392,8 +392,9 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanaryAutoPause(ref commo
 					},
 					"maxRestarts": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Description: "MaxRestarts defines the number of tolerable Canary pod restarts after which the Canary deployment is autopaused",
+							Type:        []string{"integer"},
+							Format:      "int32",
 						},
 					},
 				},

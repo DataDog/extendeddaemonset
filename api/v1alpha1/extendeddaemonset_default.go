@@ -87,9 +87,6 @@ func IsDefaultedExtendedDaemonSetSpecStrategyCanary(canary *ExtendedDaemonSetSpe
 	if canary.NodeSelector == nil {
 		return false
 	}
-	if canary.AutoPause == nil {
-		return false
-	}
 	return true
 }
 
@@ -135,9 +132,10 @@ func DefaultExtendedDaemonSetSpecStrategyCanary(c *ExtendedDaemonSetSpecStrategy
 			MatchLabels: map[string]string{},
 		}
 	}
-	if c.AutoPause != nil {
-		DefaultExtendedDaemonSetSpecStrategyCanaryAutoPause(c.AutoPause)
+	if c.AutoPause == nil {
+		c.AutoPause = &ExtendedDaemonSetSpecStrategyCanaryAutoPause{}
 	}
+	DefaultExtendedDaemonSetSpecStrategyCanaryAutoPause(c.AutoPause)
 	return c
 }
 
