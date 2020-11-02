@@ -17,13 +17,6 @@ import (
 	podUtils "github.com/DataDog/extendeddaemonset/pkg/controller/utils/pod"
 )
 
-// const (
-// 	// defaultAutoPauseEnabled enables the AutoPause feature if the spec field is not defined
-// 	defaultAutoPauseEnabled = true
-// 	// defaultMaxRestarts defines the default threshold of tolerable restart counts beyond which the canary deployment should pause
-// 	defaultMaxRestarts = 2
-// )
-
 // ManageCanaryDeployment used to manage ReplicaSet in Canary state
 func ManageCanaryDeployment(client client.Client, daemonset *v1alpha1.ExtendedDaemonSet, params *Parameters) (*Result, error) {
 	result := &Result{}
