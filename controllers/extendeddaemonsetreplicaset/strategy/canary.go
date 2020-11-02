@@ -29,6 +29,8 @@ func ManageCanaryDeployment(client client.Client, daemonset *v1alpha1.ExtendedDa
 	var needRequeue bool
 	var err error
 	isPaused, _ := eds.IsCanaryDeploymentPaused(daemonset.GetAnnotations())
+	autoPauseEnabled := *daemonset.Spec.Strategy.Canary.AutoPause.Enabled
+	maxRestarts := int(*daemonset.Spec.Strategy.Canary.AutoPause.MaxRestarts)
 
 	// Canary mode
 	for _, nodeName := range params.CanaryNodes {
@@ -57,9 +59,9 @@ func ManageCanaryDeployment(client client.Client, daemonset *v1alpha1.ExtendedDa
 					if podUtils.IsPodReady(pod) {
 						readyPods++
 					}
-					if !isPaused {
+					if autoPauseEnabled && !isPaused {
 						// Check if deploy should be paused due to restarts. Note that pausing the canary will have no effect if it has been validated or failed
-						if isRestarting, reason := podUtils.IsPodRestarting(pod); isRestarting {
+						if isRestarting, reason := podUtils.IsPodRestarting(pod, maxRestarts); isRestarting {
 							err = pauseCanaryDeployment(client, daemonset, reason)
 							if err != nil {
 								params.Logger.Error(err, "Failed to pause canary deployment")

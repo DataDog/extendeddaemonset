@@ -32,7 +32,7 @@ $ make deploy
 By default, the controller only watches the ExtendedDaemonSet resources that are present in its own namespace. If you want to deploy the controller cluster wide, add a Kustomization to the `config/manager`
 
 ```yaml
-            env:  
+            env:
             - name: WATCH_NAMESPACE
               value: ""
 ```
@@ -49,12 +49,12 @@ This creates a three node cluster with one master and two worker nodes:
 $ kind create cluster --config examples/kind-cluster-configuration.yaml
 Creating cluster "kind" ...
  ✓ Ensuring node image (kindest/node:v1.15.3) 🖼
- ✓ Preparing nodes 📦📦📦 
- ✓ Creating kubeadm config 📜 
- ✓ Starting control-plane 🕹️ 
- ✓ Installing CNI 🔌 
- ✓ Installing StorageClass 💾 
- ✓ Joining worker nodes 🚜 
+ ✓ Preparing nodes 📦📦📦
+ ✓ Creating kubeadm config 📜
+ ✓ Starting control-plane 🕹️
+ ✓ Installing CNI 🔌
+ ✓ Installing StorageClass 💾
+ ✓ Joining worker nodes 🚜
 Cluster creation complete. You can now use the cluster with:
 
 $ export KUBECONFIG="$(kind get kubeconfig-path --name="kind")"
@@ -230,6 +230,30 @@ Then add the label `extendeddaemonset.datadoghq.com/exclude=foo` to the node in 
 
 `kubectl label nodes <your-node-name> extendeddaemonset.datadoghq.com/exclude=foo`
 
+
+#### Canary settings
+
+The Canary deployment can be customized in a few ways.
+
+- `replicas`: The number of replica pods to participate in the Canary deployment
+- `duration`: The duration of the Canary deployment, after which the Canary deployment will end and the active ExtendedReplicaSet will update
+- `autoPause.enabled`: Activation of the Canary deployment auto pausing feature (default is `true`)
+- `autoPause.maxRestarts`: The maximum number of restarts tolerable before the Canary deployment is automatically paused (default is `2`)
+
+Example configuration of the spec canary strategy:
+
+```
+spec:
+  strategy:
+    canary:
+      replicas: 1
+      duration: 5m
+      autoPause:
+        enabled: true
+        maxRestarts: 5
+```
+
+
 ### Kubectl plugin
 
 To build the the kubectl ExtendedDaemonSet plugin, you can run the command: `make build-plugin`. This will create the `kubectl-eds` Go binary, corresponding to your local OS and architecture.
@@ -241,11 +265,43 @@ Usage:
   ExtendedDaemonset [command]
 
 Available Commands:
+  canary      control ExtendedDaemonset canary deployment
   get         get ExtendedDaemonSet deployment(s)
   get-ers     get-ers ExtendedDaemonSetReplicaset deployment(s)
   help        Help about any command
-  validate    validate canary replicaset
 ```
+
+#### Validate Canary deployment
+
+As an alternative to waiting for the Canary duration to end, the deployment can be manually validated.
+
+`kubectl-eds canary validate <ExtendedDaemonSet name>`
+
+#### Pause Canary deployment
+
+The Canary deployment can be paused to investigate an issue.
+
+`kubectl-eds canary pause <ExtendedDaemonSet name>`
+
+#### Unpause Canary deployment
+
+The Canary deployment can be unpaused, and the Canary duration will continue.
+
+`kubectl-eds canary unpause <ExtendedDaemonSet name>`
+
+#### Fail Canary deployment
+
+The Canary deployment can be manually failed. This command will restore the currently active ExtendedReplicaSet on the Canary pods.
+
+`kubectl-eds canary fail <ExtendedDaemonSet name>`
+
+#### Reset Canary deployment
+
+Following failure of the Canary deployment, the `fail` annotation should be reset with this command.
+
+`kubectl-eds canary reset <ExtendedDaemonSet name>`
+
+
 
 ### How to migrate from a DaemonSet
 

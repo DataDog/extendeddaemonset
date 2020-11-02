@@ -7,11 +7,14 @@ spec:
     canary:
       replicas: 1
       duration: 5m
+      autoPause:
+        enabled: true
+        maxRestarts: 5
     rollingUpdate:
       maxParallelPodCreation: 1
       slowStartIntervalDuration: 1m
   template:
-    spec: 
+    spec:
       containers:
       - name: daemon
         image: k8s.gcr.io/pause:3.1

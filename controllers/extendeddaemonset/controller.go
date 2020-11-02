@@ -263,9 +263,18 @@ func (r *Reconciler) updateInstanceWithCurrentRS(logger logr.Logger, daemonset *
 	// Check if newDaemonset differs from existing daemonset, and update if so
 	if !apiequality.Semantic.DeepEqual(daemonset, newDaemonset) {
 		if updateDaemonsetSpec {
-			if err := r.client.Update(context.TODO(), newDaemonset); err != nil {
-				return newDaemonset, reconcile.Result{}, err
+			// Make and use a copy because undesired behaviors occur when making two update calls
+			newDaemonsetCopy := newDaemonset.DeepCopy()
+			if err := r.client.Update(context.TODO(), newDaemonsetCopy); err != nil {
+				return newDaemonsetCopy, reconcile.Result{}, err
 			}
+
+			// This ensures that the first client update respects the desired new status
+			newDaemonsetCopy.Status = newDaemonset.Status
+			if err := r.client.Status().Update(context.TODO(), newDaemonsetCopy); err != nil {
+				return newDaemonsetCopy, reconcile.Result{}, err
+			}
+			return newDaemonsetCopy, reconcile.Result{}, nil
 		}
 
 		if err := r.client.Status().Update(context.TODO(), newDaemonset); err != nil {

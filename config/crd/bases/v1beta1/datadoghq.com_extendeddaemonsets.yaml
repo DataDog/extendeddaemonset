@@ -121,6 +121,19 @@ spec:
                 canary:
                   description: Canary deployment configuration
                   properties:
+                    autoPause:
+                      description: ExtendedDaemonSetSpecStrategyCanaryAutoPause defines
+                        the canary deployment AutoPause parameters of the ExtendedDaemonSet
+                      properties:
+                        enabled:
+                          type: boolean
+                        maxRestarts:
+                          description: MaxRestarts defines the number of tolerable
+                            Canary pod restarts after which the Canary deployment
+                            is autopaused
+                          format: int32
+                          type: integer
+                      type: object
                     duration:
                       type: string
                     nodeAntiAffinityKeys:

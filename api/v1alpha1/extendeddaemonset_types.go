@@ -77,7 +77,16 @@ type ExtendedDaemonSetSpecStrategyCanary struct {
 	Duration     *metav1.Duration      `json:"duration,omitempty"`
 	NodeSelector *metav1.LabelSelector `json:"nodeSelector,omitempty"`
 	// +listType=set
-	NodeAntiAffinityKeys []string `json:"nodeAntiAffinityKeys,omitempty"`
+	NodeAntiAffinityKeys []string                                      `json:"nodeAntiAffinityKeys,omitempty"`
+	AutoPause            *ExtendedDaemonSetSpecStrategyCanaryAutoPause `json:"autoPause,omitempty"`
+}
+
+// ExtendedDaemonSetSpecStrategyCanaryAutoPause defines the canary deployment AutoPause parameters of the ExtendedDaemonSet
+// +k8s:openapi-gen=true
+type ExtendedDaemonSetSpecStrategyCanaryAutoPause struct {
+	Enabled *bool `json:"enabled,omitempty"`
+	// MaxRestarts defines the number of tolerable Canary pod restarts after which the Canary deployment is autopaused
+	MaxRestarts *int32 `json:"maxRestarts,omitempty"`
 }
 
 // ExtendedDaemonSetStatusState type representing the ExtendedDaemonSet state

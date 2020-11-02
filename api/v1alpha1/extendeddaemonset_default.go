@@ -13,11 +13,13 @@ import (
 )
 
 const (
-	defaultCanaryReplica             = 1
-	defaultCanaryDuration            = 10
-	defaultSlowStartIntervalDuration = 1
-	defaultMaxParallelPodCreation    = 250
-	defaultReconcileFrequency        = 10 * time.Second
+	defaultCanaryReplica              = 1
+	defaultCanaryDuration             = 10
+	defaultCanaryAutoPauseEnabled     = true
+	defaultCanaryAutoPauseMaxRestarts = 2
+	defaultSlowStartIntervalDuration  = 1
+	defaultMaxParallelPodCreation     = 250
+	defaultReconcileFrequency         = 10 * time.Second
 )
 
 // IsDefaultedExtendedDaemonSet used to know if a ExtendedDaemonSet is already defaulted
@@ -28,7 +30,7 @@ func IsDefaultedExtendedDaemonSet(dd *ExtendedDaemonSet) bool {
 	}
 
 	if dd.Spec.Strategy.Canary != nil {
-		if defauled := IsDefaultedExtendedDaemonSetSpecStrategyCanary(dd.Spec.Strategy.Canary); !defauled {
+		if defaulted := IsDefaultedExtendedDaemonSetSpecStrategyCanary(dd.Spec.Strategy.Canary); !defaulted {
 			return false
 		}
 	}
@@ -85,11 +87,14 @@ func IsDefaultedExtendedDaemonSetSpecStrategyCanary(canary *ExtendedDaemonSetSpe
 	if canary.NodeSelector == nil {
 		return false
 	}
+	if canary.AutoPause == nil || canary.AutoPause.Enabled == nil || canary.AutoPause.MaxRestarts == nil {
+		return false
+	}
 	return true
 }
 
 // DefaultExtendedDaemonSet used to default an ExtendedDaemonSet
-// return a list of errors in case of unvalid fields.
+// return a list of errors in case of invalid fields.
 func DefaultExtendedDaemonSet(dd *ExtendedDaemonSet) *ExtendedDaemonSet {
 	defaultedDD := dd.DeepCopy()
 	DefaultExtendedDaemonSetSpec(&defaultedDD.Spec)
@@ -130,7 +135,24 @@ func DefaultExtendedDaemonSetSpecStrategyCanary(c *ExtendedDaemonSetSpecStrategy
 			MatchLabels: map[string]string{},
 		}
 	}
+	if c.AutoPause == nil {
+		c.AutoPause = &ExtendedDaemonSetSpecStrategyCanaryAutoPause{}
+	}
+	DefaultExtendedDaemonSetSpecStrategyCanaryAutoPause(c.AutoPause)
 	return c
+}
+
+// DefaultExtendedDaemonSetSpecStrategyCanaryAutoPause used to default an ExtendedDaemonSetSpecStrategyCanary
+func DefaultExtendedDaemonSetSpecStrategyCanaryAutoPause(a *ExtendedDaemonSetSpecStrategyCanaryAutoPause) *ExtendedDaemonSetSpecStrategyCanaryAutoPause {
+	if a.Enabled == nil {
+		enabled := defaultCanaryAutoPauseEnabled
+		a.Enabled = &enabled
+	}
+
+	if a.MaxRestarts == nil {
+		a.MaxRestarts = NewInt32(defaultCanaryAutoPauseMaxRestarts)
+	}
+	return a
 }
 
 // DefaultExtendedDaemonSetSpecStrategyRollingUpdate used to default an ExtendedDaemonSetSpecStrategyRollingUpdate

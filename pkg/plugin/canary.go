@@ -9,7 +9,7 @@ import (
 func NewCmdCanary(streams genericclioptions.IOStreams) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "canary [subcommand] [flags]",
-		Short: "control ExtendedDaemonset canary deployment",
+		Short: "control ExtendedDaemonSet canary deployment",
 	}
 
 	cmd.AddCommand(NewCmdValidate(streams))

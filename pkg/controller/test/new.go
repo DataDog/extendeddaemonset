@@ -61,6 +61,7 @@ type NewPodOptions struct {
 	Labels            map[string]string
 	Phase             corev1.PodPhase
 	Reason            string
+	ContainerStatuses []corev1.ContainerStatus
 	Resources         corev1.ResourceRequirements
 	NodeSelector      map[string]string
 	Tolerations       []corev1.Toleration
@@ -112,6 +113,7 @@ func NewPod(namespace, name, nodeName string, opts *NewPodOptions) *corev1.Pod {
 		}
 		pod.Status.Phase = opts.Phase
 		pod.Status.Reason = opts.Reason
+		pod.Status.ContainerStatuses = opts.ContainerStatuses
 		pod.Spec.Tolerations = append(pod.Spec.Tolerations, opts.Tolerations...)
 	}
 
