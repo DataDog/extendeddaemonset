@@ -133,16 +133,16 @@ func Test_IsPodRestarting(t *testing.T) {
 				pod: ctrltest.NewPod("bar", "pod1", "node1", &ctrltest.NewPodOptions{
 					ContainerStatuses: []v1.ContainerStatus{
 						{
+							RestartCount:         0,
+							LastTerminationState: v1.ContainerState{},
+						},
+						{
 							RestartCount: 10,
 							LastTerminationState: v1.ContainerState{
 								Terminated: &v1.ContainerStateTerminated{
 									Reason: "CrashLoopBackOff",
 								},
 							},
-						},
-						{
-							RestartCount:         0,
-							LastTerminationState: v1.ContainerState{},
 						},
 					},
 				},
