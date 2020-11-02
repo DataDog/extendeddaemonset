@@ -98,6 +98,7 @@ func main() {
 	}
 
 	// Custom setup
+	customSetupMetrics(mgr)
 	customSetupEnvironment(mgr)
 	customSetupHealthChecks(mgr)
 	customSetupEndpoints(pprofActive, mgr)
@@ -149,6 +150,16 @@ func customSetupEnvironment(mgr manager.Manager) {
 			}
 		}
 	}
+}
+
+func customSetupMetrics(mgr manager.Manager) {
+	go func() {
+		// This channel is closed when this instance is elected leader
+		// Apparently there's no releasing the lease except if application dies
+		<-mgr.Elected()
+		setupLog.Info("Controller elected - metric changed")
+		metrics.SetLeader(true)
+	}()
 }
 
 func customSetupLogging(logLevel zapcore.Level, logEncoder string) error {

@@ -8,6 +8,8 @@ package metrics
 import (
 	"net/http"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/common/expfmt"
 	"k8s.io/client-go/tools/cache"
 	ksmetric "k8s.io/kube-state-metrics/pkg/metric"
 	metricsstore "k8s.io/kube-state-metrics/pkg/metrics_store"
@@ -16,7 +18,9 @@ import (
 )
 
 var (
-	metricsHandler []func(manager.Manager, Handler) error
+	metricsHandler          []func(manager.Manager, Handler) error
+	ksmExtraMetricsRegistry = prometheus.NewRegistry()
+	log                     = ctrl.Log.WithName("ksmetrics")
 )
 
 // RegisterHandlerFunc register a function to be added to endpoint when its registered
@@ -40,8 +44,23 @@ func (h *storesHandler) serveKsmHTTP(w http.ResponseWriter, r *http.Request) {
 	// 0.0.4 is the exposition format version of prometheus
 	// https://prometheus.io/docs/instrumenting/exposition_formats/#text-based-format
 	resHeader.Set("Content-Type", `text/plain; version=`+"0.0.4")
+
+	// Write KSM families
 	for _, store := range h.stores {
 		store.WriteAll(w)
+	}
+
+	// Write extra metrics
+	metrics, err := ksmExtraMetricsRegistry.Gather()
+	if err == nil {
+		for _, m := range metrics {
+			_, err = expfmt.MetricFamilyToText(w, m)
+			if err != nil {
+				log.Error(err, "Unable to write metrics", "metricFamily", *m.Name)
+			}
+		}
+	} else {
+		log.Error(err, "Unable to export extra metrics")
 	}
 }
 
