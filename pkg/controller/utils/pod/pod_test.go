@@ -8,7 +8,7 @@ package pod
 import (
 	"testing"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	ctrltest "github.com/DataDog/extendeddaemonset/pkg/controller/test"
@@ -31,7 +31,7 @@ func Test_IsPodRestarting(t *testing.T) {
 			args: args{
 				pod: ctrltest.NewPod("bar", "pod1", "node1", &ctrltest.NewPodOptions{
 					ContainerStatuses: []v1.ContainerStatus{
-						v1.ContainerStatus{
+						{
 							RestartCount: 10,
 							LastTerminationState: v1.ContainerState{
 								Terminated: &v1.ContainerStateTerminated{
@@ -52,7 +52,7 @@ func Test_IsPodRestarting(t *testing.T) {
 			args: args{
 				pod: ctrltest.NewPod("bar", "pod1", "node1", &ctrltest.NewPodOptions{
 					ContainerStatuses: []v1.ContainerStatus{
-						v1.ContainerStatus{
+						{
 							RestartCount: 4,
 							LastTerminationState: v1.ContainerState{
 								Terminated: &v1.ContainerStateTerminated{
@@ -73,7 +73,7 @@ func Test_IsPodRestarting(t *testing.T) {
 			args: args{
 				pod: ctrltest.NewPod("bar", "pod1", "node1", &ctrltest.NewPodOptions{
 					ContainerStatuses: []v1.ContainerStatus{
-						v1.ContainerStatus{
+						{
 							RestartCount: 5,
 							LastTerminationState: v1.ContainerState{
 								Terminated: &v1.ContainerStateTerminated{
@@ -94,7 +94,7 @@ func Test_IsPodRestarting(t *testing.T) {
 			args: args{
 				pod: ctrltest.NewPod("bar", "pod1", "node1", &ctrltest.NewPodOptions{
 					ContainerStatuses: []v1.ContainerStatus{
-						v1.ContainerStatus{
+						{
 							RestartCount: 6,
 							LastTerminationState: v1.ContainerState{
 								Terminated: &v1.ContainerStateTerminated{
@@ -115,7 +115,7 @@ func Test_IsPodRestarting(t *testing.T) {
 			args: args{
 				pod: ctrltest.NewPod("bar", "pod1", "node1", &ctrltest.NewPodOptions{
 					ContainerStatuses: []v1.ContainerStatus{
-						v1.ContainerStatus{
+						{
 							RestartCount:         0,
 							LastTerminationState: v1.ContainerState{},
 						},
@@ -132,7 +132,7 @@ func Test_IsPodRestarting(t *testing.T) {
 			args: args{
 				pod: ctrltest.NewPod("bar", "pod1", "node1", &ctrltest.NewPodOptions{
 					ContainerStatuses: []v1.ContainerStatus{
-						v1.ContainerStatus{
+						{
 							RestartCount: 10,
 							LastTerminationState: v1.ContainerState{
 								Terminated: &v1.ContainerStateTerminated{
@@ -140,7 +140,7 @@ func Test_IsPodRestarting(t *testing.T) {
 								},
 							},
 						},
-						v1.ContainerStatus{
+						{
 							RestartCount:         0,
 							LastTerminationState: v1.ContainerState{},
 						},
