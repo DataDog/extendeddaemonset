@@ -25,6 +25,8 @@ const (
 	extendeddaemonsetStatusIgnoredUnresponsiveNodes = "eds_status_ignored_unresponsive_nodes"
 	extendeddaemonsetStatusCanaryActivated          = "eds_status_canary_activated"
 	extendeddaemonsetStatusCanaryNumberOfNodes      = "eds_status_canary_node_number"
+	extendeddaemonsetStatusCanaryPaused             = "eds_status_canary_paused"
+	extendeddaemonsetStatusCanaryFailed             = "eds_status_canary_failed"
 	extendeddaemonsetLabels                         = "eds_labels"
 )
 
@@ -190,7 +192,7 @@ func generateMetricFamilies() []ksmetric.FamilyGenerator {
 		{
 			Name: extendeddaemonsetStatusCanaryActivated,
 			Type: ksmetric.Gauge,
-			Help: "The status of the canary deployement, set to 1 if active, else 0",
+			Help: "The status of the canary deployment, set to 1 if active, else 0",
 			GenerateFunc: func(obj interface{}) *ksmetric.Family {
 				eds := obj.(*datadoghqv1alpha1.ExtendedDaemonSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&eds.ObjectMeta)
@@ -208,6 +210,65 @@ func generateMetricFamilies() []ksmetric.FamilyGenerator {
 							Value:       val,
 							LabelKeys:   Labelkeys,
 							LabelValues: Labelvalues,
+						},
+					},
+				}
+			},
+		},
+		{
+			Name: extendeddaemonsetStatusCanaryPaused,
+			Type: ksmetric.Gauge,
+			Help: "The paused state of the canary deployment, set to 1 if paused, else 0",
+			GenerateFunc: func(obj interface{}) *ksmetric.Family {
+				eds := obj.(*datadoghqv1alpha1.ExtendedDaemonSet)
+				labelKeys, labelValues := utils.GetLabelsValues(&eds.ObjectMeta)
+				val := float64(0)
+
+				if eds.Status.Canary != nil {
+					rs := eds.Status.Canary.ReplicaSet
+					labelKeys = append(labelKeys, "replicaset")
+					labelValues = append(labelValues, rs)
+					paused, reason := IsCanaryDeploymentPaused(eds.Annotations)
+					if paused {
+						val = 1
+						labelKeys = append(labelKeys, "paused_reason")
+						labelValues = append(labelValues, string(reason))
+					}
+				}
+				return &ksmetric.Family{
+					Metrics: []*ksmetric.Metric{
+						{
+							Value:       val,
+							LabelKeys:   labelKeys,
+							LabelValues: labelValues,
+						},
+					},
+				}
+			},
+		},
+		{
+			Name: extendeddaemonsetStatusCanaryFailed,
+			Type: ksmetric.Gauge,
+			Help: "The failed state of the canary deployment, set to 1 if failed, else 0",
+			GenerateFunc: func(obj interface{}) *ksmetric.Family {
+				eds := obj.(*datadoghqv1alpha1.ExtendedDaemonSet)
+				labelKeys, labelValues := utils.GetLabelsValues(&eds.ObjectMeta)
+				val := float64(0)
+
+				if eds.Status.Canary != nil {
+					rs := eds.Status.Canary.ReplicaSet
+					labelKeys = append(labelKeys, "replicaset")
+					labelValues = append(labelValues, rs)
+					if IsCanaryDeploymentFailed(eds.Annotations) {
+						val = 1
+					}
+				}
+				return &ksmetric.Family{
+					Metrics: []*ksmetric.Metric{
+						{
+							Value:       val,
+							LabelKeys:   labelKeys,
+							LabelValues: labelValues,
 						},
 					},
 				}
