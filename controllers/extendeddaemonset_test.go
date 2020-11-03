@@ -152,14 +152,11 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 					return false
 				}
 
-				if eds.Status.Canary == nil {
-					return false
+				if eds.Annotations == nil {
+					eds.Annotations = make(map[string]string)
 				}
 
-				eds.Status.ActiveReplicaSet = eds.Status.Canary.ReplicaSet
-				eds.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateRunning
-				eds.Status.Desired = nodesCount
-				eds.Status.Canary = nil
+				eds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryValidAnnotationKey] = eds.Status.Canary.ReplicaSet
 
 				if err = k8sClient.Update(context.Background(), eds); err != nil {
 					fmt.Fprint(GinkgoWriter, err)
