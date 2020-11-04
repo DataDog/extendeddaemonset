@@ -109,6 +109,7 @@ push_latest_to_docker_hub:
   stage: release
   tags: [ "runner:docker", "size:large" ]
   image: 486234852809.dkr.ecr.us-east-1.amazonaws.com/docker-notary:0.6.1
+  when: manual
   script:
     - docker pull $IMAGE_NAME
     - docker tag $IMAGE_NAME $RELEASE_IMAGE_NAME
