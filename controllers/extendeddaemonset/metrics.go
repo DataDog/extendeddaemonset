@@ -255,14 +255,10 @@ func generateMetricFamilies() []ksmetric.FamilyGenerator {
 				labelKeys, labelValues := utils.GetLabelsValues(&eds.ObjectMeta)
 				val := float64(0)
 
-				if eds.Status.Canary != nil {
-					rs := eds.Status.Canary.ReplicaSet
-					labelKeys = append(labelKeys, "replicaset")
-					labelValues = append(labelValues, rs)
-					if IsCanaryDeploymentFailed(eds.Annotations) {
-						val = 1
-					}
+				if IsCanaryDeploymentFailed(eds.Annotations) {
+					val = 1
 				}
+
 				return &ksmetric.Family{
 					Metrics: []*ksmetric.Metric{
 						{
