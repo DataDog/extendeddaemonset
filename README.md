@@ -4,8 +4,6 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/DataDog/extendeddaemonset)](https://goreportcard.com/report/github.com/DataDog/extendeddaemonset)
 [![codecov](https://codecov.io/gh/datadog/extendeddaemonset/branch/master/graph/badge.svg)](https://codecov.io/gh/datadog/extendeddaemonset)
 
-> **!!! Alpha version !!!**
-
 **ExtendedDaemonSet** aims to provide a new implementation of the Kubernetes `DaemonSet` resource with key features:
 
 * Canary Deployment: Deploy a new DaemonSet version with only a few nodes.
