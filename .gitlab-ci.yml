@@ -52,15 +52,15 @@ build_images:
 
 push_release_tag_controller:
   extends: .push_release_tag
-  variables:
-    IMAGE_NAME: $DOCKER_REGISTRY/$PROJECTNAME:$TARGET_TAG
-    RELEASE_IMAGE_NAME: $DOCKER_REGISTRY/$PROJECTNAME:$CI_COMMIT_TAG
-
-.docker_env_tag_check:
+  before_script:
+    - export IMAGE_NAME=$DOCKER_REGISTRY/$PROJECTNAME:$TARGET_TAG
+    - export RELEASE_IMAGE_NAME=$DOCKER_REGISTRY/$PROJECTNAME:$CI_COMMIT_TAG
+  
+push_release_tag_check:
   extends: .push_release_tag
-  variables:
-    IMAGE_NAME: $DOCKER_REGISTRY/$PROJECTNAME_CHECK:$TARGET_TAG
-    RELEASE_IMAGE_NAME: $DOCKER_REGISTRY/$PROJECTNAME_CHECK:$CI_COMMIT_TAG
+  before_script:
+    - export IMAGE_NAME=$DOCKER_REGISTRY/$PROJECTNAME_CHECK:$TARGET_TAG
+    - export RELEASE_IMAGE_NAME=$DOCKER_REGISTRY/$PROJECTNAME_CHECK:$CI_COMMIT_TAG
 
 .docker_hub_variables: &docker_hub_variables
   DOCKER_REGISTRY_LOGIN_SSM_KEY: docker_hub_login
@@ -109,7 +109,7 @@ push_latest_to_docker_hub:
   stage: release
   tags: [ "runner:docker", "size:large" ]
   image: 486234852809.dkr.ecr.us-east-1.amazonaws.com/docker-notary:0.6.1
-  before_script: []
+  when: manual
   script:
     - docker pull $IMAGE_NAME
     - docker tag $IMAGE_NAME $RELEASE_IMAGE_NAME
