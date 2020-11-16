@@ -29,6 +29,10 @@ func IsDefaultedExtendedDaemonSet(dd *ExtendedDaemonSet) bool {
 		return false
 	}
 
+	if dd.Spec.Strategy.ReconcileFrequency == nil {
+		return false
+	}
+
 	if dd.Spec.Strategy.Canary != nil {
 		if defaulted := IsDefaultedExtendedDaemonSetSpecStrategyCanary(dd.Spec.Strategy.Canary); !defaulted {
 			return false
