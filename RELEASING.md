@@ -1,23 +1,64 @@
 # Release process
 
+## Overview
+
+The release process is based on freezing master, merging fixes to a dedicated release branch and releasing release candidates as things progress. Once we have a final version, the release branch is merged into master and the freeze is lifted.
+
 ## Steps
 
-1. Checkout the repository on the correct branch and changeset (`master`).Creates a new branch if it is the first release for a "minor" version: `git checkout -b vX.Y`.
-2. Run the bundle generation:
-    - For a release candidate, run the following command, locally: `make VERSION=x.v.z-rc.w bundle`
-      For example, to generate the release version `0.3.0-rc.2`, run: `make VERSION=0.3.0-rc.2 bundle`
-    - For a release, command is the same with final version: `make VERSION=x.v.z bundle`
+### Create the release branch and the first release candidate
 
+1. Checkout the repository on the correct branch and changeset (`master`).
+2. Create a new branch: `git checkout -b vX.Y`.
+3. Prepare the first release candidate by running the bundle generation: `make VERSION=x.v.z-rc.1 bundle`.
+4. Commit all the changes generated from the previous command:
+
+   ```console
+   $ git add .
+   $ git commit -S -m "release vX.Y.X-rc.1"
+   ```
+
+5. Add release tag: `git tag vX.Y.Z-rc.1`.
+6. Push the generated commit and tag to the repostory branch.
+
+   ```console
+   $ git push origin vX.Y
+   $ git push origin vX.Y.Z-rc.1
+   ```
+
+### Create a release candidate after a bug fix
+
+**Note:** The fix must be merged to the release branch `vX.Y`, not `master`.
+
+1. Update the release branch `vX.Y` locally by pulling the bug fix merged upstream (`git fetch`, `git pull`)
+2. Prepare the release candidate by running the bundle generation: `make VERSION=x.v.z-rc.w bundle`.
+3. Commit all the changes generated from the previous command:
+
+   ```console
+   $ git add .
+   $ git commit -S -m "release vX.Y.X-rc.W"
+   ```
+
+4. Add release tag: `git tag vX.Y.Z-rc.W`.
+5. Push the generated commit and tag to the repostory branch.
+
+   ```console
+   $ git push origin vX.Y
+   $ git push origin vX.Y.Z-rc.W
+   ```
+
+### Create the final version
+
+1. Update the release branch `vX.Y` locally by pulling the bug fix merged upstream (`git fetch`, `git pull`)
+2. Prepare the final release version by running the bundle generation: `make VERSION=x.v.z bundle`.
 3. Commit all the changes generated from the previous command:
 
    ```console
    $ git add .
    $ git commit -S -m "release vX.Y.X"
-   # or
-   $ git commit -S -m "release vX.Y.X-rc.W"
    ```
 
-4. Add release tag, correct format: `git tag vX.Y.Z` or `git tag vX.Y.Z-rc.W`
+4. Add release tag: `git tag vX.Y.Z`.
 5. Push the generated commit and tag to the repostory branch.
 
    ```console
@@ -25,7 +66,5 @@
    $ git push origin vX.Y.Z
    ```
 
-## Other PRs to create
+6. Merge `vX.Y` into `master`
 
-- Create krew PR for the plugin on https://github.com/kubernetes-sigs/krew-index to update the `datadog.yaml` artifact. (See [kubernetes-sigs/krew-index#727](https://github.com/kubernetes-sigs/krew-index/pull/727) as an example).
-- Create PRs on https://github.com/operator-framework/community-operators for `community` and `upstream` operator.
