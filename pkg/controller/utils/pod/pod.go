@@ -126,6 +126,19 @@ func IsPodRestarting(pod *v1.Pod, maxRestartCount int) (bool, datadoghqv1alpha1.
 	return false, ""
 }
 
+// MostRecentPodRestartTime returns the most recent restart time for a pod or the time
+func MostRecentPodRestartTime(pod *v1.Pod, prevRestartTime time.Time) time.Time {
+	recentRestartTime := prevRestartTime
+	for _, s := range pod.Status.ContainerStatuses {
+		if s.RestartCount != 0 && s.LastTerminationState != (v1.ContainerState{}) && s.LastTerminationState.Terminated != (&v1.ContainerStateTerminated{}) {
+			if s.LastTerminationState.Terminated.FinishedAt.After(recentRestartTime) {
+				recentRestartTime = s.LastTerminationState.Terminated.FinishedAt.Time
+			}
+		}
+	}
+	return recentRestartTime
+}
+
 // HasPodSchedulerIssue returns true if a pod remained unscheduled for more than 10 minutes
 // or if it stayed in `Terminating` state for longer than its grace period.
 func HasPodSchedulerIssue(pod *v1.Pod) bool {

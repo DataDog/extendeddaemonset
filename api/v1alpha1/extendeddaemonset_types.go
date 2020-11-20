@@ -79,6 +79,7 @@ type ExtendedDaemonSetSpecStrategyCanary struct {
 	// +listType=set
 	NodeAntiAffinityKeys []string                                      `json:"nodeAntiAffinityKeys,omitempty"`
 	AutoPause            *ExtendedDaemonSetSpecStrategyCanaryAutoPause `json:"autoPause,omitempty"`
+	NoRestartDuration    *metav1.Duration                              `json:"noRestartDuration,omitempty"`
 }
 
 // ExtendedDaemonSetSpecStrategyCanaryAutoPause defines the canary deployment AutoPause parameters of the ExtendedDaemonSet

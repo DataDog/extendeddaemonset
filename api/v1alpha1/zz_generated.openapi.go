@@ -369,6 +369,11 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanary(ref common.Referen
 							Ref: ref("./api/v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoPause"),
 						},
 					},
+					"noRestartDuration": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
+						},
+					},
 				},
 			},
 		},

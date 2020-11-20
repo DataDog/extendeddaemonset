@@ -165,6 +165,56 @@ func TestIsCanaryDeploymentEnded(t *testing.T) {
 			want:         true,
 			wantDuration: -time.Hour,
 		},
+		{
+			name: "not canary but has recent restarts",
+			args: args{
+				specCanary: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
+					Duration:          &metav1.Duration{Duration: time.Hour},
+					NoRestartDuration: &metav1.Duration{Duration: 10 * time.Minute},
+				},
+				rs: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{
+					ObjectMeta: metav1.ObjectMeta{
+						CreationTimestamp: metav1.NewTime(now.Add(-2 * time.Hour)),
+					},
+					Status: datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus{
+						Conditions: []datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCondition{
+							{
+								Type:           datadoghqv1alpha1.ConditionTypePodRestarting,
+								LastUpdateTime: metav1.NewTime(now.Add(-5 * time.Minute)),
+							},
+						},
+					},
+				},
+				now: now,
+			},
+			want:         false,
+			wantDuration: 5 * time.Minute,
+		},
+		{
+			name: "not canary and has no recent restarts",
+			args: args{
+				specCanary: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
+					Duration:          &metav1.Duration{Duration: time.Hour},
+					NoRestartDuration: &metav1.Duration{Duration: 10 * time.Minute},
+				},
+				rs: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{
+					ObjectMeta: metav1.ObjectMeta{
+						CreationTimestamp: metav1.NewTime(now.Add(-2 * time.Hour)),
+					},
+					Status: datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus{
+						Conditions: []datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCondition{
+							{
+								Type:           datadoghqv1alpha1.ConditionTypePodRestarting,
+								LastUpdateTime: metav1.NewTime(now.Add(-15 * time.Minute)),
+							},
+						},
+					},
+				},
+				now: now,
+			},
+			want:         true,
+			wantDuration: -5 * time.Minute,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

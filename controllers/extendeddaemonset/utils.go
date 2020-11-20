@@ -15,7 +15,9 @@ import (
 
 	"k8s.io/apimachinery/pkg/labels"
 
+	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
+	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/conditions"
 )
 
 // IsCanaryDeploymentEnded used to know if the Canary duration has finished.
@@ -30,8 +32,26 @@ func IsCanaryDeploymentEnded(specCanary *datadoghqv1alpha1.ExtendedDaemonSetSpec
 		// in this case, it means the canary never ends
 		return false, pendingDuration
 	}
+
+	var lastRestartTime time.Time
+
+	restartCondition := conditions.GetExtendedDaemonSetReplicaSetStatusCondition(&rs.Status, v1alpha1.ConditionTypePodRestarting)
+	if restartCondition != nil {
+		lastRestartTime = restartCondition.LastUpdateTime.Time
+	}
+
+	pendingNoRestartDuration := -specCanary.Duration.Duration
+	if specCanary.NoRestartDuration != nil && !lastRestartTime.IsZero() {
+		pendingNoRestartDuration = lastRestartTime.Add(specCanary.NoRestartDuration.Duration).Sub(now)
+	}
+
 	pendingDuration = rs.CreationTimestamp.Add(specCanary.Duration.Duration).Sub(now)
-	if rs.CreationTimestamp.Add(specCanary.Duration.Duration).Sub(now) >= 0 {
+
+	if pendingNoRestartDuration > pendingDuration {
+		pendingDuration = pendingNoRestartDuration
+	}
+
+	if pendingDuration >= 0 {
 		return false, pendingDuration
 	}
 

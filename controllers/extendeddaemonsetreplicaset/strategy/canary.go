@@ -9,12 +9,14 @@ import (
 	"fmt"
 	"time"
 
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	eds "github.com/DataDog/extendeddaemonset/controllers/extendeddaemonset"
+	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/conditions"
 	podUtils "github.com/DataDog/extendeddaemonset/pkg/controller/utils/pod"
 )
 
@@ -31,6 +33,13 @@ func ManageCanaryDeployment(client client.Client, daemonset *v1alpha1.ExtendedDa
 	isPaused, _ := eds.IsCanaryDeploymentPaused(daemonset.GetAnnotations())
 	autoPauseEnabled := *daemonset.Spec.Strategy.Canary.AutoPause.Enabled
 	maxRestarts := int(*daemonset.Spec.Strategy.Canary.AutoPause.MaxRestarts)
+	var lastRestartTime, newRestartTime time.Time
+	var restartingPod string
+
+	restartCondition := conditions.GetExtendedDaemonSetReplicaSetStatusCondition(params.NewStatus, v1alpha1.ConditionTypePodRestarting)
+	if restartCondition != nil {
+		lastRestartTime = restartCondition.LastUpdateTime.Time
+	}
 
 	// Canary mode
 	for _, nodeName := range params.CanaryNodes {
@@ -71,6 +80,9 @@ func ManageCanaryDeployment(client client.Client, daemonset *v1alpha1.ExtendedDa
 							isPaused = true
 						}
 					}
+
+					newRestartTime = podUtils.MostRecentPodRestartTime(pod, newRestartTime)
+					restartingPod = pod.ObjectMeta.Name
 				}
 			}
 		}
@@ -81,6 +93,18 @@ func ManageCanaryDeployment(client client.Client, daemonset *v1alpha1.ExtendedDa
 	result.NewStatus.Ready = readyPods
 	result.NewStatus.Available = availablePods
 	result.NewStatus.Current = currentPods
+
+	if !newRestartTime.IsZero() && newRestartTime.After(lastRestartTime) {
+		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(
+			result.NewStatus,
+			metav1.NewTime(newRestartTime),
+			v1alpha1.ConditionTypePodRestarting,
+			v1.ConditionTrue,
+			fmt.Sprintf("Pod %s had a container restart", restartingPod),
+			false,
+			true,
+		)
+	}
 	params.Logger.V(1).Info("NewStatus", "Desired", desiredPods, "Ready", readyPods, "Available", availablePods)
 	params.Logger.V(1).Info("Result", "PodsToCreate", result.PodsToCreate, "PodsToDelete", result.PodsToDelete)
 

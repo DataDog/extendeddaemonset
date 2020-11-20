@@ -136,6 +136,8 @@ spec:
                       type: object
                     duration:
                       type: string
+                    noRestartDuration:
+                      type: string
                     nodeAntiAffinityKeys:
                       items:
                         type: string
