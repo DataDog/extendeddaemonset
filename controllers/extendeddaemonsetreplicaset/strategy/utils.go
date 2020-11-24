@@ -29,7 +29,7 @@ import (
 	podutils "github.com/DataDog/extendeddaemonset/pkg/controller/utils/pod"
 )
 
-const pausedValueTrue = "true"
+const valueTrue = "true"
 
 func compareCurrentPodWithNewPod(params *Parameters, pod *corev1.Pod, node *NodeItem) bool {
 	// check that the pod corresponds to the replicaset. if not return false
@@ -146,12 +146,33 @@ func pauseCanaryDeployment(client client.Client, eds *datadoghqv1alpha1.Extended
 	}
 
 	if isPaused, ok := newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]; ok {
-		if isPaused == pausedValueTrue {
+		if isPaused == valueTrue {
 			return fmt.Errorf("canary deployment already paused")
 		}
 	}
-	newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey] = pausedValueTrue
+	newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey] = valueTrue
 	newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey] = string(reason)
+
+	if err := client.Update(context.TODO(), newEds); err != nil {
+		return err
+	}
+	return nil
+}
+
+// failCanaryDeployment updates two annotations so that the Canary deployment is marked as failed, along with a reason
+func failCanaryDeployment(client client.Client, eds *datadoghqv1alpha1.ExtendedDaemonSet, reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason) error {
+	newEds := eds.DeepCopy()
+	if newEds.Annotations == nil {
+		newEds.Annotations = make(map[string]string)
+	}
+
+	if isFailed, ok := newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey]; ok {
+		if isFailed == valueTrue {
+			return fmt.Errorf("canary deployment already failed ")
+		}
+	}
+	newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey] = valueTrue
+	newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedReasonAnnotationKey] = string(reason)
 
 	if err := client.Update(context.TODO(), newEds); err != nil {
 		return err

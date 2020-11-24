@@ -79,7 +79,9 @@ type ExtendedDaemonSetSpecStrategyCanary struct {
 	// +listType=set
 	NodeAntiAffinityKeys []string                                      `json:"nodeAntiAffinityKeys,omitempty"`
 	AutoPause            *ExtendedDaemonSetSpecStrategyCanaryAutoPause `json:"autoPause,omitempty"`
-	NoRestartDuration    *metav1.Duration                              `json:"noRestartDuration,omitempty"`
+	AutoFail             *ExtendedDaemonSetSpecStrategyCanaryAutoFail  `json:"autoFail,omitempty"`
+	// NoRestartsDuration defines min duration since last restart to end the canary phase
+	NoRestartsDuration *metav1.Duration `json:"noRestartsDuration,omitempty"`
 }
 
 // ExtendedDaemonSetSpecStrategyCanaryAutoPause defines the canary deployment AutoPause parameters of the ExtendedDaemonSet
@@ -88,6 +90,16 @@ type ExtendedDaemonSetSpecStrategyCanaryAutoPause struct {
 	Enabled *bool `json:"enabled,omitempty"`
 	// MaxRestarts defines the number of tolerable Canary pod restarts after which the Canary deployment is autopaused
 	MaxRestarts *int32 `json:"maxRestarts,omitempty"`
+}
+
+// ExtendedDaemonSetSpecStrategyCanaryAutoFail defines the canary deployment AutoFail parameters of the ExtendedDaemonSet
+// +k8s:openapi-gen=true
+type ExtendedDaemonSetSpecStrategyCanaryAutoFail struct {
+	Enabled *bool `json:"enabled,omitempty"`
+	// MaxRestarts defines the number of tolerable Canary pod restarts after which the Canary deployment is autofailed
+	MaxRestarts *int32 `json:"maxRestarts,omitempty"`
+	// MaxRestartsDuration defines the maximum duration of tolerable Canary pod restarts after which the Canary deployment is autofailed
+	MaxRestartsDuration *metav1.Duration `json:"maxRestartsDuration,omitempty"`
 }
 
 // ExtendedDaemonSetStatusState type representing the ExtendedDaemonSet state
@@ -112,6 +124,8 @@ const (
 	ExtendedDaemonSetStatusReasonCLB ExtendedDaemonSetStatusReason = "CrashLoopBackOff"
 	// ExtendedDaemonSetStatusReasonOOM represents OOMKilled as the reason for the ExtendedDaemonSet status state
 	ExtendedDaemonSetStatusReasonOOM ExtendedDaemonSetStatusReason = "OOMKilled"
+	// ExtendedDaemonSetStatusRestartsTimeoutExceeded represents timeout on restarts as the reason for the ExtendedDaemonSet status
+	ExtendedDaemonSetStatusRestartsTimeoutExceeded ExtendedDaemonSetStatusReason = "RestartsTimeoutExceeded"
 	// ExtendedDaemonSetStatusReasonUnknown represents an Unknown reason for the status state
 	ExtendedDaemonSetStatusReasonUnknown ExtendedDaemonSetStatusReason = "Unknown"
 )

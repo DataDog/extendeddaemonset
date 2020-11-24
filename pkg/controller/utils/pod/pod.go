@@ -99,15 +99,15 @@ func GetPodConditionFromList(conditions []v1.PodCondition, conditionType v1.PodC
 	return -1, nil
 }
 
-// IsPodRestarting checks if a pod in the Canary deployment is restarting
-// This returns the "reason" for the pod with the most restarts
-func IsPodRestarting(pod *v1.Pod, maxRestartCount int) (bool, datadoghqv1alpha1.ExtendedDaemonSetStatusReason) {
+// HighestRestartCount checks if a pod in the Canary deployment is restarting
+// This returns the count and the "reason" for the pod with the most restarts
+func HighestRestartCount(pod *v1.Pod) (int, datadoghqv1alpha1.ExtendedDaemonSetStatusReason) {
 	// track the highest number of restarts among pod containers
-	var mostRestartCount int
+	var restartCount int
 	var reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason
 	for _, s := range pod.Status.ContainerStatuses {
-		if mostRestartCount < int(s.RestartCount) {
-			mostRestartCount = int(s.RestartCount)
+		if restartCount < int(s.RestartCount) {
+			restartCount = int(s.RestartCount)
 			if s.LastTerminationState != (v1.ContainerState{}) && *s.LastTerminationState.Terminated != (v1.ContainerStateTerminated{}) {
 				if s.LastTerminationState.Terminated.Reason == string(datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB) {
 					reason = datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB
@@ -119,16 +119,12 @@ func IsPodRestarting(pod *v1.Pod, maxRestartCount int) (bool, datadoghqv1alpha1.
 			}
 		}
 	}
-
-	if mostRestartCount > maxRestartCount {
-		return true, reason
-	}
-	return false, ""
+	return restartCount, reason
 }
 
-// MostRecentPodRestartTime returns the most recent restart time for a pod or the time
-func MostRecentPodRestartTime(pod *v1.Pod, prevRestartTime time.Time) time.Time {
-	recentRestartTime := prevRestartTime
+// MostRecentRestartTime returns the most recent restart time for a pod or the time
+func MostRecentRestartTime(pod *v1.Pod) time.Time {
+	var recentRestartTime time.Time
 	for _, s := range pod.Status.ContainerStatuses {
 		if s.RestartCount != 0 && s.LastTerminationState != (v1.ContainerState{}) && s.LastTerminationState.Terminated != (&v1.ContainerStateTerminated{}) {
 			if s.LastTerminationState.Terminated.FinishedAt.After(recentRestartTime) {

@@ -26,6 +26,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"./api/v1alpha1.ExtendedDaemonSetSpec":                        schema__api_v1alpha1_ExtendedDaemonSetSpec(ref),
 		"./api/v1alpha1.ExtendedDaemonSetSpecStrategy":                schema__api_v1alpha1_ExtendedDaemonSetSpecStrategy(ref),
 		"./api/v1alpha1.ExtendedDaemonSetSpecStrategyCanary":          schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanary(ref),
+		"./api/v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoFail":  schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanaryAutoFail(ref),
 		"./api/v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoPause": schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanaryAutoPause(ref),
 		"./api/v1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate":   schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyRollingUpdate(ref),
 		"./api/v1alpha1.ExtendedDaemonSetStatus":                      schema__api_v1alpha1_ExtendedDaemonSetStatus(ref),
@@ -369,16 +370,56 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanary(ref common.Referen
 							Ref: ref("./api/v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoPause"),
 						},
 					},
-					"noRestartDuration": {
+					"autoFail": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
+							Ref: ref("./api/v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoFail"),
+						},
+					},
+					"noRestartsDuration": {
+						SchemaProps: spec.SchemaProps{
+							Description: "NoRestartsDuration defines min duration since last restart to end the canary phase",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"./api/v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoPause", "k8s.io/apimachinery/pkg/apis/meta/v1.Duration", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector", "k8s.io/apimachinery/pkg/util/intstr.IntOrString"},
+			"./api/v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoFail", "./api/v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoPause", "k8s.io/apimachinery/pkg/apis/meta/v1.Duration", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector", "k8s.io/apimachinery/pkg/util/intstr.IntOrString"},
+	}
+}
+
+func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanaryAutoFail(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ExtendedDaemonSetSpecStrategyCanaryAutoFail defines the canary deployment AutoFail parameters of the ExtendedDaemonSet",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"enabled": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"maxRestarts": {
+						SchemaProps: spec.SchemaProps{
+							Description: "MaxRestarts defines the number of tolerable Canary pod restarts after which the Canary deployment is autofailed",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"maxRestartsDuration": {
+						SchemaProps: spec.SchemaProps{
+							Description: "MaxRestartsDuration defines the maximum duration of tolerable Canary pod restarts after which the Canary deployment is autofailed",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Duration"},
 	}
 }
 

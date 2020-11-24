@@ -8,22 +8,22 @@ package pod
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	ctrltest "github.com/DataDog/extendeddaemonset/pkg/controller/test"
 )
 
-func Test_IsPodRestarting(t *testing.T) {
+func Test_HighestPodRestartCount(t *testing.T) {
 	type args struct {
-		pod             *v1.Pod
-		maxRestartCount int
+		pod *v1.Pod
 	}
 
 	tests := []struct {
 		name             string
 		args             args
-		wantIsRestarting bool
+		wantRestartCount int
 		wantReason       datadoghqv1alpha1.ExtendedDaemonSetStatusReason
 	}{
 		{
@@ -42,9 +42,8 @@ func Test_IsPodRestarting(t *testing.T) {
 					},
 				},
 				),
-				maxRestartCount: 5,
 			},
-			wantIsRestarting: true,
+			wantRestartCount: 10,
 			wantReason:       datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB,
 		},
 		{
@@ -63,10 +62,9 @@ func Test_IsPodRestarting(t *testing.T) {
 					},
 				},
 				),
-				maxRestartCount: 5,
 			},
-			wantIsRestarting: false,
-			wantReason:       "",
+			wantRestartCount: 4,
+			wantReason:       datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB,
 		},
 		{
 			name: "restart count equal to max tolerable, due to CLB",
@@ -84,10 +82,9 @@ func Test_IsPodRestarting(t *testing.T) {
 					},
 				},
 				),
-				maxRestartCount: 5,
 			},
-			wantIsRestarting: false,
-			wantReason:       "",
+			wantRestartCount: 5,
+			wantReason:       datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB,
 		},
 		{
 			name: "restart count greater than tolerable, due to OOM",
@@ -105,9 +102,8 @@ func Test_IsPodRestarting(t *testing.T) {
 					},
 				},
 				),
-				maxRestartCount: 5,
 			},
-			wantIsRestarting: true,
+			wantRestartCount: 6,
 			wantReason:       datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM,
 		},
 		{
@@ -122,9 +118,8 @@ func Test_IsPodRestarting(t *testing.T) {
 					},
 				},
 				),
-				maxRestartCount: 5,
 			},
-			wantIsRestarting: false,
+			wantRestartCount: 0,
 			wantReason:       "",
 		},
 		{
@@ -147,22 +142,17 @@ func Test_IsPodRestarting(t *testing.T) {
 					},
 				},
 				),
-				maxRestartCount: 5,
 			},
-			wantIsRestarting: true,
+			wantRestartCount: 10,
 			wantReason:       datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			isRestarting, reason := IsPodRestarting(tt.args.pod, tt.args.maxRestartCount)
-			if isRestarting != tt.wantIsRestarting {
-				t.Errorf("IsPodRestarting() isRestarting = %v, wantIsRestarting %v", isRestarting, tt.wantIsRestarting)
-			}
-			if reason != tt.wantReason {
-				t.Errorf("IsPodRestarting() reason = %v, wantReason %v", reason, tt.wantReason)
-			}
+			restartCount, reason := HighestRestartCount(tt.args.pod)
+			assert.Equal(t, tt.wantRestartCount, restartCount)
+			assert.Equal(t, tt.wantReason, reason)
 		})
 	}
 }

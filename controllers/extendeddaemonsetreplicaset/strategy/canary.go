@@ -32,7 +32,12 @@ func ManageCanaryDeployment(client client.Client, daemonset *v1alpha1.ExtendedDa
 	var err error
 	isPaused, _ := eds.IsCanaryDeploymentPaused(daemonset.GetAnnotations())
 	autoPauseEnabled := *daemonset.Spec.Strategy.Canary.AutoPause.Enabled
-	maxRestarts := int(*daemonset.Spec.Strategy.Canary.AutoPause.MaxRestarts)
+	autoPauseMaxRestarts := int(*daemonset.Spec.Strategy.Canary.AutoPause.MaxRestarts)
+
+	isFailed := eds.IsCanaryDeploymentFailed(daemonset.GetAnnotations())
+	autoFailEnabled := *daemonset.Spec.Strategy.Canary.AutoFail.Enabled
+	autoFailMaxRestarts := int(*daemonset.Spec.Strategy.Canary.AutoFail.MaxRestarts)
+
 	var lastRestartTime, newRestartTime time.Time
 	var restartingPod string
 
@@ -68,21 +73,38 @@ func ManageCanaryDeployment(client client.Client, daemonset *v1alpha1.ExtendedDa
 					if podUtils.IsPodReady(pod) {
 						readyPods++
 					}
-					if autoPauseEnabled && !isPaused {
-						// Check if deploy should be paused due to restarts. Note that pausing the canary will have no effect if it has been validated or failed
-						if isRestarting, reason := podUtils.IsPodRestarting(pod, maxRestarts); isRestarting {
-							err = pauseCanaryDeployment(client, daemonset, reason)
-							if err != nil {
-								params.Logger.Error(err, "Failed to pause canary deployment")
-							} else {
-								params.Logger.V(1).Info("Canary deployment paused")
-							}
-							isPaused = true
-						}
+
+					// Check if deploy should be paused due to restarts. Note that pausing the canary will have no effect if it has been validated or failed
+					restartCount, reason := podUtils.HighestRestartCount(pod)
+					if restartCount == 0 {
+						continue
 					}
 
-					newRestartTime = podUtils.MostRecentPodRestartTime(pod, newRestartTime)
-					restartingPod = pod.ObjectMeta.Name
+					if autoFailEnabled && !isFailed && restartCount > autoFailMaxRestarts {
+						err = failCanaryDeployment(client, daemonset, reason)
+						if err != nil {
+							params.Logger.Error(err, "Failed to set canary deployment to failed")
+						} else {
+							params.Logger.V(1).Info("Canary deployment is now failed")
+						}
+						isFailed = true
+					}
+
+					if autoPauseEnabled && !isPaused && !isFailed && restartCount > autoPauseMaxRestarts {
+						err = pauseCanaryDeployment(client, daemonset, reason)
+						if err != nil {
+							params.Logger.Error(err, "Failed to pause canary deployment")
+						} else {
+							params.Logger.V(1).Info("Canary deployment is now paused")
+						}
+						isPaused = true
+					}
+
+					podRestartTime := podUtils.MostRecentRestartTime(pod)
+					if podRestartTime.After(newRestartTime) {
+						newRestartTime = podRestartTime
+						restartingPod = pod.ObjectMeta.Name
+					}
 				}
 			}
 		}
@@ -105,6 +127,18 @@ func ManageCanaryDeployment(client client.Client, daemonset *v1alpha1.ExtendedDa
 			true,
 		)
 	}
+
+	restartCondition = conditions.GetExtendedDaemonSetReplicaSetStatusCondition(result.NewStatus, v1alpha1.ConditionTypePodRestarting)
+	autoFailMaxRestartsDuration := params.Strategy.Canary.AutoFail.MaxRestartsDuration.Duration
+	if !isFailed && restartCondition != nil && restartCondition.LastUpdateTime.Sub(restartCondition.LastTransitionTime.Time) > autoFailMaxRestartsDuration {
+		err = failCanaryDeployment(client, daemonset, v1alpha1.ExtendedDaemonSetStatusRestartsTimeoutExceeded)
+		if err != nil {
+			params.Logger.Error(err, "Failed to set canary deployment to failed")
+		} else {
+			params.Logger.V(1).Info("Canary deployment is now failed")
+		}
+	}
+
 	params.Logger.V(1).Info("NewStatus", "Desired", desiredPods, "Ready", readyPods, "Available", availablePods)
 	params.Logger.V(1).Info("Result", "PodsToCreate", result.PodsToCreate, "PodsToDelete", result.PodsToDelete)
 

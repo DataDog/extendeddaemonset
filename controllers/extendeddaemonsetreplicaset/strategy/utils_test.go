@@ -111,7 +111,7 @@ func Test_pauseCanaryDeployment(t *testing.T) {
 	reason := datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB
 
 	daemonsetPaused := daemonset.DeepCopy()
-	daemonsetPaused.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey] = pausedValueTrue
+	daemonsetPaused.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey] = valueTrue
 
 	type args struct {
 		client client.Client

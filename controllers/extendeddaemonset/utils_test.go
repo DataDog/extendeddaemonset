@@ -169,8 +169,8 @@ func TestIsCanaryDeploymentEnded(t *testing.T) {
 			name: "not canary but has recent restarts",
 			args: args{
 				specCanary: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
-					Duration:          &metav1.Duration{Duration: time.Hour},
-					NoRestartDuration: &metav1.Duration{Duration: 10 * time.Minute},
+					Duration:           &metav1.Duration{Duration: time.Hour},
+					NoRestartsDuration: &metav1.Duration{Duration: 10 * time.Minute},
 				},
 				rs: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{
 					ObjectMeta: metav1.ObjectMeta{
@@ -194,8 +194,8 @@ func TestIsCanaryDeploymentEnded(t *testing.T) {
 			name: "not canary and has no recent restarts",
 			args: args{
 				specCanary: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
-					Duration:          &metav1.Duration{Duration: time.Hour},
-					NoRestartDuration: &metav1.Duration{Duration: 10 * time.Minute},
+					Duration:           &metav1.Duration{Duration: time.Hour},
+					NoRestartsDuration: &metav1.Duration{Duration: 10 * time.Minute},
 				},
 				rs: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{
 					ObjectMeta: metav1.ObjectMeta{
