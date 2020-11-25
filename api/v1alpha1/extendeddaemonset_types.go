@@ -88,7 +88,7 @@ type ExtendedDaemonSetSpecStrategyCanary struct {
 // +k8s:openapi-gen=true
 type ExtendedDaemonSetSpecStrategyCanaryAutoPause struct {
 	Enabled *bool `json:"enabled,omitempty"`
-	// MaxRestarts defines the number of tolerable Canary pod restarts after which the Canary deployment is autopaused
+	// MaxRestarts defines the number of tolerable (per pod) Canary pod restarts after which the Canary deployment is autopaused
 	MaxRestarts *int32 `json:"maxRestarts,omitempty"`
 }
 
@@ -96,7 +96,7 @@ type ExtendedDaemonSetSpecStrategyCanaryAutoPause struct {
 // +k8s:openapi-gen=true
 type ExtendedDaemonSetSpecStrategyCanaryAutoFail struct {
 	Enabled *bool `json:"enabled,omitempty"`
-	// MaxRestarts defines the number of tolerable Canary pod restarts after which the Canary deployment is autofailed
+	// MaxRestarts defines the number of tolerable (per pod) Canary pod restarts after which the Canary deployment is autofailed
 	MaxRestarts *int32 `json:"maxRestarts,omitempty"`
 	// MaxRestartsDuration defines the maximum duration of tolerable Canary pod restarts after which the Canary deployment is autofailed
 	MaxRestartsDuration *metav1.Duration `json:"maxRestartsDuration,omitempty"`

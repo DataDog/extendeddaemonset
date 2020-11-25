@@ -93,6 +93,10 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		return reconcile.Result{Requeue: true}, nil
 	}
 
+	if err = datadoghqv1alpha1.ValidateExtendedDaemonSetSpec(&instance.Spec); err != nil {
+		return reconcile.Result{}, err
+	}
+
 	// counter for status
 	var podsCounter podsCounterType
 

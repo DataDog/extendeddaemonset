@@ -13,17 +13,16 @@ import (
 )
 
 const (
-	defaultCanaryReplica                     = 1
-	defaultCanaryDuration                    = 10
-	defaultCanaryNoRestartsDuration          = 5
-	defaultCanaryAutoPauseEnabled            = true
-	defaultCanaryAutoPauseMaxRestarts        = 2
-	defaultCanaryAutoFailEnabled             = true
-	defaultCanaryAutoFailMaxRestarts         = 5
-	defaultCanaryAutoFailMaxRestartsDuration = 10
-	defaultSlowStartIntervalDuration         = 1
-	defaultMaxParallelPodCreation            = 250
-	defaultReconcileFrequency                = 10 * time.Second
+	defaultCanaryReplica              = 1
+	defaultCanaryDuration             = 10
+	defaultCanaryNoRestartsDuration   = 5
+	defaultCanaryAutoPauseEnabled     = true
+	defaultCanaryAutoPauseMaxRestarts = 2
+	defaultCanaryAutoFailEnabled      = true
+	defaultCanaryAutoFailMaxRestarts  = 5
+	defaultSlowStartIntervalDuration  = 1
+	defaultMaxParallelPodCreation     = 250
+	defaultReconcileFrequency         = 10 * time.Second
 )
 
 // IsDefaultedExtendedDaemonSet used to know if a ExtendedDaemonSet is already defaulted
@@ -96,6 +95,10 @@ func IsDefaultedExtendedDaemonSetSpecStrategyCanary(canary *ExtendedDaemonSetSpe
 		return false
 	}
 	if canary.AutoPause == nil || canary.AutoPause.Enabled == nil || canary.AutoPause.MaxRestarts == nil {
+		return false
+	}
+
+	if canary.AutoFail == nil || canary.AutoFail.Enabled == nil || canary.AutoFail.MaxRestarts == nil {
 		return false
 	}
 	return true
@@ -186,11 +189,6 @@ func DefaultExtendedDaemonSetSpecStrategyCanaryAutoFail(a *ExtendedDaemonSetSpec
 		a.MaxRestarts = NewInt32(defaultCanaryAutoFailMaxRestarts)
 	}
 
-	if a.MaxRestartsDuration == nil {
-		a.MaxRestartsDuration = &metav1.Duration{
-			Duration: defaultCanaryAutoFailMaxRestartsDuration * time.Minute,
-		}
-	}
 	return a
 }
 

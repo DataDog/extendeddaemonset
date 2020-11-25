@@ -136,20 +136,20 @@ func manageUnscheduledPodNodes(pods []*corev1.Pod) []string {
 	return output
 }
 
-// pauseCanaryDeployment updates two annotations so that the Canary deployment is marked as paused, along with a reason
-func pauseCanaryDeployment(client client.Client, eds *datadoghqv1alpha1.ExtendedDaemonSet, reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason) error {
+// annotateCanaryDeploymentWithReason annotates the Canary deployment with a reason
+func annotateCanaryDeploymentWithReason(client client.Client, eds *datadoghqv1alpha1.ExtendedDaemonSet, valueKey string, reasonKey string, reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason) error {
 	newEds := eds.DeepCopy()
 	if newEds.Annotations == nil {
 		newEds.Annotations = make(map[string]string)
 	}
 
-	if isPaused, ok := newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]; ok {
-		if isPaused == valueTrue {
+	if value, ok := newEds.Annotations[valueKey]; ok {
+		if value == valueTrue {
 			return nil
 		}
 	}
-	newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey] = valueTrue
-	newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey] = string(reason)
+	newEds.Annotations[valueKey] = valueTrue
+	newEds.Annotations[reasonKey] = string(reason)
 
 	if err := client.Update(context.TODO(), newEds); err != nil {
 		return err
@@ -157,25 +157,26 @@ func pauseCanaryDeployment(client client.Client, eds *datadoghqv1alpha1.Extended
 	return nil
 }
 
+// pauseCanaryDeployment updates two annotations so that the Canary deployment is marked as paused, along with a reason
+func pauseCanaryDeployment(client client.Client, eds *datadoghqv1alpha1.ExtendedDaemonSet, reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason) error {
+	return annotateCanaryDeploymentWithReason(
+		client,
+		eds,
+		datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey,
+		datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey,
+		reason,
+	)
+}
+
 // failCanaryDeployment updates two annotations so that the Canary deployment is marked as failed, along with a reason
 func failCanaryDeployment(client client.Client, eds *datadoghqv1alpha1.ExtendedDaemonSet, reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason) error {
-	newEds := eds.DeepCopy()
-	if newEds.Annotations == nil {
-		newEds.Annotations = make(map[string]string)
-	}
-
-	if isFailed, ok := newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey]; ok {
-		if isFailed == valueTrue {
-			return nil
-		}
-	}
-	newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey] = valueTrue
-	newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedReasonAnnotationKey] = string(reason)
-
-	if err := client.Update(context.TODO(), newEds); err != nil {
-		return err
-	}
-	return nil
+	return annotateCanaryDeploymentWithReason(
+		client,
+		eds,
+		datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey,
+		datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedReasonAnnotationKey,
+		reason,
+	)
 }
 
 // addPodLabel adds a given label to a pod, no-op if the pod is nil or if the label exists

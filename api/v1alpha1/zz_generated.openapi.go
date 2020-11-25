@@ -404,7 +404,7 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanaryAutoFail(ref common
 					},
 					"maxRestarts": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MaxRestarts defines the number of tolerable Canary pod restarts after which the Canary deployment is autofailed",
+							Description: "MaxRestarts defines the number of tolerable (per pod) Canary pod restarts after which the Canary deployment is autofailed",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -438,7 +438,7 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanaryAutoPause(ref commo
 					},
 					"maxRestarts": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MaxRestarts defines the number of tolerable Canary pod restarts after which the Canary deployment is autopaused",
+							Description: "MaxRestarts defines the number of tolerable (per pod) Canary pod restarts after which the Canary deployment is autopaused",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},

@@ -103,36 +103,49 @@ func GetPodConditionFromList(conditions []v1.PodCondition, conditionType v1.PodC
 // This returns the count and the "reason" for the pod with the most restarts
 func HighestRestartCount(pod *v1.Pod) (int, datadoghqv1alpha1.ExtendedDaemonSetStatusReason) {
 	// track the highest number of restarts among pod containers
-	var restartCount int
-	var reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason
+	var (
+		restartCount int32
+		reason       datadoghqv1alpha1.ExtendedDaemonSetStatusReason
+	)
+
 	for _, s := range pod.Status.ContainerStatuses {
-		if restartCount < int(s.RestartCount) {
-			restartCount = int(s.RestartCount)
+		if s.RestartCount > restartCount {
+			restartCount = s.RestartCount
 			reason = datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown
 			if s.LastTerminationState != (v1.ContainerState{}) && *s.LastTerminationState.Terminated != (v1.ContainerStateTerminated{}) {
-				switch s.LastTerminationState.Terminated.Reason {
-				case string(datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB):
-					reason = datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB
-				case string(datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM):
-					reason = datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM
-				}
+				reason = terminatedReason(s.LastTerminationState.Terminated.Reason)
 			}
 		}
 	}
-	return restartCount, reason
+	return int(restartCount), reason
 }
 
-// MostRecentRestartTime returns the most recent restart time for a pod or the time
-func MostRecentRestartTime(pod *v1.Pod) time.Time {
-	var recentRestartTime time.Time
+// MostRecentRestart returns the most recent restart time for a pod or the time
+func MostRecentRestart(pod *v1.Pod) (time.Time, datadoghqv1alpha1.ExtendedDaemonSetStatusReason) {
+	var (
+		restartTime time.Time
+		reason      datadoghqv1alpha1.ExtendedDaemonSetStatusReason
+	)
 	for _, s := range pod.Status.ContainerStatuses {
 		if s.RestartCount != 0 && s.LastTerminationState != (v1.ContainerState{}) && s.LastTerminationState.Terminated != (&v1.ContainerStateTerminated{}) {
-			if s.LastTerminationState.Terminated.FinishedAt.After(recentRestartTime) {
-				recentRestartTime = s.LastTerminationState.Terminated.FinishedAt.Time
+			if s.LastTerminationState.Terminated.FinishedAt.After(restartTime) {
+				restartTime = s.LastTerminationState.Terminated.FinishedAt.Time
+				reason = terminatedReason(s.LastTerminationState.Terminated.Reason)
 			}
 		}
 	}
-	return recentRestartTime
+	return restartTime, reason
+}
+
+func terminatedReason(reason string) datadoghqv1alpha1.ExtendedDaemonSetStatusReason {
+	switch reason {
+	case string(datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB):
+		return datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB
+	case string(datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM):
+		return datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM
+	default:
+		return datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown
+	}
 }
 
 // HasPodSchedulerIssue returns true if a pod remained unscheduled for more than 10 minutes
