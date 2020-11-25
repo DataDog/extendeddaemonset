@@ -7,7 +7,6 @@ package strategy
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -20,7 +19,6 @@ import (
 	utilserrors "k8s.io/apimachinery/pkg/util/errors"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/conditions"
@@ -84,7 +82,7 @@ func compareSpecTemplateMD5Hash(hash string, pod *corev1.Pod) bool {
 	return false
 }
 
-func cleanupPods(client client.Client, logger logr.Logger, status *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus, pods []*corev1.Pod) (*datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus, reconcile.Result, error) {
+func cleanupPods(client client.Client, logger logr.Logger, status *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus, pods []*corev1.Pod) error {
 	errs := deletePodSlice(client, logger, pods)
 	now := metav1.NewTime(time.Now())
 	conditionStatus := corev1.ConditionTrue
@@ -94,7 +92,7 @@ func cleanupPods(client client.Client, logger logr.Logger, status *datadoghqv1al
 	if len(pods) != 0 {
 		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(status, now, datadoghqv1alpha1.ConditionTypePodsCleanupDone, conditionStatus, "", false, false)
 	}
-	return status, reconcile.Result{}, utilserrors.NewAggregate(errs)
+	return utilserrors.NewAggregate(errs)
 }
 
 func deletePodSlice(client client.Client, logger logr.Logger, podsToDelete []*corev1.Pod) []error {
@@ -147,7 +145,7 @@ func pauseCanaryDeployment(client client.Client, eds *datadoghqv1alpha1.Extended
 
 	if isPaused, ok := newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]; ok {
 		if isPaused == valueTrue {
-			return fmt.Errorf("canary deployment already paused")
+			return nil
 		}
 	}
 	newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey] = valueTrue
@@ -168,7 +166,7 @@ func failCanaryDeployment(client client.Client, eds *datadoghqv1alpha1.ExtendedD
 
 	if isFailed, ok := newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey]; ok {
 		if isFailed == valueTrue {
-			return fmt.Errorf("canary deployment already failed ")
+			return nil
 		}
 	}
 	newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey] = valueTrue

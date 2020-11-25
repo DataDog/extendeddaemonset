@@ -108,14 +108,14 @@ func HighestRestartCount(pod *v1.Pod) (int, datadoghqv1alpha1.ExtendedDaemonSetS
 	for _, s := range pod.Status.ContainerStatuses {
 		if restartCount < int(s.RestartCount) {
 			restartCount = int(s.RestartCount)
+			reason = datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown
 			if s.LastTerminationState != (v1.ContainerState{}) && *s.LastTerminationState.Terminated != (v1.ContainerStateTerminated{}) {
-				if s.LastTerminationState.Terminated.Reason == string(datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB) {
+				switch s.LastTerminationState.Terminated.Reason {
+				case string(datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB):
 					reason = datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB
-				} else if s.LastTerminationState.Terminated.Reason == string(datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM) {
+				case string(datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM):
 					reason = datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM
 				}
-			} else {
-				reason = datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown
 			}
 		}
 	}

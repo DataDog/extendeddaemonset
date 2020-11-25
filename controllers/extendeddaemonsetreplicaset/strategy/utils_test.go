@@ -140,7 +140,7 @@ func Test_pauseCanaryDeployment(t *testing.T) {
 				eds:    daemonsetPaused,
 				reason: reason,
 			},
-			wantErr: true,
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
