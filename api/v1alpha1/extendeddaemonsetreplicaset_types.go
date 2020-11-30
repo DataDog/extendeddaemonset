@@ -46,7 +46,6 @@ type ExtendedDaemonSetReplicaSetStatus struct {
 	Ready                    int32  `json:"ready"`
 	Available                int32  `json:"available"`
 	IgnoredUnresponsiveNodes int32  `json:"ignoredUnresponsiveNodes"`
-
 	// Conditions Represents the latest available observations of a DaemonSet's current state.
 	// +listType=map
 	// +listMapKey=type
@@ -91,6 +90,8 @@ const (
 	ConditionTypePodCreation ExtendedDaemonSetReplicaSetConditionType = "PodCreation"
 	// ConditionTypePodDeletion Pod(s) deletion condition
 	ConditionTypePodDeletion ExtendedDaemonSetReplicaSetConditionType = "PodDeletion"
+	// ConditionTypePodRestarting Pod(s) restarting condition
+	ConditionTypePodRestarting ExtendedDaemonSetReplicaSetConditionType = "PodRestarting"
 	// ConditionTypeLastFullSync last time the ExtendedDaemonSetReplicaSet sync when to the end of the reconcile function
 	ConditionTypeLastFullSync ExtendedDaemonSetReplicaSetConditionType = "LastFullSync"
 )

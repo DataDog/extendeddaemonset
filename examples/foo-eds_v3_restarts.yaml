@@ -1,0 +1,28 @@
+apiVersion: datadoghq.com/v1alpha1
+kind: ExtendedDaemonSet
+metadata:
+  name: foo
+spec:
+  strategy:
+    canary:
+      replicas: 1
+      duration: 5m
+      noRestartsDuration: 2m
+      autoPause:
+        enabled: true
+        maxRestarts: 2
+      autoFail:
+        enabled: true
+        maxRestarts: 10
+        maxRestartsDuration: 10m
+    rollingUpdate:
+      maxParallelPodCreation: 1
+      slowStartIntervalDuration: 1m
+  template:
+    spec:
+      containers:
+      - name: daemon
+        image: k8s.gcr.io/pause:3.1
+        command: ["does", "-not", "-exist"]
+      tolerations:
+      - operator: Exists

@@ -22,6 +22,8 @@ const (
 	ReplicaSetStatusActive ReplicaSetStatus = "active"
 	// ReplicaSetStatusCanary the ReplicaSet is currently in canary mode
 	ReplicaSetStatusCanary ReplicaSetStatus = "canary"
+	// ReplicaSetStatusCanaryFailed the ReplicaSet is currently in canary failed mode
+	ReplicaSetStatusCanaryFailed ReplicaSetStatus = "canary-failed"
 	// ReplicaSetStatusUnknown the controller is not able to define the ReplicaSet status
 	ReplicaSetStatusUnknown ReplicaSetStatus = "unknown"
 )
@@ -56,6 +58,16 @@ type Result struct {
 	PodsToDelete []*NodeItem
 
 	UnscheduledNodesDueToResourcesConstraints []string
+
+	// IsPaused represents paused status of the deployment
+	IsPaused bool
+	// PausedReason provides the reason for the paused deployment
+	PausedReason datadoghqv1alpha1.ExtendedDaemonSetStatusReason
+
+	// IsFailed represents failed state of the deployment
+	IsFailed bool
+	// FailedReason provides the reason for the failed deployment
+	FailedReason datadoghqv1alpha1.ExtendedDaemonSetStatusReason
 
 	NewStatus *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus
 	Result    reconcile.Result

@@ -121,6 +121,24 @@ spec:
                 canary:
                   description: Canary deployment configuration
                   properties:
+                    autoFail:
+                      description: ExtendedDaemonSetSpecStrategyCanaryAutoFail defines
+                        the canary deployment AutoFail parameters of the ExtendedDaemonSet
+                      properties:
+                        enabled:
+                          type: boolean
+                        maxRestarts:
+                          description: MaxRestarts defines the number of tolerable
+                            (per pod) Canary pod restarts after which the Canary deployment
+                            is autofailed
+                          format: int32
+                          type: integer
+                        maxRestartsDuration:
+                          description: MaxRestartsDuration defines the maximum duration
+                            of tolerable Canary pod restarts after which the Canary
+                            deployment is autofailed
+                          type: string
+                      type: object
                     autoPause:
                       description: ExtendedDaemonSetSpecStrategyCanaryAutoPause defines
                         the canary deployment AutoPause parameters of the ExtendedDaemonSet
@@ -129,12 +147,16 @@ spec:
                           type: boolean
                         maxRestarts:
                           description: MaxRestarts defines the number of tolerable
-                            Canary pod restarts after which the Canary deployment
+                            (per pod) Canary pod restarts after which the Canary deployment
                             is autopaused
                           format: int32
                           type: integer
                       type: object
                     duration:
+                      type: string
+                    noRestartsDuration:
+                      description: NoRestartsDuration defines min duration since last
+                        restart to end the canary phase
                       type: string
                     nodeAntiAffinityKeys:
                       items:

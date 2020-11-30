@@ -8,6 +8,7 @@ package strategy
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -111,7 +112,7 @@ func Test_pauseCanaryDeployment(t *testing.T) {
 	reason := datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB
 
 	daemonsetPaused := daemonset.DeepCopy()
-	daemonsetPaused.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey] = pausedValueTrue
+	daemonsetPaused.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey] = valueTrue
 
 	type args struct {
 		client client.Client
@@ -122,7 +123,7 @@ func Test_pauseCanaryDeployment(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		wantErr bool
+		wantErr error
 	}{
 		{
 			name: "add paused annotation without issue",
@@ -131,7 +132,6 @@ func Test_pauseCanaryDeployment(t *testing.T) {
 				eds:    daemonset,
 				reason: reason,
 			},
-			wantErr: false,
 		},
 		{
 			name: "add paused annotation when it is already paused",
@@ -140,14 +140,58 @@ func Test_pauseCanaryDeployment(t *testing.T) {
 				eds:    daemonsetPaused,
 				reason: reason,
 			},
-			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := pauseCanaryDeployment(tt.args.client, tt.args.eds, tt.args.reason); (err != nil) != tt.wantErr {
-				t.Errorf("pauseCanaryDeployment() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			err := pauseCanaryDeployment(tt.args.client, tt.args.eds, tt.args.reason)
+			assert.Equal(t, tt.wantErr, err)
+		})
+	}
+}
+
+func Test_failCanaryDeployment(t *testing.T) {
+	s := scheme.Scheme
+	s.AddKnownTypes(datadoghqv1alpha1.GroupVersion, &datadoghqv1alpha1.ExtendedDaemonSet{})
+
+	daemonset := test.NewExtendedDaemonSet("test", "test", &test.NewExtendedDaemonSetOptions{})
+	reason := datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM
+
+	daemonsetPaused := daemonset.DeepCopy()
+	daemonsetPaused.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey] = valueTrue
+
+	type args struct {
+		client client.Client
+		eds    *datadoghqv1alpha1.ExtendedDaemonSet
+		reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason
+	}
+
+	tests := []struct {
+		name    string
+		args    args
+		wantErr error
+	}{
+		{
+			name: "add dailed annotation without issue",
+			args: args{
+				client: fake.NewFakeClient(daemonset),
+				eds:    daemonset,
+				reason: reason,
+			},
+		},
+		{
+			name: "add failed annotation when it is already paused",
+			args: args{
+				client: fake.NewFakeClient(daemonsetPaused),
+				eds:    daemonsetPaused,
+				reason: reason,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := failCanaryDeployment(tt.args.client, tt.args.eds, tt.args.reason)
+			assert.Equal(t, tt.wantErr, err)
 		})
 	}
 }

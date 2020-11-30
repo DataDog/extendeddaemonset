@@ -15,8 +15,11 @@ import (
 const (
 	defaultCanaryReplica              = 1
 	defaultCanaryDuration             = 10
+	defaultCanaryNoRestartsDuration   = 5
 	defaultCanaryAutoPauseEnabled     = true
 	defaultCanaryAutoPauseMaxRestarts = 2
+	defaultCanaryAutoFailEnabled      = true
+	defaultCanaryAutoFailMaxRestarts  = 5
 	defaultSlowStartIntervalDuration  = 1
 	defaultMaxParallelPodCreation     = 250
 	defaultReconcileFrequency         = 10 * time.Second
@@ -94,6 +97,10 @@ func IsDefaultedExtendedDaemonSetSpecStrategyCanary(canary *ExtendedDaemonSetSpe
 	if canary.AutoPause == nil || canary.AutoPause.Enabled == nil || canary.AutoPause.MaxRestarts == nil {
 		return false
 	}
+
+	if canary.AutoFail == nil || canary.AutoFail.Enabled == nil || canary.AutoFail.MaxRestarts == nil {
+		return false
+	}
 	return true
 }
 
@@ -143,10 +150,22 @@ func DefaultExtendedDaemonSetSpecStrategyCanary(c *ExtendedDaemonSetSpecStrategy
 		c.AutoPause = &ExtendedDaemonSetSpecStrategyCanaryAutoPause{}
 	}
 	DefaultExtendedDaemonSetSpecStrategyCanaryAutoPause(c.AutoPause)
+
+	if c.AutoFail == nil {
+		c.AutoFail = &ExtendedDaemonSetSpecStrategyCanaryAutoFail{}
+	}
+	DefaultExtendedDaemonSetSpecStrategyCanaryAutoFail(c.AutoFail)
+
+	if c.NoRestartsDuration == nil {
+		c.Duration = &metav1.Duration{
+			Duration: defaultCanaryNoRestartsDuration * time.Minute,
+		}
+	}
+
 	return c
 }
 
-// DefaultExtendedDaemonSetSpecStrategyCanaryAutoPause used to default an ExtendedDaemonSetSpecStrategyCanary
+// DefaultExtendedDaemonSetSpecStrategyCanaryAutoPause used to default an ExtendedDaemonSetSpecStrategyCanaryAutoPause
 func DefaultExtendedDaemonSetSpecStrategyCanaryAutoPause(a *ExtendedDaemonSetSpecStrategyCanaryAutoPause) *ExtendedDaemonSetSpecStrategyCanaryAutoPause {
 	if a.Enabled == nil {
 		enabled := defaultCanaryAutoPauseEnabled
@@ -156,6 +175,20 @@ func DefaultExtendedDaemonSetSpecStrategyCanaryAutoPause(a *ExtendedDaemonSetSpe
 	if a.MaxRestarts == nil {
 		a.MaxRestarts = NewInt32(defaultCanaryAutoPauseMaxRestarts)
 	}
+	return a
+}
+
+// DefaultExtendedDaemonSetSpecStrategyCanaryAutoFail used to default an ExtendedDaemonSetSpecStrategyCanaryAutoFail
+func DefaultExtendedDaemonSetSpecStrategyCanaryAutoFail(a *ExtendedDaemonSetSpecStrategyCanaryAutoFail) *ExtendedDaemonSetSpecStrategyCanaryAutoFail {
+	if a.Enabled == nil {
+		enabled := defaultCanaryAutoFailEnabled
+		a.Enabled = &enabled
+	}
+
+	if a.MaxRestarts == nil {
+		a.MaxRestarts = NewInt32(defaultCanaryAutoFailMaxRestarts)
+	}
+
 	return a
 }
 

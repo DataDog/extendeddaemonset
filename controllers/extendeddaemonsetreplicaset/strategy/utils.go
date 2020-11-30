@@ -7,7 +7,6 @@ package strategy
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -20,7 +19,6 @@ import (
 	utilserrors "k8s.io/apimachinery/pkg/util/errors"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/conditions"
@@ -29,7 +27,7 @@ import (
 	podutils "github.com/DataDog/extendeddaemonset/pkg/controller/utils/pod"
 )
 
-const pausedValueTrue = "true"
+const valueTrue = "true"
 
 func compareCurrentPodWithNewPod(params *Parameters, pod *corev1.Pod, node *NodeItem) bool {
 	// check that the pod corresponds to the replicaset. if not return false
@@ -84,7 +82,7 @@ func compareSpecTemplateMD5Hash(hash string, pod *corev1.Pod) bool {
 	return false
 }
 
-func cleanupPods(client client.Client, logger logr.Logger, status *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus, pods []*corev1.Pod) (*datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus, reconcile.Result, error) {
+func cleanupPods(client client.Client, logger logr.Logger, status *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus, pods []*corev1.Pod) error {
 	errs := deletePodSlice(client, logger, pods)
 	now := metav1.NewTime(time.Now())
 	conditionStatus := corev1.ConditionTrue
@@ -94,7 +92,7 @@ func cleanupPods(client client.Client, logger logr.Logger, status *datadoghqv1al
 	if len(pods) != 0 {
 		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(status, now, datadoghqv1alpha1.ConditionTypePodsCleanupDone, conditionStatus, "", false, false)
 	}
-	return status, reconcile.Result{}, utilserrors.NewAggregate(errs)
+	return utilserrors.NewAggregate(errs)
 }
 
 func deletePodSlice(client client.Client, logger logr.Logger, podsToDelete []*corev1.Pod) []error {
@@ -138,25 +136,47 @@ func manageUnscheduledPodNodes(pods []*corev1.Pod) []string {
 	return output
 }
 
-// pauseCanaryDeployment updates two annotations so that the Canary deployment is marked as paused, along with a reason
-func pauseCanaryDeployment(client client.Client, eds *datadoghqv1alpha1.ExtendedDaemonSet, reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason) error {
+// annotateCanaryDeploymentWithReason annotates the Canary deployment with a reason
+func annotateCanaryDeploymentWithReason(client client.Client, eds *datadoghqv1alpha1.ExtendedDaemonSet, valueKey string, reasonKey string, reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason) error {
 	newEds := eds.DeepCopy()
 	if newEds.Annotations == nil {
 		newEds.Annotations = make(map[string]string)
 	}
 
-	if isPaused, ok := newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]; ok {
-		if isPaused == pausedValueTrue {
-			return fmt.Errorf("canary deployment already paused")
+	if value, ok := newEds.Annotations[valueKey]; ok {
+		if value == valueTrue {
+			return nil
 		}
 	}
-	newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey] = pausedValueTrue
-	newEds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey] = string(reason)
+	newEds.Annotations[valueKey] = valueTrue
+	newEds.Annotations[reasonKey] = string(reason)
 
 	if err := client.Update(context.TODO(), newEds); err != nil {
 		return err
 	}
 	return nil
+}
+
+// pauseCanaryDeployment updates two annotations so that the Canary deployment is marked as paused, along with a reason
+func pauseCanaryDeployment(client client.Client, eds *datadoghqv1alpha1.ExtendedDaemonSet, reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason) error {
+	return annotateCanaryDeploymentWithReason(
+		client,
+		eds,
+		datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey,
+		datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey,
+		reason,
+	)
+}
+
+// failCanaryDeployment updates two annotations so that the Canary deployment is marked as failed, along with a reason
+func failCanaryDeployment(client client.Client, eds *datadoghqv1alpha1.ExtendedDaemonSet, reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason) error {
+	return annotateCanaryDeploymentWithReason(
+		client,
+		eds,
+		datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey,
+		datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedReasonAnnotationKey,
+		reason,
+	)
 }
 
 // addPodLabel adds a given label to a pod, no-op if the pod is nil or if the label exists

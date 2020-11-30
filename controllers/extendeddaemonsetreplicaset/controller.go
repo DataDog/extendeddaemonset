@@ -190,6 +190,11 @@ func (r *Reconciler) applyStrategy(logger logr.Logger, daemonset *datadoghqv1alp
 		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(strategyParams.NewStatus, now, datadoghqv1alpha1.ConditionTypeActive, corev1.ConditionFalse, "", false, false)
 		logger.Info("manage canary deployment")
 		strategyResult, err = strategy.ManageCanaryDeployment(r.client, daemonset, strategyParams)
+	case strategy.ReplicaSetStatusCanaryFailed:
+		logger.Info("manage canary failed deployment")
+		strategyResult = &strategy.Result{
+			NewStatus: strategyParams.NewStatus.DeepCopy(),
+		}
 	case strategy.ReplicaSetStatusUnknown:
 		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(strategyParams.NewStatus, now, datadoghqv1alpha1.ConditionTypeCanary, corev1.ConditionFalse, "", false, false)
 		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(strategyParams.NewStatus, now, datadoghqv1alpha1.ConditionTypeActive, corev1.ConditionFalse, "", false, false)
