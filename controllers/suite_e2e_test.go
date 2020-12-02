@@ -1,9 +1,9 @@
 // Unless explicitly stated otherwise all files in this repository are licensed
 // under the Apache License Version 2.0.
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
-// Copyright 2016-2019 Datadog, Inc.
+// Copyright 2016-2020 Datadog, Inc.
 
-// +build !e2e
+// +build e2e
 
 package controllers
 
@@ -13,9 +13,12 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -26,18 +29,18 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
-	"github.com/DataDog/extendeddaemonset/controllers/testutils"
 	// +kubebuilder:scaffold:imports
 )
 
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to
 // http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
-var cfg *rest.Config
-var k8sClient client.Client
-var testEnv *envtest.Environment
-
-const nodesCount = 2
+var (
+	cfg       *rest.Config
+	k8sClient client.Client
+	namespace = fmt.Sprintf("eds-%d", time.Now().Unix())
+	testEnv   *envtest.Environment
+)
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -53,7 +56,8 @@ var _ = BeforeSuite(func(done Done) {
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
-		CRDDirectoryPaths: []string{filepath.Join("..", "config", "crd", "bases", "v1")},
+		UseExistingCluster: datadoghqv1alpha1.NewBool(true),
+		CRDDirectoryPaths:  []string{filepath.Join("..", "config", "crd", "bases", "v1beta1")},
 	}
 	// Not present in envtest.Environment
 	err = os.Setenv("KUBEBUILDER_ASSETS", filepath.Join("..", "bin", "kubebuilder"))
@@ -72,11 +76,13 @@ var _ = BeforeSuite(func(done Done) {
 	Expect(err).ToNot(HaveOccurred())
 	Expect(k8sClient).ToNot(BeNil())
 
-	// Create some Nodes
-	for i := 0; i < nodesCount; i++ {
-		nodei := testutils.NewNode(fmt.Sprintf("node%d", i+1), nil)
-		Expect(k8sClient.Create(context.Background(), nodei)).Should(Succeed())
+	ns := &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: namespace,
+		},
 	}
+
+	Expect(k8sClient.Create(context.Background(), ns)).Should(Succeed())
 
 	// Start controllers
 	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
@@ -98,6 +104,13 @@ var _ = BeforeSuite(func(done Done) {
 
 var _ = AfterSuite(func() {
 	By("tearing down the test environment")
+	ns := &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: namespace,
+		},
+	}
+
+	Expect(k8sClient.Delete(context.Background(), ns)).Should(Succeed())
 	err := testEnv.Stop()
 	Expect(err).ToNot(HaveOccurred())
 })
