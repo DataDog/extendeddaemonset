@@ -135,7 +135,6 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 	})
 
 	Context("Using ExtendedDaemonsetSetting", func() {
-		// var err error
 		name := "eds-setting"
 		key := types.NamespacedName{
 			Namespace: namespace,
