@@ -14,6 +14,8 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -31,11 +33,23 @@ import (
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to
 // http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
-var cfg *rest.Config
-var k8sClient client.Client
-var testEnv *envtest.Environment
+type testConfigOptions struct {
+	useExistingCluster bool
+	crdVersion         string
+	namespace          string
+}
 
-const nodesCount = 2
+const (
+	fakeNodesCount   = 2
+	defaultNamespace = "default"
+)
+
+var (
+	cfg        *rest.Config
+	k8sClient  client.Client
+	testEnv    *envtest.Environment
+	testConfig = initTestConfig()
+)
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -51,7 +65,8 @@ var _ = BeforeSuite(func(done Done) {
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
-		CRDDirectoryPaths: []string{filepath.Join("..", "config", "crd", "bases", "v1")},
+		UseExistingCluster: datadoghqv1alpha1.NewBool(testConfig.useExistingCluster),
+		CRDDirectoryPaths:  []string{filepath.Join("..", "config", "crd", "bases", testConfig.crdVersion)},
 	}
 	// Not present in envtest.Environment
 	err = os.Setenv("KUBEBUILDER_ASSETS", filepath.Join("..", "bin", "kubebuilder"))
@@ -70,10 +85,21 @@ var _ = BeforeSuite(func(done Done) {
 	Expect(err).ToNot(HaveOccurred())
 	Expect(k8sClient).ToNot(BeNil())
 
-	// Create some Nodes
-	for i := 0; i < nodesCount; i++ {
-		nodei := testutils.NewNode(fmt.Sprintf("node%d", i+1), nil)
-		Expect(k8sClient.Create(context.Background(), nodei)).Should(Succeed())
+	if !testConfig.useExistingCluster {
+		// Create some Nodes
+		for i := 0; i < fakeNodesCount; i++ {
+			nodei := testutils.NewNode(fmt.Sprintf("node%d", i+1), nil)
+			Expect(k8sClient.Create(context.Background(), nodei)).Should(Succeed())
+		}
+	}
+
+	if testConfig.namespace != defaultNamespace {
+		ns := &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: testConfig.namespace,
+			},
+		}
+		Expect(k8sClient.Create(context.Background(), ns)).Should(Succeed())
 	}
 
 	// Start controllers
@@ -96,6 +122,14 @@ var _ = BeforeSuite(func(done Done) {
 
 var _ = AfterSuite(func() {
 	By("tearing down the test environment")
+	if testConfig.namespace != defaultNamespace {
+		ns := &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: testConfig.namespace,
+			},
+		}
+		Expect(k8sClient.Delete(context.Background(), ns)).Should(Succeed())
+	}
 	err := testEnv.Stop()
 	Expect(err).ToNot(HaveOccurred())
 })

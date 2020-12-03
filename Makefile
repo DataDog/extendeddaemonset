@@ -41,6 +41,12 @@ test: build manifests verify-license gotest
 gotest:
 	go test ./... -coverprofile cover.out
 
+e2e: build manifests verify-license goe2e
+
+# Runs e2e tests (expects a configured cluster)
+goe2e:
+	go test --tags=e2e ./controllers -ginkgo.progress -ginkgo.v -test.v
+
 # Build manager binary
 manager: generate lint
 	go build -ldflags '${LDFLAGS}' -o bin/manager main.go
