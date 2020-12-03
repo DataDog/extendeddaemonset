@@ -21,7 +21,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -37,10 +36,10 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 
 	intString2 := intstr.FromInt(2)
 	intString10 := intstr.FromInt(10)
+	namespace := testConfig.namespace
+	ctx := context.Background()
 
 	Context("Initial deployment", func() {
-		var err error
-		namespace := "default"
 		name := "eds-foo"
 		key := types.NamespacedName{
 			Namespace: namespace,
@@ -48,6 +47,9 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 		}
 
 		It("Should handle EDS ", func() {
+			nodeList := &corev1.NodeList{}
+			Expect(k8sClient.List(ctx, nodeList)).Should(Succeed())
+
 			edsOptions := &testutils.NewExtendedDaemonsetOptions{
 				CanaryStrategy: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
 					Duration: &metav1.Duration{Duration: 1 * time.Minute},
@@ -59,145 +61,81 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 				},
 			}
 			eds := testutils.NewExtendedDaemonset(namespace, name, "k8s.gcr.io/pause:latest", edsOptions)
-			Expect(k8sClient.Create(context.Background(), eds)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, eds)).Should(Succeed())
 
 			eds = &datadoghqv1alpha1.ExtendedDaemonSet{}
-			Eventually(func() bool {
-				err = k8sClient.Get(context.Background(), key, eds)
-				if err != nil {
-					fmt.Fprint(GinkgoWriter, err)
-					return false
-				}
+			Eventually(withEDS(key, eds, func() bool {
 				return eds.Status.ActiveReplicaSet != ""
-			}, timeout, interval).Should(BeTrue())
+			}), timeout, interval).Should(BeTrue())
 
 			ers := &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{}
-			Eventually(func() bool {
-				err = k8sClient.Get(context.Background(), types.NamespacedName{
-					Namespace: namespace,
-					Name:      eds.Status.ActiveReplicaSet,
-				}, ers)
-				if err != nil {
-					fmt.Fprint(GinkgoWriter, err)
-					return false
-				}
-
-				nodeList := &corev1.NodeList{}
-				err = k8sClient.List(context.Background(), nodeList)
-				if err != nil {
-					fmt.Fprint(GinkgoWriter, err)
-					return false
-				}
-
+			ersKey := types.NamespacedName{
+				Namespace: namespace,
+				Name:      eds.Status.ActiveReplicaSet,
+			}
+			Eventually(withERS(ersKey, ers, func() bool {
 				return ers.Status.Status == "active" && int(ers.Status.Available) == len(nodeList.Items)
-			}, timeout, interval).Should(BeTrue())
+			}), timeout, interval).Should(BeTrue())
 		})
 
 		It("Should do canary deployment", func() {
 			eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
-			Eventually(func() bool {
-				err = k8sClient.Get(context.Background(), key, eds)
-				if err != nil {
-					fmt.Fprint(GinkgoWriter, err)
-					return false
-				}
-				b, _ := json.MarshalIndent(eds.Status, "", "  ")
-				fmt.Fprintf(GinkgoWriter, string(b))
+			Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
+			b, _ := json.MarshalIndent(eds.Status, "", "  ")
+			fmt.Fprintf(GinkgoWriter, string(b))
 
-				eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("k8s.gcr.io/pause:3.1")
+			eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("k8s.gcr.io/pause:3.1")
+			Expect(k8sClient.Update(ctx, eds)).Should(Succeed())
 
-				err = k8sClient.Update(context.Background(), eds)
-				if err != nil {
-					fmt.Fprint(GinkgoWriter, err)
-					return false
-				}
-
-				return true
-			}, timeout, interval).Should(BeTrue())
-
-			Eventually(func() bool {
-				err = k8sClient.Get(context.Background(), key, eds)
-				if err != nil {
-					fmt.Fprint(GinkgoWriter, err)
-					return false
-				}
-
+			Eventually(withEDS(key, eds, func() bool {
 				return eds.Status.Canary != nil && eds.Status.Canary.ReplicaSet != ""
-			}, timeout, interval).Should(BeTrue())
+			}), timeout, interval).Should(BeTrue())
 		})
 
 		It("Should add canary labels", func() {
-			Eventually(func() bool {
-				canaryPods := &corev1.PodList{}
-				listOptions := []client.ListOption{
-					client.MatchingLabels{
-						datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelKey: datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelValue,
-					},
-				}
-
-				err = k8sClient.List(context.Background(), canaryPods, listOptions...)
-				if err != nil {
-					fmt.Fprint(GinkgoWriter, err)
-					return false
-				}
-
+			canaryPods := &corev1.PodList{}
+			listOptions := []client.ListOption{
+				client.InNamespace(namespace),
+				client.MatchingLabels{
+					datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelKey: datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelValue,
+				},
+			}
+			Eventually(withList(listOptions, canaryPods, "canary pods", func() bool {
 				return len(canaryPods.Items) == 2
-			}, timeout, interval).Should(BeTrue())
+			}), timeout, interval).Should(BeTrue())
 		})
 
 		It("Should remove canary labels", func() {
-			Eventually(func() bool {
-				eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
-				err = k8sClient.Get(context.Background(), key, eds)
-				if err != nil {
-					fmt.Fprint(GinkgoWriter, err)
-					return false
-				}
+			eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
+			Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
+			if eds.Annotations == nil {
+				eds.Annotations = make(map[string]string)
+			}
 
-				if eds.Annotations == nil {
-					eds.Annotations = make(map[string]string)
-				}
+			canaryReplicaSet := eds.Status.Canary.ReplicaSet
+			eds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryValidAnnotationKey] = canaryReplicaSet
+			Expect(k8sClient.Update(ctx, eds)).Should(Succeed())
 
-				eds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryValidAnnotationKey] = eds.Status.Canary.ReplicaSet
+			Eventually(withEDS(key, eds, func() bool {
+				return eds.Status.ActiveReplicaSet == canaryReplicaSet
+			}), timeout, interval).Should(BeTrue())
 
-				if err = k8sClient.Update(context.Background(), eds); err != nil {
-					fmt.Fprint(GinkgoWriter, err)
-					return false
-				}
-
-				return true
-			}, timeout, interval).Should(BeTrue())
-
-			Eventually(func() bool {
-				eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
-				err = k8sClient.Get(context.Background(), key, eds)
-				if err != nil {
-					fmt.Fprint(GinkgoWriter, err)
-					return false
-				}
-
-				canaryPods := &corev1.PodList{}
-				listOptions := []client.ListOption{
-					client.MatchingLabels{
-						datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelKey: datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelValue,
-						datadoghqv1alpha1.ExtendedDaemonSetReplicaSetNameLabelKey:   eds.Status.ActiveReplicaSet,
-					},
-				}
-
-				err = k8sClient.List(context.Background(), canaryPods, listOptions...)
-				if err != nil {
-					fmt.Fprint(GinkgoWriter, err)
-					return false
-				}
-
+			canaryPods := &corev1.PodList{}
+			listOptions := []client.ListOption{
+				client.InNamespace(namespace),
+				client.MatchingLabels{
+					datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelKey: datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelValue,
+					datadoghqv1alpha1.ExtendedDaemonSetReplicaSetNameLabelKey:   eds.Status.ActiveReplicaSet,
+				},
+			}
+			Eventually(withList(listOptions, canaryPods, "canary pods", func() bool {
 				return len(canaryPods.Items) == 0
-			}, timeout, interval).Should(BeTrue())
+			}), timeout, interval).Should(BeTrue())
 		})
 	})
 
 	Context("Using ExtendedDaemonsetSetting", func() {
-		var err error
-		namespace := "default"
+		// var err error
 		name := "eds-setting"
 		key := types.NamespacedName{
 			Namespace: namespace,
@@ -208,7 +146,7 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 			nodeWorker := testutils.NewNode("node-worker", map[string]string{
 				"role": "eds-setting-worker",
 			})
-			Expect(k8sClient.Create(context.Background(), nodeWorker)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, nodeWorker)).Should(Succeed())
 		})
 
 		It("Should use DaemonsetSetting", func() {
@@ -224,7 +162,7 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 					},
 				},
 			})
-			Expect(k8sClient.Create(context.Background(), edsNodeSetting)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, edsNodeSetting)).Should(Succeed())
 
 			edsOptions := &testutils.NewExtendedDaemonsetOptions{
 				CanaryStrategy: nil,
@@ -237,31 +175,25 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 				},
 			}
 			eds := testutils.NewExtendedDaemonset(namespace, name, "k8s.gcr.io/pause:latest", edsOptions)
-			Expect(k8sClient.Create(context.Background(), eds)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, eds)).Should(Succeed())
 
 			eds = &datadoghqv1alpha1.ExtendedDaemonSet{}
-			Eventually(func() bool {
-				err = k8sClient.Get(context.Background(), key, eds)
-				if err != nil {
-					fmt.Fprint(GinkgoWriter, err)
-					return false
-				}
+			Eventually(withEDS(key, eds, func() bool {
 				return eds.Status.ActiveReplicaSet != ""
-			}, timeout, interval).Should(BeTrue())
+			}), timeout, interval).Should(BeTrue())
 
 			podList := &corev1.PodList{}
-			Eventually(func() bool {
-				err = k8sClient.List(context.Background(), podList, &client.ListOptions{
-					Namespace:     namespace,
-					LabelSelector: labels.Set(map[string]string{"extendeddaemonset.datadoghq.com/name": name}).AsSelector(),
-				})
-				if err != nil {
-					fmt.Fprint(GinkgoWriter, err)
-					return false
-				}
+			listOptions := []client.ListOption{
+				client.InNamespace(namespace),
+				client.MatchingLabels{
+					"extendeddaemonset.datadoghq.com/name": name,
+				},
+			}
+			Eventually(withList(listOptions, podList, "pods", func() bool {
 				return len(podList.Items) == 3
-			}, timeout, interval).Should(BeTrue())
+			}), timeout, interval).Should(BeTrue())
 
+			// TODO: This loop below does not assert on anything in any way
 			for _, pod := range podList.Items {
 				if pod.Spec.NodeName == "node-worker" {
 					for _, container := range pod.Spec.Containers {
