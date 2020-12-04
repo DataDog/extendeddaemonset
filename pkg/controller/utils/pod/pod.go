@@ -141,6 +141,9 @@ var cannotStartReasons = []string{
 	"ErrImagePull",
 	"ImagePullBackOff",
 	"CreateContainerConfigError",
+	"CreateContainerError",
+	"PreStartHookError",
+	"PostStartHookError",
 }
 
 // IsCannotStartReason returns true for a reason that is considered an abnormal cannot start condition

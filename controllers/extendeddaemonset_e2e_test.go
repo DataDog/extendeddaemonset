@@ -248,6 +248,14 @@ var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition", func() {
 		Eventually(withList(listOptions, pods, "EDS pods", func() bool {
 			return len(pods.Items) == 0
 		}), timeout, interval).Should(BeTrue(), "All EDS pods should be destroyed")
+
+		edslist := &datadoghqv1alpha1.ExtendedDaemonSetList{}
+		listOptions = []client.ListOption{
+			client.InNamespace(namespace),
+		}
+		Eventually(withList(listOptions, edslist, "EDS instances", func() bool {
+			return len(edslist.Items) == 0
+		}), timeout, interval).Should(BeTrue(), "All EDS instances should be destroyed")
 	})
 
 	pauseOnCannotStart := func(configureEDS func(eds *datadoghqv1alpha1.ExtendedDaemonSet), expectedReasons ...string) {
@@ -286,8 +294,10 @@ var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition", func() {
 		var cannotStartCondition *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCondition
 		Eventually(withEDS(key, eds, func() bool {
 			cannotStartCondition = conditions.GetExtendedDaemonSetReplicaSetStatusCondition(&ers.Status, datadoghqv1alpha1.ConditionTypePodCannotStart)
-			return cannotStartCondition != nil && cannotStartCondition.Status == corev1.ConditionTrue
+			return cannotStartCondition != nil
 		}), timeout, interval).Should(BeTrue())
+
+		Expect(cannotStartCondition.Status).Should(Equal(corev1.ConditionTrue))
 
 		matchers = []GomegaMatcher{}
 		for _, reason := range expectedReasons {
@@ -332,6 +342,36 @@ var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition", func() {
 			}, "CreateContainerConfigError")
 		})
 	})
+
+	// Context("When pod has missing volume", func() {
+
+	// 	It("Should promptly auto-pause canary", func() {
+	// 		pauseOnCannotStart(func(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
+	// 			eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("gcr.io/google-containers/alpine-with-bash:1.0")
+	// 			eds.Spec.Template.Spec.Containers[0].Command = []string{
+	// 				"tail", "-f", "/dev/null",
+	// 			}
+	// 			eds.Spec.Template.Spec.Volumes = []corev1.Volume{
+	// 				{
+	// 					Name: "missing-config-map",
+	// 					VolumeSource: corev1.VolumeSource{
+	// 						ConfigMap: &corev1.ConfigMapVolumeSource{
+	// 							LocalObjectReference: corev1.LocalObjectReference{
+	// 								Name: "missing",
+	// 							},
+	// 						},
+	// 					},
+	// 				},
+	// 			}
+	// 			eds.Spec.Template.Spec.Containers[0].VolumeMounts = []corev1.VolumeMount{
+	// 				{
+	// 					Name:      "missing-config-map",
+	// 					MountPath: "/etc/missing",
+	// 				},
+	// 			}
+	// 		}, "CreateContainerConfigError")
+	// 	})
+	// })
 })
 
 func withUpdate(obj runtime.Object, desc string) condFn {
