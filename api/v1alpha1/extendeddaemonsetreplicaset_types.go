@@ -92,6 +92,8 @@ const (
 	ConditionTypePodDeletion ExtendedDaemonSetReplicaSetConditionType = "PodDeletion"
 	// ConditionTypePodRestarting Pod(s) restarting condition
 	ConditionTypePodRestarting ExtendedDaemonSetReplicaSetConditionType = "PodRestarting"
+	// ConditionTypePodCannotStart Pod(s) cannot start condition
+	ConditionTypePodCannotStart ExtendedDaemonSetReplicaSetConditionType = "PodCannotStart"
 	// ConditionTypeLastFullSync last time the ExtendedDaemonSetReplicaSet sync when to the end of the reconcile function
 	ConditionTypeLastFullSync ExtendedDaemonSetReplicaSetConditionType = "LastFullSync"
 )

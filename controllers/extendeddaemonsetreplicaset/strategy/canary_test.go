@@ -84,6 +84,23 @@ func podTerminatedStatus(restartCount int32, reason string, time time.Time) v1.P
 	}
 }
 
+func podWaitingStatus(reason, message string) v1.PodStatus {
+	return v1.PodStatus{
+		ContainerStatuses: []v1.ContainerStatus{
+			{
+				Name: "waiting",
+				State: v1.ContainerState{
+					Waiting: &v1.ContainerStateWaiting{
+
+						Reason:  reason,
+						Message: message,
+					},
+				},
+			},
+		},
+	}
+}
+
 func withDeletionTimestamp(pod *v1.Pod) *v1.Pod {
 	ts := metav1.Now()
 	pod.DeletionTimestamp = &ts
@@ -94,10 +111,14 @@ type canaryStatusTest struct {
 	annotations map[string]string
 	params      *Parameters
 	result      *Result
+	now         time.Time
 }
 
 func (test *canaryStatusTest) Run(t *testing.T) {
-	result := manageCanaryStatus(test.annotations, test.params)
+	if test.now.IsZero() {
+		test.now = time.Now()
+	}
+	result := manageCanaryStatus(test.annotations, test.params, test.now)
 	assert.Equal(t, test.result, result)
 }
 
@@ -296,7 +317,7 @@ func TestManageCanaryStatus_NoRestartsAndPodsToDelete(t *testing.T) {
 	test.Run(t)
 }
 
-func TestManageCanaryStatusHighRestartsLeadingToPause(t *testing.T) {
+func TestManageCanaryStatus_HighRestartsLeadingToPause(t *testing.T) {
 	now := time.Now()
 	restartedAt := now.Add(-time.Minute)
 	test := canaryStatusTest{
@@ -354,7 +375,7 @@ func TestManageCanaryStatusHighRestartsLeadingToPause(t *testing.T) {
 	test.Run(t)
 }
 
-func TestManageCanaryStatusHighRestartsLeadingToFail(t *testing.T) {
+func TestManageCanaryStatus_HighRestartsLeadingToFail(t *testing.T) {
 	now := time.Now()
 	restartedAt := now.Add(-time.Minute)
 	test := canaryStatusTest{
@@ -412,7 +433,7 @@ func TestManageCanaryStatusHighRestartsLeadingToFail(t *testing.T) {
 	test.Run(t)
 }
 
-func TestManageCanaryStatusLongRestartsDurationLeadingToFail(t *testing.T) {
+func TestManageCanaryStatus_LongRestartsDurationLeadingToFail(t *testing.T) {
 	now := time.Now()
 	restartsStartedAt := now.Add(-time.Hour)
 	restartsUpdatedAt := now.Add(-10 * time.Minute)
@@ -480,6 +501,64 @@ func TestManageCanaryStatusLongRestartsDurationLeadingToFail(t *testing.T) {
 			FailedReason: v1alpha1.ExtendedDaemonSetStatusRestartsTimeoutExceeded,
 			Result:       reconcile.Result{},
 		},
+	}
+	test.Run(t)
+}
+
+func TestManageCanaryStatus_ImagePullErrorLeadingToPause(t *testing.T) {
+	now := time.Now()
+	test := canaryStatusTest{
+		params: &Parameters{
+			EDSName: "foo",
+			Strategy: &v1alpha1.ExtendedDaemonSetSpecStrategy{
+				Canary: &v1alpha1.ExtendedDaemonSetSpecStrategyCanary{
+					AutoPause: &v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoPause{
+						Enabled:     v1alpha1.NewBool(true),
+						MaxRestarts: v1alpha1.NewInt32(2),
+					},
+					AutoFail: &v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoFail{
+						Enabled:     v1alpha1.NewBool(true),
+						MaxRestarts: v1alpha1.NewInt32(5),
+					},
+				},
+			},
+			Replicaset: &v1alpha1.ExtendedDaemonSetReplicaSet{
+				Spec: v1alpha1.ExtendedDaemonSetReplicaSetSpec{
+					TemplateGeneration: "v1",
+				},
+			},
+			NewStatus:   &v1alpha1.ExtendedDaemonSetReplicaSetStatus{},
+			CanaryNodes: testCanaryNodeNames,
+			NodeByName:  testCanaryNodes,
+			PodByNodeName: map[*NodeItem]*v1.Pod{
+				testCanaryNodes["a"]: newTestCanaryPod("foo-a", "v1", podWaitingStatus("ImagePullBackOff", `Back-off pulling image "gcr.io/missing"`)),
+				testCanaryNodes["b"]: nil,
+				testCanaryNodes["c"]: nil,
+			},
+			Logger: testLogger,
+		},
+		result: &Result{
+			NewStatus: &v1alpha1.ExtendedDaemonSetReplicaSetStatus{
+				Status:    "canary",
+				Desired:   3,
+				Current:   1,
+				Ready:     0,
+				Available: 1,
+				Conditions: []v1alpha1.ExtendedDaemonSetReplicaSetCondition{
+					{
+						Type:               v1alpha1.ConditionTypePodCannotStart,
+						Status:             v1.ConditionTrue,
+						LastTransitionTime: metav1.NewTime(now),
+						LastUpdateTime:     metav1.NewTime(now),
+						Message:            "Pod foo-a cannot start with reason: ImagePullBackOff",
+					},
+				},
+			},
+			IsPaused:     true,
+			PausedReason: v1alpha1.ExtendedDaemonSetStatusReason("ImagePullBackOff"),
+			Result:       reconcile.Result{},
+		},
+		now: now,
 	}
 	test.Run(t)
 }

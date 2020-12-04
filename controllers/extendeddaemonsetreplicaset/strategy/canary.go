@@ -24,7 +24,7 @@ import (
 // ManageCanaryDeployment used to manage ReplicaSet in Canary state
 func ManageCanaryDeployment(client client.Client, daemonset *v1alpha1.ExtendedDaemonSet, params *Parameters) (*Result, error) {
 	// Manage canary status
-	result := manageCanaryStatus(daemonset.GetAnnotations(), params)
+	result := manageCanaryStatus(daemonset.GetAnnotations(), params, time.Now())
 
 	if result.IsFailed {
 		err := failCanaryDeployment(client, daemonset, result.FailedReason)
@@ -62,7 +62,7 @@ func ManageCanaryDeployment(client client.Client, daemonset *v1alpha1.ExtendedDa
 }
 
 // manageCanaryStatus manages ReplicaSet status in Canary state
-func manageCanaryStatus(annotations map[string]string, params *Parameters) *Result {
+func manageCanaryStatus(annotations map[string]string, params *Parameters, now time.Time) *Result {
 	result := &Result{}
 	result.NewStatus = params.NewStatus.DeepCopy()
 	result.NewStatus.Status = string(ReplicaSetStatusCanary)
@@ -71,7 +71,6 @@ func manageCanaryStatus(annotations map[string]string, params *Parameters) *Resu
 	result.IsPaused, _ = eds.IsCanaryDeploymentPaused(annotations)
 
 	var (
-		now     = time.Now()
 		metaNow = metav1.NewTime(now)
 
 		desiredPods, currentPods, availablePods, readyPods int32
@@ -115,9 +114,9 @@ func manageCanaryStatus(annotations map[string]string, params *Parameters) *Resu
 		}
 	}
 
-	// Update result to reflect active pods currently experiencing restarts
+	// Update result to reflect active pods currently experiencing restarts or failures otherwise
 	// potentially placing canary into paused or failed state
-	manageCanaryPodRestarts(podsToCheckForRestarts, params, result)
+	manageCanaryPodFailures(podsToCheckForRestarts, params, result, now)
 
 	// Update pod counts
 	result.NewStatus.Desired = desiredPods
@@ -151,9 +150,9 @@ func manageCanaryStatus(annotations map[string]string, params *Parameters) *Resu
 	return result
 }
 
-// manageCanaryPodRestarts checks if canary should be failed or paused due to restarts.
+// manageCanaryPodFailures checks if canary should be failed or paused due to restarts or other failures.
 // Note that pausing the canary will have no effect if it has been validated or failed
-func manageCanaryPodRestarts(pods []*v1.Pod, params *Parameters, result *Result) {
+func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result, now time.Time) {
 	var (
 		canary               = params.Strategy.Canary
 		autoPauseEnabled     = *canary.AutoPause.Enabled
@@ -164,20 +163,27 @@ func manageCanaryPodRestarts(pods []*v1.Pod, params *Parameters, result *Result)
 
 		newRestartTime      time.Time
 		restartingPodStatus string
+
+		cannotStart          bool
+		cannotStartPodStatus string
 	)
 
 	// Note that we still need to evaluate restarts regardless of the enabled autoPause or autoFail
 	// since we maintain the restarting condition that can be checked by canary.noRestartsDuration
 	for _, pod := range pods {
 		restartCount, highRestartReason := podUtils.HighestRestartCount(pod)
-		if restartCount == 0 {
-			continue
+		if restartCount != 0 {
+			restartTime, recentRestartReason := podUtils.MostRecentRestart(pod)
+			if restartTime.After(newRestartTime) {
+				newRestartTime = restartTime
+				restartingPodStatus = fmt.Sprintf("Pod %s restarting with reason: %s", pod.ObjectMeta.Name, string(recentRestartReason))
+			}
 		}
 
-		restartTime, recentRestartReason := podUtils.MostRecentRestart(pod)
-		if restartTime.After(newRestartTime) {
-			newRestartTime = restartTime
-			restartingPodStatus = fmt.Sprintf("Pod %s restarting with reason: %s", pod.ObjectMeta.Name, string(recentRestartReason))
+		var cannotStartReason v1alpha1.ExtendedDaemonSetStatusReason
+		cannotStart, cannotStartReason = podUtils.CannotStart(pod)
+		if cannotStart {
+			cannotStartPodStatus = fmt.Sprintf("Pod %s cannot start with reason: %s", pod.ObjectMeta.Name, string(cannotStartReason))
 		}
 
 		if result.IsFailed {
@@ -196,15 +202,26 @@ func manageCanaryPodRestarts(pods []*v1.Pod, params *Parameters, result *Result)
 			continue
 		}
 
-		if !result.IsPaused && autoPauseEnabled && restartCount > autoPauseMaxRestarts {
-			result.IsPaused = true
-			result.PausedReason = highRestartReason
-			params.Logger.Info(
-				"AutoPaused",
-				"RestartCount", restartCount,
-				"MaxRestarts", autoFailMaxRestarts,
-				"Reason", highRestartReason,
-			)
+		if !result.IsPaused && autoPauseEnabled {
+			// Handle cases related to failure to start states
+			if cannotStart {
+				result.IsPaused = true
+				result.PausedReason = cannotStartReason
+				params.Logger.Info(
+					"AutoPaused",
+					"CannotStart", true,
+					"Reason", cannotStart,
+				)
+			} else if restartCount > autoPauseMaxRestarts {
+				result.IsPaused = true
+				result.PausedReason = highRestartReason
+				params.Logger.Info(
+					"AutoPaused",
+					"RestartCount", restartCount,
+					"MaxRestarts", autoFailMaxRestarts,
+					"Reason", highRestartReason,
+				)
+			}
 		}
 	}
 
@@ -226,6 +243,22 @@ func manageCanaryPodRestarts(pods []*v1.Pod, params *Parameters, result *Result)
 			true,
 		)
 	}
+
+	conditionStatus := v1.ConditionFalse
+	// Track pod restart condition in the status
+	if cannotStart {
+		conditionStatus = v1.ConditionTrue
+	}
+
+	conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(
+		result.NewStatus,
+		metav1.NewTime(now),
+		v1alpha1.ConditionTypePodCannotStart,
+		conditionStatus,
+		cannotStartPodStatus,
+		false,
+		true,
+	)
 
 	if !result.IsFailed && autoFailEnabled && canary.AutoFail.MaxRestartsDuration != nil {
 		maxRestartsDuration := canary.AutoFail.MaxRestartsDuration.Duration
