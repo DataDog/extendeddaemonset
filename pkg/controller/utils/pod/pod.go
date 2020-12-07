@@ -156,7 +156,7 @@ func IsCannotStartReason(reason string) bool {
 	return false
 }
 
-// CannotStart returns true if the Pod is currently
+// CannotStart returns true if the Pod is currently experiencing abnormal start condition
 func CannotStart(pod *v1.Pod) (bool, datadoghqv1alpha1.ExtendedDaemonSetStatusReason) {
 	for _, s := range pod.Status.ContainerStatuses {
 		if s.State.Waiting != nil && IsCannotStartReason(s.State.Waiting.Reason) {
@@ -164,6 +164,16 @@ func CannotStart(pod *v1.Pod) (bool, datadoghqv1alpha1.ExtendedDaemonSetStatusRe
 		}
 	}
 	return false, datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown
+}
+
+// PendingCreate returns true if the Pod is pending create (may be an eventually resolving state)
+func PendingCreate(pod *v1.Pod) bool {
+	for _, s := range pod.Status.ContainerStatuses {
+		if s.State.Waiting != nil && s.State.Waiting.Reason == "ContainerCreating" {
+			return true
+		}
+	}
+	return false
 }
 
 // HasPodSchedulerIssue returns true if a pod remained unscheduled for more than 10 minutes

@@ -215,7 +215,8 @@ var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition", func() {
 				Duration: &metav1.Duration{Duration: 1 * time.Minute},
 				Replicas: &intString2,
 				AutoPause: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoPause{
-					Enabled: datadoghqv1alpha1.NewBool(true),
+					Enabled:              datadoghqv1alpha1.NewBool(true),
+					MaxSlowStartDuration: &metav1.Duration{Duration: 20 * time.Second},
 				},
 			},
 			RollingUpdate: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate{
@@ -343,35 +344,35 @@ var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition", func() {
 		})
 	})
 
-	// Context("When pod has missing volume", func() {
+	Context("When pod has missing volume", func() {
 
-	// 	It("Should promptly auto-pause canary", func() {
-	// 		pauseOnCannotStart(func(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
-	// 			eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("gcr.io/google-containers/alpine-with-bash:1.0")
-	// 			eds.Spec.Template.Spec.Containers[0].Command = []string{
-	// 				"tail", "-f", "/dev/null",
-	// 			}
-	// 			eds.Spec.Template.Spec.Volumes = []corev1.Volume{
-	// 				{
-	// 					Name: "missing-config-map",
-	// 					VolumeSource: corev1.VolumeSource{
-	// 						ConfigMap: &corev1.ConfigMapVolumeSource{
-	// 							LocalObjectReference: corev1.LocalObjectReference{
-	// 								Name: "missing",
-	// 							},
-	// 						},
-	// 					},
-	// 				},
-	// 			}
-	// 			eds.Spec.Template.Spec.Containers[0].VolumeMounts = []corev1.VolumeMount{
-	// 				{
-	// 					Name:      "missing-config-map",
-	// 					MountPath: "/etc/missing",
-	// 				},
-	// 			}
-	// 		}, "CreateContainerConfigError")
-	// 	})
-	// })
+		It("Should promptly auto-pause canary", func() {
+			pauseOnCannotStart(func(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
+				eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("gcr.io/google-containers/alpine-with-bash:1.0")
+				eds.Spec.Template.Spec.Containers[0].Command = []string{
+					"tail", "-f", "/dev/null",
+				}
+				eds.Spec.Template.Spec.Volumes = []corev1.Volume{
+					{
+						Name: "missing-config-map",
+						VolumeSource: corev1.VolumeSource{
+							ConfigMap: &corev1.ConfigMapVolumeSource{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "missing",
+								},
+							},
+						},
+					},
+				}
+				eds.Spec.Template.Spec.Containers[0].VolumeMounts = []corev1.VolumeMount{
+					{
+						Name:      "missing-config-map",
+						MountPath: "/etc/missing",
+					},
+				}
+			}, "SlowStartTimeoutExceeded")
+		})
+	})
 })
 
 func withUpdate(obj runtime.Object, desc string) condFn {
