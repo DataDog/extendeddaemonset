@@ -9,10 +9,10 @@ package controllers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/google/go-cmp/cmp"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -81,8 +81,7 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 		It("Should do canary deployment", func() {
 			eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
 			Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
-			b, _ := json.MarshalIndent(eds.Status, "", "  ")
-			fmt.Fprintf(GinkgoWriter, string(b))
+			fmt.Fprintf(GinkgoWriter, "EDS status:\n%s\n", spew.Sdump(eds.Status))
 
 			eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("k8s.gcr.io/pause:3.1")
 			Expect(k8sClient.Update(ctx, eds)).Should(Succeed())

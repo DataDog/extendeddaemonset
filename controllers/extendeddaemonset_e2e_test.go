@@ -9,10 +9,10 @@ package controllers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/types"
@@ -34,6 +34,12 @@ const (
 	timeout     = 1 * time.Minute
 	longTimeout = 5 * time.Minute
 	interval    = 2 * time.Second
+
+	Reset  = "\033[0m"
+	Red    = "\033[31m"
+	Green  = "\033[32m"
+	Purple = "\033[35m"
+	Bold   = "\x1b[1m"
 )
 
 var (
@@ -42,6 +48,22 @@ var (
 	namespace   = testConfig.namespace
 	ctx         = context.Background()
 )
+
+func logPreamble() string {
+	return Bold + "E2E >> " + Reset
+}
+
+func info(format string, a ...interface{}) {
+	ginkgoLog(logPreamble()+Purple+Bold+format+Reset, a...)
+}
+
+func warn(format string, a ...interface{}) {
+	ginkgoLog(logPreamble()+Red+Bold+format+Reset, a...)
+}
+
+func ginkgoLog(format string, a ...interface{}) {
+	fmt.Fprintf(GinkgoWriter, format, a...)
+}
 
 // These tests may take several minutes to run, check you go test timeout
 var _ = Describe("ExtendedDaemonSet e2e updates and recovery", func() {
@@ -90,8 +112,7 @@ var _ = Describe("ExtendedDaemonSet e2e updates and recovery", func() {
 		It("Should auto-pause and auto-fail canary on restarts", func() {
 			eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
 			Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
-			b, _ := json.MarshalIndent(eds.Status, "", "  ")
-			fmt.Fprintf(GinkgoWriter, string(b))
+			info("EDS status:\n%s\n", spew.Sdump(eds.Status))
 
 			eds.Spec.Strategy.Canary = &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
 				Duration:           &metav1.Duration{Duration: 1 * time.Minute},
@@ -157,8 +178,7 @@ var _ = Describe("ExtendedDaemonSet e2e updates and recovery", func() {
 		It("Should recover from failed on update", func() {
 			eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
 			Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
-			b, _ := json.MarshalIndent(eds.Status, "", "  ")
-			fmt.Fprintf(GinkgoWriter, string(b))
+			info("EDS status:\n%s\n", spew.Sdump(eds.Status))
 
 			clearFailureAnnotations(eds)
 
@@ -166,7 +186,8 @@ var _ = Describe("ExtendedDaemonSet e2e updates and recovery", func() {
 			eds.Spec.Template.Spec.Containers[0].Command = []string{
 				"tail", "-f", "/dev/null",
 			}
-			Eventually(withUpdate(eds, "EDS")).Should(BeTrue())
+			Eventually(withUpdate(eds, "EDS"),
+				timeout, interval).Should(BeTrue())
 
 			Eventually(withEDS(key, eds, func() bool {
 				return eds.Status.State == datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanary
@@ -174,7 +195,8 @@ var _ = Describe("ExtendedDaemonSet e2e updates and recovery", func() {
 
 			canaryReplicaSet := eds.Status.Canary.ReplicaSet
 			eds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryValidAnnotationKey] = canaryReplicaSet
-			Eventually(withUpdate(eds, "EDS")).Should(BeTrue())
+			Eventually(withUpdate(eds, "EDS"),
+				timeout, interval).Should(BeTrue())
 
 			Eventually(withEDS(key, eds, func() bool {
 				return eds.Status.State == datadoghqv1alpha1.ExtendedDaemonSetStatusStateRunning
@@ -202,21 +224,28 @@ var _ = Describe("ExtendedDaemonSet e2e updates and recovery", func() {
 })
 
 var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition", func() {
-	name := "eds-foo-cannot-start"
 
-	key := types.NamespacedName{
-		Namespace: namespace,
-		Name:      name,
-	}
+	var (
+		name string
+		key  types.NamespacedName
+	)
 
 	BeforeEach(func() {
+		name = fmt.Sprintf("eds-foo-%d", time.Now().Unix())
+		key = types.NamespacedName{
+			Namespace: namespace,
+			Name:      name,
+		}
+
+		info("BeforeEach: Creating EDS %s\n", name)
+
 		edsOptions := &testutils.NewExtendedDaemonsetOptions{
 			CanaryStrategy: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
 				Duration: &metav1.Duration{Duration: 1 * time.Minute},
 				Replicas: &intString2,
 				AutoPause: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoPause{
 					Enabled:              datadoghqv1alpha1.NewBool(true),
-					MaxSlowStartDuration: &metav1.Duration{Duration: 20 * time.Second},
+					MaxSlowStartDuration: &metav1.Duration{Duration: 10 * time.Second},
 				},
 			},
 			RollingUpdate: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate{
@@ -232,11 +261,17 @@ var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition", func() {
 		Eventually(withEDS(key, eds, func() bool {
 			return eds.Status.ActiveReplicaSet != ""
 		}), timeout, interval).Should(BeTrue())
+
+		info("BeforeEach: Done creating EDS %s - active replicaset: %s\n", name, eds.Status.ActiveReplicaSet)
 	})
 
 	AfterEach(func() {
+		info("AfterEach: Destroying EDS %s\n", name)
 		eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
 		Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
+		info("AfterEach: Destroying EDS %s - canary replicaset: %s\n", name, eds.Status.Canary.ReplicaSet)
+		info("AfterEach: Destroying EDS %s - active replicaset: %s\n", name, eds.Status.ActiveReplicaSet)
+
 		Expect(k8sClient.Delete(ctx, eds)).Should(Succeed())
 
 		pods := &corev1.PodList{}
@@ -257,21 +292,45 @@ var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition", func() {
 		Eventually(withList(listOptions, edslist, "EDS instances", func() bool {
 			return len(edslist.Items) == 0
 		}), timeout, interval).Should(BeTrue(), "All EDS instances should be destroyed")
+
+		erslist := &datadoghqv1alpha1.ExtendedDaemonSetReplicaSetList{}
+		Eventually(withList(listOptions, erslist, "ERS instances", func() bool {
+			return len(erslist.Items) == 0
+		}), timeout, interval).Should(BeTrue(), "All ERS instances should be destroyed")
+
+		info("AfterEach: Done destroying EDS %s\n", name)
+	})
+
+	JustAfterEach(func() {
+		if CurrentGinkgoTestDescription().Failed {
+			eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
+			Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
+			warn("%s - FAILED: EDS status:\n%s\n\n", CurrentGinkgoTestDescription().TestText, spew.Sdump(eds.Status))
+		}
 	})
 
 	pauseOnCannotStart := func(configureEDS func(eds *datadoghqv1alpha1.ExtendedDaemonSet), expectedReasons ...string) {
 		eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
 		Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
-		b, _ := json.MarshalIndent(eds.Status, "", "  ")
-		fmt.Fprintf(GinkgoWriter, string(b))
+		info("%s: %s - active replicaset: %s\n",
+			CurrentGinkgoTestDescription().TestText,
+			name, eds.Status.ActiveReplicaSet,
+		)
+
+		info("EDS status:\n%s\n", spew.Sdump(eds.Status))
 		configureEDS(eds)
 
-		Eventually(withUpdate(eds, "EDS")).Should(BeTrue())
+		info("EDS %s - updating\n", name)
+		Eventually(withUpdate(eds, "EDS"),
+			timeout, interval).Should(BeTrue())
 
+		info("EDS %s - waiting for canary to be paused\n", name)
 		eds = &datadoghqv1alpha1.ExtendedDaemonSet{}
 		Eventually(withEDS(key, eds, func() bool {
 			return eds.Status.State == datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryPaused
 		}), timeout, interval).Should(BeTrue())
+
+		info("EDS status:\n%s\n", spew.Sdump(eds.Status))
 
 		pausedValue := eds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]
 		Expect(pausedValue).Should(Equal("true"), "EDS canary should be marked paused")
@@ -290,10 +349,9 @@ var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition", func() {
 			Namespace: namespace,
 			Name:      eds.Status.Canary.ReplicaSet,
 		}
-		Expect(k8sClient.Get(ctx, ersKey, ers)).Should(Succeed())
 
 		var cannotStartCondition *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCondition
-		Eventually(withEDS(key, eds, func() bool {
+		Eventually(withERS(ersKey, ers, func() bool {
 			cannotStartCondition = conditions.GetExtendedDaemonSetReplicaSetStatusCondition(&ers.Status, datadoghqv1alpha1.ConditionTypePodCannotStart)
 			return cannotStartCondition != nil
 		}), timeout, interval).Should(BeTrue())
@@ -305,6 +363,10 @@ var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition", func() {
 			matchers = append(matchers, MatchRegexp(fmt.Sprintf("Pod eds-foo-.*? cannot start with reason: %s", reason)))
 		}
 		Expect(cannotStartCondition.Message).Should(Or(matchers...))
+		info("%s: %s - done\n",
+			CurrentGinkgoTestDescription().TestText,
+			name,
+		)
 	}
 
 	Context("When pod has image pull error", func() {
@@ -379,7 +441,7 @@ func withUpdate(obj runtime.Object, desc string) condFn {
 	return func() bool {
 		err := k8sClient.Update(context.Background(), obj)
 		if err != nil {
-			fmt.Fprintf(GinkgoWriter, "Failed to update %s: %v", desc, err)
+			warn("Failed to update %s: %v\n", desc, err)
 			return false
 		}
 		return true

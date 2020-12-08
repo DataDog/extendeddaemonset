@@ -8,6 +8,7 @@ package extendeddaemonset
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"strings"
 	"sync"
 	"time"
@@ -64,9 +65,11 @@ func NewReconciler(options ReconcilerOptions, client client.Client, scheme *runt
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
-	reqLogger := r.log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling ExtendedDaemonSet")
 	now := time.Now()
+	rand := rand.Uint32()
+	reqLogger := r.log.WithValues("Req.NS", request.Namespace, "Req.Name", request.Name, "Req.TS", now.Unix(), "Req.Rand", rand)
+	reqLogger.Info("Reconciling ExtendedDaemonSet")
+
 	// Fetch the ExtendedDaemonSet instance
 	instance := &datadoghqv1alpha1.ExtendedDaemonSet{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
@@ -86,7 +89,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		defaultedInstance := datadoghqv1alpha1.DefaultExtendedDaemonSet(instance)
 		err = r.client.Update(context.TODO(), defaultedInstance)
 		if err != nil {
-			reqLogger.Error(err, "failed to update ExtendedDaemonSet")
+			reqLogger.Error(err, "Failed to update ExtendedDaemonSet")
 			return reconcile.Result{}, err
 		}
 		// ExtendedDaemonSet is now defaulted return and requeue
@@ -269,19 +272,25 @@ func (r *Reconciler) updateInstanceWithCurrentRS(logger logr.Logger, daemonset *
 		if updateDaemonsetSpec {
 			// Make and use a copy because undesired behaviors occur when making two update calls
 			newDaemonsetCopy := newDaemonset.DeepCopy()
+			logger.Info("Updating ExtendedDaemonSet")
 			if err := r.client.Update(context.TODO(), newDaemonsetCopy); err != nil {
+				logger.Error(err, "Failed to update ExtendedDaemonSet")
 				return newDaemonsetCopy, reconcile.Result{}, err
 			}
 
 			// This ensures that the first client update respects the desired new status
 			newDaemonsetCopy.Status = newDaemonset.Status
+			logger.Info("Updating ExtendedDaemonSet status")
 			if err := r.client.Status().Update(context.TODO(), newDaemonsetCopy); err != nil {
+				logger.Error(err, "Failed to update ExtendedDaemonSet status")
 				return newDaemonsetCopy, reconcile.Result{}, err
 			}
 			return newDaemonsetCopy, reconcile.Result{}, nil
 		}
 
+		logger.Info("Updating ExtendedDaemonSet status")
 		if err := r.client.Status().Update(context.TODO(), newDaemonset); err != nil {
+			logger.Error(err, "Failed to update ExtendedDaemonSet status")
 			return newDaemonset, reconcile.Result{}, err
 		}
 		return newDaemonset, reconcile.Result{}, nil

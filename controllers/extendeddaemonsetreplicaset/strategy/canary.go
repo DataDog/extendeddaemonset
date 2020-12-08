@@ -135,14 +135,13 @@ func manageCanaryStatus(annotations map[string]string, params *Parameters, now t
 	params.Logger.V(1).Info("NewStatus", "Desired", desiredPods, "Ready", readyPods, "Available", availablePods)
 	params.Logger.V(1).Info(
 		"Result",
-		"PodsToCreate", result.PodsToCreate,
-		"PodsToDelete", result.PodsToDelete,
+		"PodsToCreate", len(result.PodsToCreate),
+		"PodsToDelete", len(result.PodsToDelete),
 		"IsFailed", result.IsFailed,
 		"FailedReason", result.FailedReason,
 		"IsPaused", result.IsPaused,
 		"PausedReason", result.PausedReason,
 	)
-	params.Logger.V(1).Info("IsFailed", "PodsToCreate", result.PodsToCreate, "PodsToDelete", result.PodsToDelete)
 
 	if needRequeue || !result.IsFailed && !result.IsPaused && result.NewStatus.Desired != result.NewStatus.Ready {
 		result.Result = requeuePromptly()
@@ -186,6 +185,11 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 			cannotStartPodStatus = fmt.Sprintf("Pod %s cannot start with reason: %s", pod.ObjectMeta.Name, string(cannotStartReason))
 		} else if autoPauseEnabled && podUtils.PendingCreate(pod) && params.Strategy.Canary.AutoPause.MaxSlowStartDuration != nil {
 			if time.Now().After(pod.Status.StartTime.Time.Add(params.Strategy.Canary.AutoPause.MaxSlowStartDuration.Duration)) {
+				params.Logger.Info(
+					"PendingCreate",
+					"PodName", pod.ObjectMeta.Name,
+					"Exceeded", params.Strategy.Canary.AutoPause.MaxSlowStartDuration.Duration,
+				)
 				cannotStart = true
 				cannotStartReason = v1alpha1.ExtendedDaemonSetStatusSlowStartTimeoutExceeded
 				cannotStartPodStatus = fmt.Sprintf("Pod %s cannot start with reason: %s", pod.ObjectMeta.Name, cannotStartReason)
@@ -216,7 +220,7 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 				params.Logger.Info(
 					"AutoPaused",
 					"CannotStart", true,
-					"Reason", cannotStart,
+					"Reason", cannotStartReason,
 				)
 			} else if restartCount > autoPauseMaxRestarts {
 				result.IsPaused = true
@@ -254,6 +258,10 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 	// Track pod restart condition in the status
 	if cannotStart {
 		conditionStatus = v1.ConditionTrue
+		params.Logger.Info(
+			"UpdateCannotStartCondition",
+			"Reason", cannotStartPodStatus,
+		)
 	}
 
 	conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(
