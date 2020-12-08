@@ -90,6 +90,9 @@ type ExtendedDaemonSetSpecStrategyCanaryAutoPause struct {
 	Enabled *bool `json:"enabled,omitempty"`
 	// MaxRestarts defines the number of tolerable (per pod) Canary pod restarts after which the Canary deployment is autopaused
 	MaxRestarts *int32 `json:"maxRestarts,omitempty"`
+	// MaxSlowStartDuration defines the maximum slow start duration for a pod (stuck in Creating state) after which the
+	// Canary deployment is autopaused
+	MaxSlowStartDuration *metav1.Duration `json:"maxSlowStartDuration,omitempty"`
 }
 
 // ExtendedDaemonSetSpecStrategyCanaryAutoFail defines the canary deployment AutoFail parameters of the ExtendedDaemonSet
@@ -126,6 +129,8 @@ const (
 	ExtendedDaemonSetStatusReasonOOM ExtendedDaemonSetStatusReason = "OOMKilled"
 	// ExtendedDaemonSetStatusRestartsTimeoutExceeded represents timeout on restarts as the reason for the ExtendedDaemonSet status
 	ExtendedDaemonSetStatusRestartsTimeoutExceeded ExtendedDaemonSetStatusReason = "RestartsTimeoutExceeded"
+	// ExtendedDaemonSetStatusSlowStartTimeoutExceeded represents timeout on slow starts as the reason for the ExtendedDaemonSet status
+	ExtendedDaemonSetStatusSlowStartTimeoutExceeded ExtendedDaemonSetStatusReason = "SlowStartTimeoutExceeded"
 	// ExtendedDaemonSetStatusReasonUnknown represents an Unknown reason for the status state
 	ExtendedDaemonSetStatusReasonUnknown ExtendedDaemonSetStatusReason = "Unknown"
 )

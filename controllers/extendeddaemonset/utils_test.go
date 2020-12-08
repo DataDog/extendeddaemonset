@@ -74,15 +74,15 @@ func TestIsCanaryDeploymentPaused(t *testing.T) {
 			wantReason: datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown,
 		},
 		{
-			name: "pause annotation is `true` and has an unsupported reason, expect true and `unknown` reason",
+			name: "pause annotation is `true` and has a not very well known reason reason, expect true and actual reason",
 			args: args{
 				dsAnnotations: map[string]string{
 					"extendeddaemonset.datadoghq.com/canary-paused":        "true",
-					"extendeddaemonset.datadoghq.com/canary-paused-reason": "SomeUnsupportedReason",
+					"extendeddaemonset.datadoghq.com/canary-paused-reason": "SomeOddReason",
 				},
 			},
 			want:       true,
-			wantReason: datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown,
+			wantReason: datadoghqv1alpha1.ExtendedDaemonSetStatusReason("SomeOddReason"),
 		},
 	}
 	for _, tt := range tests {

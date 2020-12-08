@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/blang/semver v3.5.0+incompatible
+	github.com/davecgh/go-spew v1.1.1
 	github.com/go-logr/logr v0.1.0
 	github.com/go-openapi/spec v0.19.3
 	github.com/google/go-cmp v0.4.0

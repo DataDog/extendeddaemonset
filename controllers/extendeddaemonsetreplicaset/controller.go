@@ -8,6 +8,7 @@ package extendeddaemonsetreplicaset
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"strings"
 	"time"
 
@@ -62,10 +63,11 @@ func NewReconciler(options ReconcilerOptions, client client.Client, scheme *runt
 // Reconcile reads that state of the cluster for a ExtendedDaemonSetReplicaSet object and makes changes based on the state read
 // and what is in the ExtendedDaemonSetReplicaSet.Spec
 func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
-	reqLogger := r.log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
+	now := metav1.NewTime(time.Now())
+	rand := rand.Uint32()
+	reqLogger := r.log.WithValues("Req.NS", request.Namespace, "Req.Name", request.Name, "Req.TS", now.Unix(), "Req.Rand", rand)
 	reqLogger.Info("Reconciling ExtendedDaemonSetReplicaSet")
 
-	now := metav1.NewTime(time.Now())
 	// Fetch the ExtendedDaemonSetReplicaSet replicaSetInstance
 	replicaSetInstance, needReturn, err := r.retrievedReplicaSet(request)
 	if needReturn {
@@ -83,7 +85,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		nextSyncTS := lastResyncTimeStampCond.LastUpdateTime.Add(daemonsetInstance.Spec.Strategy.ReconcileFrequency.Duration)
 		if nextSyncTS.After(now.Time) {
 			requeueDuration := nextSyncTS.Sub(now.Time)
-			reqLogger.V(1).Info("Reconcile, skip this resync", "requeueAfter", requeueDuration)
+			// reqLogger.V(1).Info("Reconcile, skip this resync", "requeueAfter", requeueDuration)
 			return reconcile.Result{RequeueAfter: requeueDuration}, nil
 		}
 	}
@@ -139,7 +141,12 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	err = utilserrors.NewAggregate(errs)
 	conditions.UpdateErrorCondition(newStatus, now, err, "")
 	conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(newStatus, now, datadoghqv1alpha1.ConditionTypeLastFullSync, corev1.ConditionTrue, "full sync", true, true)
+
+	reqLogger.V(1).Info("Updating ExtendedDaemonSetReplicaSet status")
 	err = r.updateReplicaSet(replicaSetInstance, newStatus)
+	if err != nil {
+		reqLogger.Error(err, "Failed to update ExtendedDaemonSetReplicaSet status")
+	}
 	reqLogger.V(1).Info("Reconcile end", "return", result, "error", err)
 	return result, err
 }

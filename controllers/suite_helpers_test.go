@@ -29,6 +29,7 @@ func withGet(nsName types.NamespacedName, obj runtime.Object, desc string, condi
 		return condition()
 	}
 }
+
 func withEDS(nsName types.NamespacedName, eds *datadoghqv1alpha1.ExtendedDaemonSet, condition condFn) condFn {
 	return withGet(nsName, eds, "EDS", condition)
 }

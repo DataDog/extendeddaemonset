@@ -443,9 +443,17 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanaryAutoPause(ref commo
 							Format:      "int32",
 						},
 					},
+					"maxSlowStartDuration": {
+						SchemaProps: spec.SchemaProps{
+							Description: "MaxSlowStartDuration defines the maximum slow start duration for a pod (stuck in Creating state) after which the Canary deployment is autopaused",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
+						},
+					},
 				},
 			},
 		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Duration"},
 	}
 }
 

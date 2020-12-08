@@ -63,12 +63,7 @@ func IsCanaryDeploymentPaused(dsAnnotations map[string]string) (bool, datadoghqv
 	isPaused, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]
 	if found && isPaused == "true" { //nolint:goconst
 		if reason, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey]; found {
-			switch reason {
-			case
-				string(datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB),
-				string(datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM):
-				return true, datadoghqv1alpha1.ExtendedDaemonSetStatusReason(reason)
-			}
+			return true, datadoghqv1alpha1.ExtendedDaemonSetStatusReason(reason)
 		}
 		return true, datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown
 	}

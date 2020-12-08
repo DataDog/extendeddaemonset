@@ -113,7 +113,7 @@ func HighestRestartCount(pod *v1.Pod) (int, datadoghqv1alpha1.ExtendedDaemonSetS
 			restartCount = s.RestartCount
 			reason = datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown
 			if s.LastTerminationState != (v1.ContainerState{}) && *s.LastTerminationState.Terminated != (v1.ContainerStateTerminated{}) {
-				reason = terminatedReason(s.LastTerminationState.Terminated.Reason)
+				reason = datadoghqv1alpha1.ExtendedDaemonSetStatusReason(s.LastTerminationState.Terminated.Reason)
 			}
 		}
 	}
@@ -130,22 +130,50 @@ func MostRecentRestart(pod *v1.Pod) (time.Time, datadoghqv1alpha1.ExtendedDaemon
 		if s.RestartCount != 0 && s.LastTerminationState != (v1.ContainerState{}) && s.LastTerminationState.Terminated != (&v1.ContainerStateTerminated{}) {
 			if s.LastTerminationState.Terminated.FinishedAt.After(restartTime) {
 				restartTime = s.LastTerminationState.Terminated.FinishedAt.Time
-				reason = terminatedReason(s.LastTerminationState.Terminated.Reason)
+				reason = datadoghqv1alpha1.ExtendedDaemonSetStatusReason(s.LastTerminationState.Terminated.Reason)
 			}
 		}
 	}
 	return restartTime, reason
 }
 
-func terminatedReason(reason string) datadoghqv1alpha1.ExtendedDaemonSetStatusReason {
-	switch reason {
-	case string(datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB):
-		return datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB
-	case string(datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM):
-		return datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM
-	default:
-		return datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown
+var cannotStartReasons = []string{
+	"ErrImagePull",
+	"ImagePullBackOff",
+	"CreateContainerConfigError",
+	"CreateContainerError",
+	"PreStartHookError",
+	"PostStartHookError",
+}
+
+// IsCannotStartReason returns true for a reason that is considered an abnormal cannot start condition
+func IsCannotStartReason(reason string) bool {
+	for _, cannot := range cannotStartReasons {
+		if cannot == reason {
+			return true
+		}
 	}
+	return false
+}
+
+// CannotStart returns true if the Pod is currently experiencing abnormal start condition
+func CannotStart(pod *v1.Pod) (bool, datadoghqv1alpha1.ExtendedDaemonSetStatusReason) {
+	for _, s := range pod.Status.ContainerStatuses {
+		if s.State.Waiting != nil && IsCannotStartReason(s.State.Waiting.Reason) {
+			return true, datadoghqv1alpha1.ExtendedDaemonSetStatusReason(s.State.Waiting.Reason)
+		}
+	}
+	return false, datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown
+}
+
+// PendingCreate returns true if the Pod is pending create (may be an eventually resolving state)
+func PendingCreate(pod *v1.Pod) bool {
+	for _, s := range pod.Status.ContainerStatuses {
+		if s.State.Waiting != nil && s.State.Waiting.Reason == "ContainerCreating" {
+			return true
+		}
+	}
+	return false
 }
 
 // HasPodSchedulerIssue returns true if a pod remained unscheduled for more than 10 minutes
