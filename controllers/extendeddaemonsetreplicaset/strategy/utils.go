@@ -138,7 +138,7 @@ func manageUnscheduledPodNodes(pods []*corev1.Pod) []string {
 }
 
 // annotateCanaryDeploymentWithReason annotates the Canary deployment with a reason
-func annotateCanaryDeploymentWithReason(client client.Client, eds *datadoghqv1alpha1.ExtendedDaemonSet, valueKey string, reasonKey string, reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason) error {
+func annotateCanaryDeploymentWithReason(c client.Client, eds *datadoghqv1alpha1.ExtendedDaemonSet, valueKey string, reasonKey string, reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason) error {
 	newEds := eds.DeepCopy()
 	if newEds.Annotations == nil {
 		newEds.Annotations = make(map[string]string)
@@ -149,13 +149,11 @@ func annotateCanaryDeploymentWithReason(client client.Client, eds *datadoghqv1al
 			return nil
 		}
 	}
+
+	patch := client.MergeFrom(newEds.DeepCopy())
 	newEds.Annotations[valueKey] = valueTrue
 	newEds.Annotations[reasonKey] = string(reason)
-
-	if err := client.Update(context.TODO(), newEds); err != nil {
-		return err
-	}
-	return nil
+	return c.Patch(context.TODO(), newEds, patch)
 }
 
 // pauseCanaryDeployment updates two annotations so that the Canary deployment is marked as paused, along with a reason
