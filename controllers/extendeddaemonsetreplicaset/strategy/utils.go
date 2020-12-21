@@ -138,7 +138,7 @@ func manageUnscheduledPodNodes(pods []*corev1.Pod) []string {
 }
 
 // annotateCanaryDeploymentWithReason annotates the Canary deployment with a reason
-func annotateCanaryDeploymentWithReason(client client.Client, eds *datadoghqv1alpha1.ExtendedDaemonSet, valueKey string, reasonKey string, reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason) error {
+func annotateCanaryDeploymentWithReason(c client.Client, eds *datadoghqv1alpha1.ExtendedDaemonSet, valueKey string, reasonKey string, reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason) error {
 	newEds := eds.DeepCopy()
 	if newEds.Annotations == nil {
 		newEds.Annotations = make(map[string]string)
@@ -149,13 +149,11 @@ func annotateCanaryDeploymentWithReason(client client.Client, eds *datadoghqv1al
 			return nil
 		}
 	}
+
+	patch := client.MergeFrom(newEds.DeepCopy())
 	newEds.Annotations[valueKey] = valueTrue
 	newEds.Annotations[reasonKey] = string(reason)
-
-	if err := client.Update(context.TODO(), newEds); err != nil {
-		return err
-	}
-	return nil
+	return c.Patch(context.TODO(), newEds, patch)
 }
 
 // pauseCanaryDeployment updates two annotations so that the Canary deployment is marked as paused, along with a reason
@@ -206,8 +204,14 @@ func addPodLabel(c client.Client, pod *corev1.Pod, k, v string) error {
 		// The label is there, nothing to do
 		return nil
 	}
+
+	// A merge patch will preserve other fields modified at runtime.
+	patch := client.MergeFrom(pod.DeepCopy())
+	if pod.Labels == nil {
+		pod.Labels = make(map[string]string)
+	}
 	pod.Labels[k] = v
-	return c.Update(context.TODO(), pod)
+	return c.Patch(context.TODO(), pod, patch)
 }
 
 // deletePodLabel deletes a given pod label, no-op if the pod is nil or if the label doesn't exists
@@ -225,6 +229,9 @@ func deletePodLabel(c client.Client, pod *corev1.Pod, k string) error {
 		// The label is not there, nothing to do
 		return nil
 	}
+
+	// A merge patch will preserve other fields modified at runtime.
+	patch := client.MergeFrom(pod.DeepCopy())
 	delete(pod.Labels, k)
-	return c.Update(context.TODO(), pod)
+	return c.Patch(context.TODO(), pod, patch)
 }
