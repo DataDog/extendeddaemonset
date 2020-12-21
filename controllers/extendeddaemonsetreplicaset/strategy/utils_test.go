@@ -6,18 +6,19 @@
 package strategy
 
 import (
+	"context"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
-	"k8s.io/client-go/kubernetes/scheme"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	"github.com/DataDog/extendeddaemonset/api/v1alpha1/test"
 	commontest "github.com/DataDog/extendeddaemonset/pkg/controller/test"
+	"github.com/stretchr/testify/assert"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes/scheme"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 func Test_compareWithExtendedDaemonsetSettingOverwrite(t *testing.T) {
@@ -192,6 +193,142 @@ func Test_failCanaryDeployment(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := failCanaryDeployment(tt.args.client, tt.args.eds, tt.args.reason)
 			assert.Equal(t, tt.wantErr, err)
+		})
+	}
+}
+
+func Test_addPodLabel(t *testing.T) {
+	key := "key1"
+	val := "val1"
+	podNoLabel := commontest.NewPod("foo", "pod1", "node1", nil)
+	podLabeled := podNoLabel.DeepCopy()
+	podLabeled.Labels = make(map[string]string)
+	podLabeled.Labels[key] = val
+
+	validatationLabelFunc := func(t *testing.T, c client.Client, pod *corev1.Pod) {
+		wantPod := &corev1.Pod{}
+		nNs := types.NamespacedName{
+			Namespace: pod.Namespace,
+			Name:      pod.Name,
+		}
+		err := c.Get(context.TODO(), nNs, wantPod)
+		assert.Nilf(t, err, "error must be nil, err: %v", err)
+
+		if gotVal, ok := wantPod.Labels[key]; ok {
+			assert.Equal(t, val, gotVal)
+		} else {
+			t.Fatalf("Label not present, pod: %#v", wantPod.Labels)
+		}
+	}
+
+	type args struct {
+		c   client.Client
+		pod *corev1.Pod
+		k   string
+		v   string
+	}
+	tests := []struct {
+		name           string
+		args           args
+		validationFunc func(*testing.T, client.Client, *corev1.Pod)
+		wantErr        bool
+	}{
+		{
+			name: "add label",
+			args: args{
+				c:   fake.NewFakeClient(podNoLabel),
+				pod: podNoLabel,
+				k:   key,
+				v:   val,
+			},
+			validationFunc: validatationLabelFunc,
+			wantErr:        false,
+		},
+		{
+			name: "label already present",
+			args: args{
+				c:   fake.NewFakeClient(podLabeled),
+				pod: podLabeled,
+				k:   key,
+				v:   val,
+			},
+			wantErr:        false,
+			validationFunc: validatationLabelFunc,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := addPodLabel(tt.args.c, tt.args.pod, tt.args.k, tt.args.v); (err != nil) != tt.wantErr {
+				t.Errorf("addPodLabel() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if tt.validationFunc != nil {
+				tt.validationFunc(t, tt.args.c, tt.args.pod)
+			}
+		})
+	}
+}
+
+func Test_deletePodLabel(t *testing.T) {
+	key := "key1"
+	val := "val1"
+	podNoLabel := commontest.NewPod("foo", "pod1", "node1", nil)
+	podLabeled := podNoLabel.DeepCopy()
+	podLabeled.Labels = make(map[string]string)
+	podLabeled.Labels[key] = val
+
+	validatationNoLabelFunc := func(t *testing.T, c client.Client, pod *corev1.Pod) {
+		wantPod := &corev1.Pod{}
+		nNs := types.NamespacedName{
+			Namespace: pod.Namespace,
+			Name:      pod.Name,
+		}
+		err := c.Get(context.TODO(), nNs, wantPod)
+		assert.Nilf(t, err, "error must be nil, err: %v", err)
+		if _, ok := wantPod.Labels[key]; ok {
+			t.Fatalf("Label is present, pod: %#v", wantPod.Labels)
+		}
+	}
+
+	type args struct {
+		c   client.Client
+		pod *corev1.Pod
+		k   string
+	}
+	tests := []struct {
+		name           string
+		args           args
+		validationFunc func(*testing.T, client.Client, *corev1.Pod)
+		wantErr        bool
+	}{
+		{
+			name: "delete label",
+			args: args{
+				c:   fake.NewFakeClient(podLabeled),
+				pod: podLabeled,
+				k:   key,
+			},
+			validationFunc: validatationNoLabelFunc,
+			wantErr:        false,
+		},
+		{
+			name: "label not present",
+			args: args{
+				c:   fake.NewFakeClient(podNoLabel),
+				pod: podNoLabel,
+				k:   key,
+			},
+			wantErr:        false,
+			validationFunc: validatationNoLabelFunc,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := deletePodLabel(tt.args.c, tt.args.pod, tt.args.k); (err != nil) != tt.wantErr {
+				t.Errorf("deletePodLabel() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if tt.validationFunc != nil {
+				tt.validationFunc(t, tt.args.c, tt.args.pod)
+			}
 		})
 	}
 }
