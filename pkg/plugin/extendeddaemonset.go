@@ -6,8 +6,11 @@
 package plugin
 
 import (
-	"github.com/spf13/cobra"
+	"github.com/DataDog/extendeddaemonset/pkg/plugin/canary"
+	"github.com/DataDog/extendeddaemonset/pkg/plugin/get"
+	"github.com/DataDog/extendeddaemonset/pkg/plugin/pods"
 
+	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
@@ -34,9 +37,10 @@ func NewCmdExtendedDaemonset(streams genericclioptions.IOStreams) *cobra.Command
 		Use: "ExtendedDaemonset [subcommand] [flags]",
 	}
 
-	cmd.AddCommand(NewCmdCanary(streams))
-	cmd.AddCommand(NewCmdGet(streams))
-	cmd.AddCommand(NewCmdGetERS(streams))
+	cmd.AddCommand(canary.NewCmdCanary(streams))
+	cmd.AddCommand(get.NewCmdGet(streams))
+	cmd.AddCommand(get.NewCmdGetERS(streams))
+	cmd.AddCommand(pods.NewCmdPods(streams))
 
 	o.configFlags.AddFlags(cmd.Flags())
 

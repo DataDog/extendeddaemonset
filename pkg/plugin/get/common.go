@@ -3,10 +3,9 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-2019 Datadog, Inc.
 
-package plugin
+package get
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/hako/durafmt"
@@ -14,10 +13,6 @@ import (
 
 	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
 )
-
-func intToString(i int32) string {
-	return fmt.Sprintf("%d", i)
-}
 
 func getCanaryRS(eds *v1alpha1.ExtendedDaemonSet) string {
 	if eds.Status.Canary != nil {

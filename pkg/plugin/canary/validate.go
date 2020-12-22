@@ -3,7 +3,7 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-2019 Datadog, Inc.
 
-package plugin
+package canary
 
 import (
 	"context"
@@ -18,6 +18,7 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
+	"github.com/DataDog/extendeddaemonset/pkg/plugin/common"
 )
 
 var (
@@ -27,8 +28,8 @@ var (
 `
 )
 
-// ValidateOptions provides information required to manage ExtendedDaemonSet
-type ValidateOptions struct {
+// validateOptions provides information required to manage ExtendedDaemonSet
+type validateOptions struct {
 	configFlags *genericclioptions.ConfigFlags
 	args        []string
 
@@ -40,18 +41,18 @@ type ValidateOptions struct {
 	userExtendedDaemonSetName string
 }
 
-// NewValidateOptions provides an instance of GetOptions with default values
-func NewValidateOptions(streams genericclioptions.IOStreams) *ValidateOptions {
-	return &ValidateOptions{
+// newvalidateOptions provides an instance of GetOptions with default values
+func newValidateOptions(streams genericclioptions.IOStreams) *validateOptions {
+	return &validateOptions{
 		configFlags: genericclioptions.NewConfigFlags(false),
 
 		IOStreams: streams,
 	}
 }
 
-// NewCmdValidate provides a cobra command wrapping ValidateOptions
-func NewCmdValidate(streams genericclioptions.IOStreams) *cobra.Command {
-	o := NewValidateOptions(streams)
+// newCmdValidate provides a cobra command wrapping validateOptions
+func newCmdValidate(streams genericclioptions.IOStreams) *cobra.Command {
+	o := newValidateOptions(streams)
 
 	cmd := &cobra.Command{
 		Use:          "validate an ExtendedDaemonSet canary replicaset",
@@ -59,13 +60,13 @@ func NewCmdValidate(streams genericclioptions.IOStreams) *cobra.Command {
 		Example:      fmt.Sprintf(validateExample, "kubectl"),
 		SilenceUsage: true,
 		RunE: func(c *cobra.Command, args []string) error {
-			if err := o.Complete(c, args); err != nil {
+			if err := o.complete(c, args); err != nil {
 				return err
 			}
-			if err := o.Validate(); err != nil {
+			if err := o.validate(); err != nil {
 				return err
 			}
-			return o.Run()
+			return o.run()
 		},
 	}
 
@@ -74,14 +75,14 @@ func NewCmdValidate(streams genericclioptions.IOStreams) *cobra.Command {
 	return cmd
 }
 
-// Complete sets all information required for processing the command
-func (o *ValidateOptions) Complete(cmd *cobra.Command, args []string) error {
+// complete sets all information required for processing the command
+func (o *validateOptions) complete(cmd *cobra.Command, args []string) error {
 	o.args = args
 	var err error
 
 	clientConfig := o.configFlags.ToRawKubeConfigLoader()
 	// Create the Client for Read/Write operations.
-	o.client, err = NewClient(clientConfig)
+	o.client, err = common.NewClient(clientConfig)
 	if err != nil {
 		return fmt.Errorf("unable to instantiate client, err: %v", err)
 	}
@@ -106,8 +107,8 @@ func (o *ValidateOptions) Complete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// Validate ensures that all required arguments and flag values are provided
-func (o *ValidateOptions) Validate() error {
+// validate ensures that all required arguments and flag values are provided
+func (o *validateOptions) validate() error {
 
 	if len(o.args) < 1 {
 		return fmt.Errorf("the extendeddaemonset name is required")
@@ -116,8 +117,8 @@ func (o *ValidateOptions) Validate() error {
 	return nil
 }
 
-// Run use to run the command
-func (o *ValidateOptions) Run() error {
+// run use to run the command
+func (o *validateOptions) run() error {
 
 	eds := &v1alpha1.ExtendedDaemonSet{}
 	err := o.client.Get(context.TODO(), client.ObjectKey{Namespace: o.userNamespace, Name: o.userExtendedDaemonSetName}, eds)

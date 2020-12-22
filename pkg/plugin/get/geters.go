@@ -3,7 +3,7 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-2019 Datadog, Inc.
 
-package plugin
+package get
 
 import (
 	"context"
@@ -21,6 +21,7 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
+	"github.com/DataDog/extendeddaemonset/pkg/plugin/common"
 )
 
 var (
@@ -32,8 +33,8 @@ var (
 `
 )
 
-// GetERSOptions provides information required to manage Kanary
-type GetERSOptions struct {
+// getERSOptions provides information required to manage Kanary
+type getERSOptions struct {
 	configFlags *genericclioptions.ConfigFlags
 	args        []string
 
@@ -45,9 +46,9 @@ type GetERSOptions struct {
 	userExtendedDaemonSetReplicaSetName string
 }
 
-// NewGetERSOptions provides an instance of GetERSOptions with default values
-func NewGetERSOptions(streams genericclioptions.IOStreams) *GetERSOptions {
-	return &GetERSOptions{
+// newGetERSOptions provides an instance of GetERSOptions with default values
+func newGetERSOptions(streams genericclioptions.IOStreams) *getERSOptions {
+	return &getERSOptions{
 		configFlags: genericclioptions.NewConfigFlags(false),
 
 		IOStreams: streams,
@@ -56,7 +57,7 @@ func NewGetERSOptions(streams genericclioptions.IOStreams) *GetERSOptions {
 
 // NewCmdGetERS provides a cobra command wrapping GetERSOptions
 func NewCmdGetERS(streams genericclioptions.IOStreams) *cobra.Command {
-	o := NewGetERSOptions(streams)
+	o := newGetERSOptions(streams)
 
 	cmd := &cobra.Command{
 		Use:          "get-ers [ExtendedDaemonSetReplicaset name]",
@@ -64,13 +65,13 @@ func NewCmdGetERS(streams genericclioptions.IOStreams) *cobra.Command {
 		Example:      fmt.Sprintf(getErsExample, "kubectl"),
 		SilenceUsage: true,
 		RunE: func(c *cobra.Command, args []string) error {
-			if err := o.Complete(c, args); err != nil {
+			if err := o.complete(c, args); err != nil {
 				return err
 			}
-			if err := o.Validate(); err != nil {
+			if err := o.validate(); err != nil {
 				return err
 			}
-			return o.Run()
+			return o.run()
 		},
 	}
 
@@ -79,14 +80,14 @@ func NewCmdGetERS(streams genericclioptions.IOStreams) *cobra.Command {
 	return cmd
 }
 
-// Complete sets all information required for processing the command
-func (o *GetERSOptions) Complete(cmd *cobra.Command, args []string) error {
+// complete sets all information required for processing the command
+func (o *getERSOptions) complete(cmd *cobra.Command, args []string) error {
 	o.args = args
 	var err error
 
 	clientConfig := o.configFlags.ToRawKubeConfigLoader()
 	// Create the Client for Read/Write operations.
-	o.client, err = NewClient(clientConfig)
+	o.client, err = common.NewClient(clientConfig)
 	if err != nil {
 		return fmt.Errorf("unable to instantiate client, err: %v", err)
 	}
@@ -111,8 +112,8 @@ func (o *GetERSOptions) Complete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// Validate ensures that all required arguments and flag values are provided
-func (o *GetERSOptions) Validate() error {
+// validate ensures that all required arguments and flag values are provided
+func (o *getERSOptions) validate() error {
 
 	if len(o.args) > 1 {
 		return fmt.Errorf("either one or no arguments are allowed")
@@ -121,8 +122,8 @@ func (o *GetERSOptions) Validate() error {
 	return nil
 }
 
-// Run use to run the command
-func (o *GetERSOptions) Run() error {
+// run use to run the command
+func (o *getERSOptions) run() error {
 	ersList := &v1alpha1.ExtendedDaemonSetReplicaSetList{}
 
 	if o.userExtendedDaemonSetReplicaSetName == "" {
@@ -143,7 +144,7 @@ func (o *GetERSOptions) Run() error {
 
 	table := newGetERSTable(o.Out)
 	for _, item := range ersList.Items {
-		data := []string{item.Namespace, item.Name, intToString(item.Status.Desired), intToString(item.Status.Current), intToString(item.Status.Ready), intToString(item.Status.Available), intToString(item.Status.IgnoredUnresponsiveNodes), item.Status.Status, getDuration(&item.ObjectMeta)}
+		data := []string{item.Namespace, item.Name, common.IntToString(item.Status.Desired), common.IntToString(item.Status.Current), common.IntToString(item.Status.Ready), common.IntToString(item.Status.Available), common.IntToString(item.Status.IgnoredUnresponsiveNodes), item.Status.Status, getDuration(&item.ObjectMeta)}
 		table.Append(data)
 	}
 
