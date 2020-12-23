@@ -3,7 +3,7 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-2019 Datadog, Inc.
 
-package plugin
+package canary
 
 import (
 	"context"
@@ -18,6 +18,7 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
+	"github.com/DataDog/extendeddaemonset/pkg/plugin/common"
 )
 
 const (
@@ -32,8 +33,8 @@ var (
 `
 )
 
-// PauseOptions provides information required to manage ExtendedDaemonSet
-type PauseOptions struct {
+// pauseOptions provides information required to manage ExtendedDaemonSet
+type pauseOptions struct {
 	configFlags *genericclioptions.ConfigFlags
 	args        []string
 
@@ -46,9 +47,9 @@ type PauseOptions struct {
 	pauseStatus               bool
 }
 
-// NewPauseOptions provides an instance of GetOptions with default values
-func NewPauseOptions(streams genericclioptions.IOStreams, pauseStatus bool) *PauseOptions {
-	return &PauseOptions{
+// newPauseOptions provides an instance of GetOptions with default values
+func newPauseOptions(streams genericclioptions.IOStreams, pauseStatus bool) *pauseOptions {
+	return &pauseOptions{
 		configFlags: genericclioptions.NewConfigFlags(false),
 
 		IOStreams: streams,
@@ -57,9 +58,9 @@ func NewPauseOptions(streams genericclioptions.IOStreams, pauseStatus bool) *Pau
 	}
 }
 
-// NewCmdPause provides a cobra command wrapping PauseOptions
-func NewCmdPause(streams genericclioptions.IOStreams) *cobra.Command {
-	o := NewPauseOptions(streams, cmdPause)
+// newCmdPause provides a cobra command wrapping pauseOptions
+func newCmdPause(streams genericclioptions.IOStreams) *cobra.Command {
+	o := newPauseOptions(streams, cmdPause)
 
 	cmd := &cobra.Command{
 		Use:          "pause [ExtendedDaemonSet name]",
@@ -67,13 +68,13 @@ func NewCmdPause(streams genericclioptions.IOStreams) *cobra.Command {
 		Example:      fmt.Sprintf(pauseExample, "pause"),
 		SilenceUsage: true,
 		RunE: func(c *cobra.Command, args []string) error {
-			if err := o.Complete(c, args); err != nil {
+			if err := o.complete(c, args); err != nil {
 				return err
 			}
-			if err := o.Validate(); err != nil {
+			if err := o.validate(); err != nil {
 				return err
 			}
-			return o.Run()
+			return o.run()
 		},
 	}
 
@@ -82,9 +83,9 @@ func NewCmdPause(streams genericclioptions.IOStreams) *cobra.Command {
 	return cmd
 }
 
-// NewCmdUnpause provides a cobra command wrapping PauseOptions
-func NewCmdUnpause(streams genericclioptions.IOStreams) *cobra.Command {
-	o := NewPauseOptions(streams, cmdUnpause)
+// newCmdUnpause provides a cobra command wrapping pauseOptions
+func newCmdUnpause(streams genericclioptions.IOStreams) *cobra.Command {
+	o := newPauseOptions(streams, cmdUnpause)
 
 	cmd := &cobra.Command{
 		Use:          "unpause [ExtendedDaemonSet name]",
@@ -92,13 +93,13 @@ func NewCmdUnpause(streams genericclioptions.IOStreams) *cobra.Command {
 		Example:      fmt.Sprintf(pauseExample, "unpause"),
 		SilenceUsage: true,
 		RunE: func(c *cobra.Command, args []string) error {
-			if err := o.Complete(c, args); err != nil {
+			if err := o.complete(c, args); err != nil {
 				return err
 			}
-			if err := o.Validate(); err != nil {
+			if err := o.validate(); err != nil {
 				return err
 			}
-			return o.Run()
+			return o.run()
 		},
 	}
 
@@ -107,14 +108,14 @@ func NewCmdUnpause(streams genericclioptions.IOStreams) *cobra.Command {
 	return cmd
 }
 
-// Complete sets all information required for processing the command
-func (o *PauseOptions) Complete(cmd *cobra.Command, args []string) error {
+// complete sets all information required for processing the command
+func (o *pauseOptions) complete(cmd *cobra.Command, args []string) error {
 	o.args = args
 	var err error
 
 	clientConfig := o.configFlags.ToRawKubeConfigLoader()
 	// Create the Client for Read/Write operations.
-	o.client, err = NewClient(clientConfig)
+	o.client, err = common.NewClient(clientConfig)
 	if err != nil {
 		return fmt.Errorf("unable to instantiate client, err: %v", err)
 	}
@@ -139,8 +140,8 @@ func (o *PauseOptions) Complete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// Validate ensures that all required arguments and flag values are provided
-func (o *PauseOptions) Validate() error {
+// validate ensures that all required arguments and flag values are provided
+func (o *pauseOptions) validate() error {
 
 	if len(o.args) < 1 {
 		return fmt.Errorf("the extendeddaemonset name is required")
@@ -149,8 +150,8 @@ func (o *PauseOptions) Validate() error {
 	return nil
 }
 
-// Run use to run the command
-func (o *PauseOptions) Run() error {
+// run use to run the command
+func (o *pauseOptions) run() error {
 	eds := &v1alpha1.ExtendedDaemonSet{}
 	err := o.client.Get(context.TODO(), client.ObjectKey{Namespace: o.userNamespace, Name: o.userExtendedDaemonSetName}, eds)
 	if err != nil && errors.IsNotFound(err) {

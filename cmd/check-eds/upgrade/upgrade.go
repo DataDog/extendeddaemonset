@@ -20,7 +20,7 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
-	"github.com/DataDog/extendeddaemonset/pkg/plugin"
+	"github.com/DataDog/extendeddaemonset/pkg/plugin/common"
 )
 
 var (
@@ -88,7 +88,7 @@ func (o *Options) Complete(cmd *cobra.Command, args []string) error {
 
 	clientConfig := o.configFlags.ToRawKubeConfigLoader()
 	// Create the Client for Read/Write operations.
-	o.client, err = plugin.NewClient(clientConfig)
+	o.client, err = common.NewClient(clientConfig)
 	if err != nil {
 		return fmt.Errorf("unable to instantiate client, err: %v", err)
 	}

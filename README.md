@@ -267,7 +267,22 @@ Available Commands:
   get         get ExtendedDaemonSet deployment(s)
   get-ers     get-ers ExtendedDaemonSetReplicaset deployment(s)
   help        Help about any command
+  pods        print the list pods managed by the EDS
 ```
+
+#### List the not ready pods managed by the ExtendedDaemonSet
+
+`kubectl-eds pods <ExtendedDaemonSet name> --select=not-ready`
+
+#### List the active Canary pods
+
+Print the canary pods and their corresponding status and restart counts.
+
+`kubectl-eds canary pods <ExtendedDaemonSet name>`
+
+OR
+
+`kubectl-eds pods <ExtendedDaemonSet name> --select=canary`
 
 #### Validate Canary deployment
 

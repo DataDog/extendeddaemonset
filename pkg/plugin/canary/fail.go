@@ -3,7 +3,7 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-2019 Datadog, Inc.
 
-package plugin
+package canary
 
 import (
 	"context"
@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
+	"github.com/DataDog/extendeddaemonset/pkg/plugin/common"
 )
 
 const (
@@ -30,8 +31,8 @@ var (
 `
 )
 
-// FailOptions provides information required to manage ExtendedDaemonSet
-type FailOptions struct {
+// failOptions provides information required to manage ExtendedDaemonSet
+type failOptions struct {
 	configFlags *genericclioptions.ConfigFlags
 	args        []string
 
@@ -44,9 +45,9 @@ type FailOptions struct {
 	failStatus                bool
 }
 
-// NewFailOptions provides an instance of GetOptions with default values
-func NewFailOptions(streams genericclioptions.IOStreams, failStatus bool) *FailOptions {
-	return &FailOptions{
+// newfailOptions provides an instance of GetOptions with default values
+func newfailOptions(streams genericclioptions.IOStreams, failStatus bool) *failOptions {
+	return &failOptions{
 		configFlags: genericclioptions.NewConfigFlags(false),
 
 		IOStreams: streams,
@@ -55,9 +56,9 @@ func NewFailOptions(streams genericclioptions.IOStreams, failStatus bool) *FailO
 	}
 }
 
-// NewCmdFail provides a cobra command wrapping FailOptions
-func NewCmdFail(streams genericclioptions.IOStreams) *cobra.Command {
-	o := NewFailOptions(streams, cmdFail)
+// newCmdFail provides a cobra command wrapping failOptions
+func newCmdFail(streams genericclioptions.IOStreams) *cobra.Command {
+	o := newfailOptions(streams, cmdFail)
 
 	cmd := &cobra.Command{
 		Use:          "fail [ExtendedDaemonSet name]",
@@ -65,13 +66,13 @@ func NewCmdFail(streams genericclioptions.IOStreams) *cobra.Command {
 		Example:      fmt.Sprintf(failExample, "fail"),
 		SilenceUsage: true,
 		RunE: func(c *cobra.Command, args []string) error {
-			if err := o.Complete(c, args); err != nil {
+			if err := o.complete(c, args); err != nil {
 				return err
 			}
-			if err := o.Validate(); err != nil {
+			if err := o.validate(); err != nil {
 				return err
 			}
-			return o.Run()
+			return o.run()
 		},
 	}
 
@@ -80,9 +81,9 @@ func NewCmdFail(streams genericclioptions.IOStreams) *cobra.Command {
 	return cmd
 }
 
-// NewCmdReset provides a cobra command wrapping FailOptions
-func NewCmdReset(streams genericclioptions.IOStreams) *cobra.Command {
-	o := NewFailOptions(streams, cmdReset)
+// newCmdReset provides a cobra command wrapping failOptions
+func newCmdReset(streams genericclioptions.IOStreams) *cobra.Command {
+	o := newfailOptions(streams, cmdReset)
 
 	cmd := &cobra.Command{
 		Use:          "reset [ExtendedDaemonSet name]",
@@ -90,13 +91,13 @@ func NewCmdReset(streams genericclioptions.IOStreams) *cobra.Command {
 		Example:      fmt.Sprintf(failExample, "reset"),
 		SilenceUsage: true,
 		RunE: func(c *cobra.Command, args []string) error {
-			if err := o.Complete(c, args); err != nil {
+			if err := o.complete(c, args); err != nil {
 				return err
 			}
-			if err := o.Validate(); err != nil {
+			if err := o.validate(); err != nil {
 				return err
 			}
-			return o.Run()
+			return o.run()
 		},
 	}
 
@@ -105,14 +106,14 @@ func NewCmdReset(streams genericclioptions.IOStreams) *cobra.Command {
 	return cmd
 }
 
-// Complete sets all information required for processing the command
-func (o *FailOptions) Complete(cmd *cobra.Command, args []string) error {
+// complete sets all information required for processing the command
+func (o *failOptions) complete(cmd *cobra.Command, args []string) error {
 	o.args = args
 	var err error
 
 	clientConfig := o.configFlags.ToRawKubeConfigLoader()
 	// Create the Client for Read/Write operations.
-	o.client, err = NewClient(clientConfig)
+	o.client, err = common.NewClient(clientConfig)
 	if err != nil {
 		return fmt.Errorf("unable to instantiate client, err: %v", err)
 	}
@@ -137,8 +138,8 @@ func (o *FailOptions) Complete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// Validate ensures that all required arguments and flag values are provided
-func (o *FailOptions) Validate() error {
+// validate ensures that all required arguments and flag values are provided
+func (o *failOptions) validate() error {
 
 	if len(o.args) < 1 {
 		return fmt.Errorf("the extendeddaemonset name is required")
@@ -147,8 +148,8 @@ func (o *FailOptions) Validate() error {
 	return nil
 }
 
-// Run use to run the command
-func (o *FailOptions) Run() error {
+// run use to run the command
+func (o *failOptions) run() error {
 	eds := &v1alpha1.ExtendedDaemonSet{}
 	err := o.client.Get(context.TODO(), client.ObjectKey{Namespace: o.userNamespace, Name: o.userExtendedDaemonSetName}, eds)
 	if err != nil && errors.IsNotFound(err) {

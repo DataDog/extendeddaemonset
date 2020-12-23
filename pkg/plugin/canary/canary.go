@@ -1,4 +1,4 @@
-package plugin
+package canary
 
 import (
 	"github.com/spf13/cobra"
@@ -12,11 +12,12 @@ func NewCmdCanary(streams genericclioptions.IOStreams) *cobra.Command {
 		Short: "control ExtendedDaemonSet canary deployment",
 	}
 
-	cmd.AddCommand(NewCmdValidate(streams))
-	cmd.AddCommand(NewCmdPause(streams))
-	cmd.AddCommand(NewCmdUnpause(streams))
-	cmd.AddCommand(NewCmdFail(streams))
-	cmd.AddCommand(NewCmdReset(streams))
+	cmd.AddCommand(newCmdValidate(streams))
+	cmd.AddCommand(newCmdPause(streams))
+	cmd.AddCommand(newCmdUnpause(streams))
+	cmd.AddCommand(newCmdFail(streams))
+	cmd.AddCommand(newCmdReset(streams))
+	cmd.AddCommand(newCmdPods(streams))
 
 	return cmd
 }
