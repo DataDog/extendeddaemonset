@@ -120,7 +120,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_Reconcile(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "ReplicaSet, Daemonset exist, but no status Daemonset => should requeue in 1sec",
+			name: "ReplicaSet, Daemonset exists but not defaulted => should requeue in 1sec",
 			fields: fields{
 				client:   fake.NewFakeClient(daemonset, replicaset),
 				scheme:   s,
@@ -133,9 +133,22 @@ func TestReconcileExtendedDaemonSetReplicaSet_Reconcile(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "ReplicaSet, Daemonset exist with status",
+			name: "ReplicaSet, Daemonset exists, defaulted but without a status => should requeue in 1sec",
 			fields: fields{
-				client:   fake.NewFakeClient(daemonsetWithStatus, replicaset),
+				client:   fake.NewFakeClient(datadoghqv1alpha1.DefaultExtendedDaemonSet(daemonset), replicaset),
+				scheme:   s,
+				recorder: recorder,
+			},
+			args: args{
+				request: newRequest("but", "foo-1"),
+			},
+			want:    reconcile.Result{RequeueAfter: time.Second},
+			wantErr: false,
+		},
+		{
+			name: "ReplicaSet, Daemonset exists, defaulted and with a status",
+			fields: fields{
+				client:   fake.NewFakeClient(datadoghqv1alpha1.DefaultExtendedDaemonSet(daemonsetWithStatus), replicaset),
 				scheme:   s,
 				recorder: recorder,
 			},
