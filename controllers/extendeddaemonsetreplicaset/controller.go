@@ -80,6 +80,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		return reconcile.Result{}, err
 	}
 
+	if !datadoghqv1alpha1.IsDefaultedExtendedDaemonSet(daemonsetInstance) {
+		reqLogger.Info("Parent ExtendedDaemonSet is not defaulted, requeuing")
+		return reconcile.Result{RequeueAfter: time.Second}, nil
+	}
+
 	lastResyncTimeStampCond := conditions.GetExtendedDaemonSetReplicaSetStatusCondition(&replicaSetInstance.Status, datadoghqv1alpha1.ConditionTypeLastFullSync)
 	if lastResyncTimeStampCond != nil {
 		nextSyncTS := lastResyncTimeStampCond.LastUpdateTime.Add(daemonsetInstance.Spec.Strategy.ReconcileFrequency.Duration)
