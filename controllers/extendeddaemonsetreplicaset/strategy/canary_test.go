@@ -356,7 +356,7 @@ func TestManageCanaryStatus_HighRestartsLeadingToPause(t *testing.T) {
 				Desired:   3,
 				Current:   1,
 				Ready:     0,
-				Available: 1,
+				Available: 0,
 				Conditions: []v1alpha1.ExtendedDaemonSetReplicaSetCondition{
 					{
 						Type:               v1alpha1.ConditionTypePodRestarting,
@@ -414,7 +414,7 @@ func TestManageCanaryStatus_HighRestartsLeadingToFail(t *testing.T) {
 				Desired:   3,
 				Current:   1,
 				Ready:     0,
-				Available: 1,
+				Available: 0,
 				Conditions: []v1alpha1.ExtendedDaemonSetReplicaSetCondition{
 					{
 						Type:               v1alpha1.ConditionTypePodRestarting,
@@ -486,7 +486,7 @@ func TestManageCanaryStatus_LongRestartsDurationLeadingToFail(t *testing.T) {
 				Desired:   3,
 				Current:   1,
 				Ready:     0,
-				Available: 1,
+				Available: 0,
 				Conditions: []v1alpha1.ExtendedDaemonSetReplicaSetCondition{
 					{
 						Type:               v1alpha1.ConditionTypePodRestarting,
@@ -543,7 +543,7 @@ func TestManageCanaryStatus_ImagePullErrorLeadingToPause(t *testing.T) {
 				Desired:   3,
 				Current:   1,
 				Ready:     0,
-				Available: 1,
+				Available: 0,
 				Conditions: []v1alpha1.ExtendedDaemonSetReplicaSetCondition{
 					{
 						Type:               v1alpha1.ConditionTypePodCannotStart,
