@@ -46,8 +46,8 @@ func IsPodScheduled(pod *v1.Pod) (string, bool) {
 // 1. minReadySeconds == 0, or
 // 2. LastTransitionTime (is set) + minReadySeconds < current time
 func IsPodAvailable(pod *v1.Pod, minReadySeconds int32, now metav1.Time) bool {
-	if IsPodReady(pod) {
-		return true
+	if !IsPodReady(pod) {
+		return false
 	}
 
 	c := GetPodReadyCondition(pod.Status)
