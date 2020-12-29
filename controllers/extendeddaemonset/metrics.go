@@ -11,6 +11,7 @@ import (
 	ksmetric "k8s.io/kube-state-metrics/pkg/metric"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
+	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonset/conditions"
 	"github.com/DataDog/extendeddaemonset/pkg/controller/metrics"
 	"github.com/DataDog/extendeddaemonset/pkg/controller/utils"
 )
@@ -228,11 +229,12 @@ func generateMetricFamilies() []ksmetric.FamilyGenerator {
 					rs := eds.Status.Canary.ReplicaSet
 					labelKeys = append(labelKeys, "replicaset")
 					labelValues = append(labelValues, rs)
-					paused, reason := IsCanaryDeploymentPaused(eds.Annotations)
-					if paused {
+					if conditions.IsConditionTrue(&eds.Status, datadoghqv1alpha1.ConditionTypeEDSCanaryPaused) {
+						cond := conditions.GetExtendedDaemonSetStatusCondition(&eds.Status, datadoghqv1alpha1.ConditionTypeEDSCanaryPaused)
+
 						val = 1
 						labelKeys = append(labelKeys, "paused_reason")
-						labelValues = append(labelValues, string(reason))
+						labelValues = append(labelValues, cond.Reason)
 					}
 				}
 				return &ksmetric.Family{
@@ -255,7 +257,7 @@ func generateMetricFamilies() []ksmetric.FamilyGenerator {
 				labelKeys, labelValues := utils.GetLabelsValues(&eds.ObjectMeta)
 				val := float64(0)
 
-				if IsCanaryDeploymentFailed(eds.Annotations) {
+				if conditions.IsConditionTrue(&eds.Status, datadoghqv1alpha1.ConditionTypeEDSCanaryFailed) {
 					val = 1
 				}
 

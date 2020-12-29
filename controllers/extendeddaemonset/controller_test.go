@@ -559,6 +559,7 @@ func TestReconciler_createNewReplicaSet(t *testing.T) {
 }
 func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 	eventBroadcaster := record.NewBroadcaster()
+	now := time.Now()
 
 	logf.SetLogger(logf.ZapLogger(true))
 	log := logf.Log.WithName("TestReconcileExtendedDaemonSet_updateStatusWithNewRS")
@@ -579,17 +580,33 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 			Ready:     2,
 		}})
 
-	daemonsetWithStatus := daemonset.DeepCopy()
-	daemonsetWithStatus.ResourceVersion = "1"
-	daemonsetWithStatus.Status = datadoghqv1alpha1.ExtendedDaemonSetStatus{
-		ActiveReplicaSet: "current",
-		Desired:          3,
-		Current:          3,
-		Available:        3,
-		Ready:            2,
-		UpToDate:         3,
-		State:            "Running",
+	replicassetUpToDateWithPauseCondition := replicassetUpToDate.DeepCopy()
+	{
+		replicassetUpToDateWithPauseCondition.Status.Conditions = []datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCondition{
+			{
+				Type:               datadoghqv1alpha1.ConditionTypeCanaryPaused,
+				Status:             corev1.ConditionTrue,
+				LastTransitionTime: metav1.NewTime(now),
+				LastUpdateTime:     metav1.NewTime(now),
+				Reason:             "CrashLoopBackOff",
+			},
+		}
 	}
+
+	daemonsetWithStatus := daemonset.DeepCopy()
+	{
+		daemonsetWithStatus.ResourceVersion = "1"
+		daemonsetWithStatus.Status = datadoghqv1alpha1.ExtendedDaemonSetStatus{
+			ActiveReplicaSet: "current",
+			Desired:          3,
+			Current:          3,
+			Available:        3,
+			Ready:            2,
+			UpToDate:         3,
+			State:            "Running",
+		}
+	}
+
 	intString1 := intstr.FromInt(1)
 	daemonsetWithCanaryWithStatus := daemonsetWithStatus.DeepCopy()
 	{
@@ -602,6 +619,7 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 			Nodes:      []string{"node1"},
 			ReplicaSet: "foo-1",
 		}
+		daemonsetWithCanaryWithStatus.ResourceVersion = "1"
 	}
 
 	daemonsetWithCanaryPaused := test.NewExtendedDaemonSet(
@@ -633,20 +651,91 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 			},
 		},
 	)
-
-	daemonsetWithCanaryFailedOldStatus := daemonsetWithCanaryWithStatus.DeepCopy()
+	daemonsetWithCanaryPausedWanted := daemonsetWithCanaryPaused.DeepCopy()
 	{
-		daemonsetWithCanaryFailedOldStatus.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey] = "true"
-		daemonsetWithCanaryFailedOldStatus.Status.Canary = &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{
+		daemonsetWithCanaryPausedWanted.ResourceVersion = "1"
+		daemonsetWithCanaryPausedWanted.Status.Conditions = []datadoghqv1alpha1.ExtendedDaemonSetCondition{
+			{
+				Type:               datadoghqv1alpha1.ConditionTypeEDSCanaryPaused,
+				Status:             corev1.ConditionTrue,
+				LastTransitionTime: metav1.NewTime(now),
+				LastUpdateTime:     metav1.NewTime(now),
+				Reason:             "CrashLoopBackOff",
+				Message:            "canary paused with ers: foo-1",
+			},
+		}
+	}
+
+	daemonsetWithCanaryPausedWithoutAnnotations := daemonsetWithCanaryPaused.DeepCopy()
+	{
+		daemonsetWithCanaryPausedWithoutAnnotations.Annotations = make(map[string]string)
+	}
+	daemonsetWithCanaryPausedWithoutAnnotationsWanted := daemonsetWithCanaryPausedWanted.DeepCopy()
+	{
+		daemonsetWithCanaryPausedWithoutAnnotationsWanted.Annotations = make(map[string]string)
+	}
+
+	daemonsetWithCanaryFailedOldWithoutAnnotationsStatus := daemonsetWithCanaryWithStatus.DeepCopy()
+	{
+		daemonsetWithCanaryFailedOldWithoutAnnotationsStatus.Status.Canary = &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{
 			Nodes:      []string{"node1"},
 			ReplicaSet: "foo-1",
 		}
+		daemonsetWithCanaryFailedOldWithoutAnnotationsStatus.Status.Conditions = []datadoghqv1alpha1.ExtendedDaemonSetCondition{
+			{
+				Type:               datadoghqv1alpha1.ConditionTypeEDSCanaryPaused,
+				Status:             corev1.ConditionTrue,
+				LastTransitionTime: metav1.NewTime(now),
+				LastUpdateTime:     metav1.NewTime(now),
+				Reason:             "CrashLoopBackOff",
+				Message:            "canary paused with ers: foo-1",
+			},
+		}
 	}
-	daemonsetWithCanaryFailedNewStatus := daemonsetWithCanaryFailedOldStatus.DeepCopy()
+	daemonsetWithCanaryFailedOldStatus := daemonsetWithCanaryFailedOldWithoutAnnotationsStatus.DeepCopy()
 	{
-		daemonsetWithCanaryFailedNewStatus.ResourceVersion = "2"
-		daemonsetWithCanaryFailedNewStatus.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryFailed
-		daemonsetWithCanaryFailedNewStatus.Status.Canary = nil
+		daemonsetWithCanaryFailedOldStatus.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey] = "true"
+	}
+
+	daemonsetWithCanaryFailedWithoutAnnotationsWanted := daemonsetWithCanaryFailedOldStatus.DeepCopy()
+	{
+		delete(daemonsetWithCanaryFailedWithoutAnnotationsWanted.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey)
+		delete(daemonsetWithCanaryFailedWithoutAnnotationsWanted.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedReasonAnnotationKey)
+		daemonsetWithCanaryFailedWithoutAnnotationsWanted.ResourceVersion = "2"
+		daemonsetWithCanaryFailedWithoutAnnotationsWanted.Status.Canary = nil
+		daemonsetWithCanaryFailedWithoutAnnotationsWanted.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryFailed
+		daemonsetWithCanaryFailedWithoutAnnotationsWanted.Status.Conditions = []datadoghqv1alpha1.ExtendedDaemonSetCondition{
+			{
+				Type:               datadoghqv1alpha1.ConditionTypeEDSCanaryPaused,
+				Status:             corev1.ConditionFalse,
+				LastTransitionTime: metav1.NewTime(now),
+				LastUpdateTime:     metav1.NewTime(now),
+				Reason:             "CrashLoopBackOff",
+				Message:            "canary paused with ers: foo-1",
+			},
+			{
+				Type:               datadoghqv1alpha1.ConditionTypeEDSCanaryFailed,
+				Status:             corev1.ConditionTrue,
+				LastTransitionTime: metav1.NewTime(now),
+				LastUpdateTime:     metav1.NewTime(now),
+				Reason:             "CanaryFailed",
+				Message:            "canary failed with ers: foo-1",
+			},
+		}
+
+	}
+
+	replicassetUpToDateWithFailedCondition := replicassetUpToDate.DeepCopy()
+	{
+		replicassetUpToDateWithFailedCondition.Status.Conditions = []datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCondition{
+			{
+				Type:               datadoghqv1alpha1.ConditionTypeCanaryFailed,
+				Status:             corev1.ConditionTrue,
+				LastTransitionTime: metav1.NewTime(now),
+				LastUpdateTime:     metav1.NewTime(now),
+				Reason:             "CrashLoopBackOff",
+			},
+		}
 	}
 
 	type fields struct {
@@ -661,6 +750,7 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 		podsCounter podsCounterType
 	}
 	tests := []struct {
+		now        time.Time
 		name       string
 		fields     fields
 		args       args
@@ -669,6 +759,7 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 		wantErr    bool
 	}{
 		{
+			now:  now,
 			name: "no replicaset == no update",
 			fields: fields{
 				client: fake.NewFakeClient(daemonset),
@@ -685,6 +776,7 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 			wantErr:    false,
 		},
 		{
+			now:  now,
 			name: "current == upToDate; status empty => update",
 			fields: fields{
 				client: fake.NewFakeClient(daemonset, replicassetCurrent, replicassetUpToDate),
@@ -705,6 +797,7 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 			wantErr:    false,
 		},
 		{
+			now:  now,
 			name: "current != upToDate; canary active => update",
 			fields: fields{
 				client: fake.NewFakeClient(daemonset, replicassetCurrent, replicassetUpToDate),
@@ -725,6 +818,7 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 			wantErr:    false,
 		},
 		{
+			now:  now,
 			name: "current != upToDate; canary paused => update",
 			fields: fields{
 				client: fake.NewFakeClient(daemonset, replicassetCurrent, replicassetUpToDate),
@@ -740,11 +834,33 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 					Ready:   2,
 				},
 			},
-			want:       daemonsetWithCanaryPaused,
+			want:       daemonsetWithCanaryPausedWanted,
 			wantResult: reconcile.Result{Requeue: false},
 			wantErr:    false,
 		},
 		{
+			now:  now,
+			name: "current != upToDate; ers-condition-pause, canary paused => update",
+			fields: fields{
+				client: fake.NewFakeClient(daemonset, replicassetCurrent, replicassetUpToDate),
+				scheme: s,
+			},
+			args: args{
+				logger:    log,
+				daemonset: daemonsetWithCanaryPausedWithoutAnnotations,
+				current:   replicassetCurrent,
+				upToDate:  replicassetUpToDateWithPauseCondition,
+				podsCounter: podsCounterType{
+					Current: 3,
+					Ready:   2,
+				},
+			},
+			want:       daemonsetWithCanaryPausedWithoutAnnotationsWanted,
+			wantResult: reconcile.Result{Requeue: false},
+			wantErr:    false,
+		},
+		{
+			now:  now,
 			name: "canary failed => update",
 			fields: fields{
 				client: fake.NewFakeClient(daemonsetWithCanaryFailedOldStatus, replicassetCurrent, replicassetUpToDate),
@@ -760,7 +876,28 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 					Ready:   2,
 				},
 			},
-			want:       daemonsetWithCanaryFailedNewStatus,
+			want:       daemonsetWithCanaryFailedWithoutAnnotationsWanted,
+			wantResult: reconcile.Result{Requeue: false},
+			wantErr:    false,
+		},
+		{
+			now:  now,
+			name: "canary failed, ers-condition-failed => update",
+			fields: fields{
+				client: fake.NewFakeClient(daemonsetWithCanaryFailedOldStatus, replicassetCurrent, replicassetUpToDate),
+				scheme: s,
+			},
+			args: args{
+				logger:    log,
+				daemonset: daemonsetWithCanaryFailedOldWithoutAnnotationsStatus,
+				current:   replicassetCurrent,
+				upToDate:  replicassetUpToDateWithFailedCondition,
+				podsCounter: podsCounterType{
+					Current: 3,
+					Ready:   2,
+				},
+			},
+			want:       daemonsetWithCanaryFailedWithoutAnnotationsWanted,
 			wantResult: reconcile.Result{Requeue: false},
 			wantErr:    false,
 		},
@@ -772,7 +909,7 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 				scheme:   tt.fields.scheme,
 				recorder: eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "TestReconciler_cleanupReplicaSet"}),
 			}
-			got, got1, err := r.updateInstanceWithCurrentRS(tt.args.logger, tt.args.daemonset, tt.args.current, tt.args.upToDate, tt.args.podsCounter)
+			got, got1, err := r.updateInstanceWithCurrentRS(tt.args.logger, tt.now, tt.args.daemonset, tt.args.current, tt.args.upToDate, tt.args.podsCounter)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ReconcileExtendedDaemonSet.updateInstanceWithCurrentRS() error = %v, wantErr %v", err, tt.wantErr)
 				return

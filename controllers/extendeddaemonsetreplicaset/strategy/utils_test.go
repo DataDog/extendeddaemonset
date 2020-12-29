@@ -19,6 +19,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
 func Test_compareWithExtendedDaemonsetSettingOverwrite(t *testing.T) {
@@ -198,6 +199,7 @@ func Test_failCanaryDeployment(t *testing.T) {
 }
 
 func Test_addPodLabel(t *testing.T) {
+	testLogger := logf.ZapLogger(true)
 	key := "key1"
 	val := "val1"
 	podNoLabel := commontest.NewPod("foo", "pod1", "node1", nil)
@@ -258,7 +260,8 @@ func Test_addPodLabel(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := addPodLabel(tt.args.c, tt.args.pod, tt.args.k, tt.args.v); (err != nil) != tt.wantErr {
+			logger := testLogger.WithName(tt.name)
+			if err := addPodLabel(logger, tt.args.c, tt.args.pod, tt.args.k, tt.args.v); (err != nil) != tt.wantErr {
 				t.Errorf("addPodLabel() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if tt.validationFunc != nil {
@@ -269,6 +272,7 @@ func Test_addPodLabel(t *testing.T) {
 }
 
 func Test_deletePodLabel(t *testing.T) {
+	testLogger := logf.ZapLogger(true)
 	key := "key1"
 	val := "val1"
 	podNoLabel := commontest.NewPod("foo", "pod1", "node1", nil)
@@ -323,7 +327,8 @@ func Test_deletePodLabel(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := deletePodLabel(tt.args.c, tt.args.pod, tt.args.k); (err != nil) != tt.wantErr {
+			logger := testLogger.WithName(tt.name)
+			if err := deletePodLabel(logger, tt.args.c, tt.args.pod, tt.args.k); (err != nil) != tt.wantErr {
 				t.Errorf("deletePodLabel() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if tt.validationFunc != nil {

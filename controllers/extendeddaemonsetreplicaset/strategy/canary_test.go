@@ -321,6 +321,7 @@ func TestManageCanaryStatus_HighRestartsLeadingToPause(t *testing.T) {
 	now := time.Now()
 	restartedAt := now.Add(-time.Minute)
 	test := canaryStatusTest{
+		now: now,
 		params: &Parameters{
 			EDSName: "foo",
 			Strategy: &v1alpha1.ExtendedDaemonSetSpecStrategy{
@@ -359,6 +360,14 @@ func TestManageCanaryStatus_HighRestartsLeadingToPause(t *testing.T) {
 				Available: 0,
 				Conditions: []v1alpha1.ExtendedDaemonSetReplicaSetCondition{
 					{
+						Type:               v1alpha1.ConditionTypeCanaryPaused,
+						Status:             v1.ConditionTrue,
+						LastTransitionTime: metav1.NewTime(now),
+						LastUpdateTime:     metav1.NewTime(now),
+						Reason:             "CrashLoopBackOff",
+						Message:            "",
+					},
+					{
 						Type:               v1alpha1.ConditionTypePodRestarting,
 						Status:             v1.ConditionTrue,
 						LastTransitionTime: metav1.NewTime(restartedAt),
@@ -379,6 +388,7 @@ func TestManageCanaryStatus_HighRestartsLeadingToFail(t *testing.T) {
 	now := time.Now()
 	restartedAt := now.Add(-time.Minute)
 	test := canaryStatusTest{
+		now: now,
 		params: &Parameters{
 			EDSName: "foo",
 			Strategy: &v1alpha1.ExtendedDaemonSetSpecStrategy{
@@ -416,6 +426,14 @@ func TestManageCanaryStatus_HighRestartsLeadingToFail(t *testing.T) {
 				Ready:     0,
 				Available: 0,
 				Conditions: []v1alpha1.ExtendedDaemonSetReplicaSetCondition{
+					{
+						Type:               v1alpha1.ConditionTypeCanaryFailed,
+						Status:             v1.ConditionTrue,
+						LastTransitionTime: metav1.NewTime(now),
+						LastUpdateTime:     metav1.NewTime(now),
+						Reason:             "CrashLoopBackOff",
+						Message:            "",
+					},
 					{
 						Type:               v1alpha1.ConditionTypePodRestarting,
 						Status:             v1.ConditionTrue,
@@ -546,10 +564,18 @@ func TestManageCanaryStatus_ImagePullErrorLeadingToPause(t *testing.T) {
 				Available: 0,
 				Conditions: []v1alpha1.ExtendedDaemonSetReplicaSetCondition{
 					{
+						Type:               v1alpha1.ConditionTypeCanaryPaused,
+						Status:             v1.ConditionTrue,
+						LastTransitionTime: metav1.NewTime(now),
+						LastUpdateTime:     metav1.NewTime(now),
+						Reason:             "ImagePullBackOff",
+					},
+					{
 						Type:               v1alpha1.ConditionTypePodCannotStart,
 						Status:             v1.ConditionTrue,
 						LastTransitionTime: metav1.NewTime(now),
 						LastUpdateTime:     metav1.NewTime(now),
+						Reason:             "ImagePullBackOff",
 						Message:            "Pod foo-a cannot start with reason: ImagePullBackOff",
 					},
 				},

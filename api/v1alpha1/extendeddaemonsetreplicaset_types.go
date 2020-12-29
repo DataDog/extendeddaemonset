@@ -96,6 +96,10 @@ const (
 	ConditionTypePodCannotStart ExtendedDaemonSetReplicaSetConditionType = "PodCannotStart"
 	// ConditionTypeLastFullSync last time the ExtendedDaemonSetReplicaSet sync when to the end of the reconcile function
 	ConditionTypeLastFullSync ExtendedDaemonSetReplicaSetConditionType = "LastFullSync"
+	// ConditionTypeCanaryPaused ExtendedDaemonSetReplicaSet is in canary mode
+	ConditionTypeCanaryPaused ExtendedDaemonSetReplicaSetConditionType = "Canary-Paused"
+	// ConditionTypeCanaryFailed ExtendedDaemonSetReplicaSet is in canary mode
+	ConditionTypeCanaryFailed ExtendedDaemonSetReplicaSetConditionType = "Canary-Failed"
 )
 
 // ExtendedDaemonSetReplicaSet is the Schema for the extendeddaemonsetreplicasets API

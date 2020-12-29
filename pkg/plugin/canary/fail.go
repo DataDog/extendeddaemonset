@@ -173,8 +173,8 @@ func (o *failOptions) run() error {
 		}
 	}
 	newEds.Annotations[v1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey] = fmt.Sprintf("%v", o.failStatus)
-
-	if err = o.client.Update(context.TODO(), newEds); err != nil {
+	patch := client.MergeFrom(eds)
+	if err = o.client.Patch(context.TODO(), newEds, patch); err != nil {
 		return fmt.Errorf("unable to fail or reset ExtendedDaemonset deployment, err: %v", err)
 	}
 	action := "set to failed"

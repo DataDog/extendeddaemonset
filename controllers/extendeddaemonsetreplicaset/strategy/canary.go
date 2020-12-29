@@ -26,24 +26,6 @@ func ManageCanaryDeployment(client client.Client, daemonset *v1alpha1.ExtendedDa
 	// Manage canary status
 	result := manageCanaryStatus(daemonset.GetAnnotations(), params, time.Now())
 
-	if result.IsFailed {
-		err := failCanaryDeployment(client, daemonset, result.FailedReason)
-		if err != nil {
-			params.Logger.Error(err, "Failed to set canary deployment to failed")
-			result.Result = requeuePromptly()
-		} else {
-			params.Logger.V(1).Info("Canary deployment is now failed")
-		}
-	} else if result.IsPaused {
-		err := pauseCanaryDeployment(client, daemonset, result.PausedReason)
-		if err != nil {
-			params.Logger.Error(err, "Failed to pause canary deployment")
-			result.Result = requeuePromptly()
-		} else {
-			params.Logger.V(1).Info("Canary deployment is now paused")
-		}
-	}
-
 	err := ensureCanaryPodLabels(client, params)
 	if err != nil {
 		result.Result = requeuePromptly()
@@ -67,8 +49,8 @@ func manageCanaryStatus(annotations map[string]string, params *Parameters, now t
 	result.NewStatus = params.NewStatus.DeepCopy()
 	result.NewStatus.Status = string(ReplicaSetStatusCanary)
 
-	result.IsFailed = eds.IsCanaryDeploymentFailed(annotations)
-	result.IsPaused, _ = eds.IsCanaryDeploymentPaused(annotations)
+	result.IsFailed = eds.IsCanaryDeploymentFailed(annotations, params.Replicaset)
+	result.IsPaused, _ = eds.IsCanaryDeploymentPaused(annotations, params.Replicaset)
 
 	var (
 		metaNow = metav1.NewTime(now)
@@ -132,7 +114,7 @@ func manageCanaryStatus(annotations map[string]string, params *Parameters, now t
 		needRequeue = true
 	}
 
-	params.Logger.V(1).Info("NewStatus", "Desired", desiredPods, "Ready", readyPods, "Available", availablePods)
+	params.Logger.V(1).Info("NewStatus", "Desired", desiredPods, "Ready", readyPods, "Available", availablePods, "Current", currentPods)
 	params.Logger.V(1).Info(
 		"Result",
 		"PodsToCreate", len(result.PodsToCreate),
@@ -164,6 +146,7 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 		restartingPodStatus string
 
 		cannotStart          bool
+		cannotStartPodReason string
 		cannotStartPodStatus string
 	)
 
@@ -183,6 +166,7 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 		cannotStart, cannotStartReason = podUtils.CannotStart(pod)
 		if cannotStart {
 			cannotStartPodStatus = fmt.Sprintf("Pod %s cannot start with reason: %s", pod.ObjectMeta.Name, string(cannotStartReason))
+			cannotStartPodReason = string(cannotStartReason)
 		} else if autoPauseEnabled && podUtils.PendingCreate(pod) && params.Strategy.Canary.AutoPause.MaxSlowStartDuration != nil {
 			if time.Now().After(pod.Status.StartTime.Time.Add(params.Strategy.Canary.AutoPause.MaxSlowStartDuration.Duration)) {
 				params.Logger.Info(
@@ -193,6 +177,7 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 				cannotStart = true
 				cannotStartReason = v1alpha1.ExtendedDaemonSetStatusSlowStartTimeoutExceeded
 				cannotStartPodStatus = fmt.Sprintf("Pod %s cannot start with reason: %s", pod.ObjectMeta.Name, cannotStartReason)
+				cannotStartPodReason = string(cannotStartReason)
 			}
 		}
 
@@ -209,10 +194,7 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 				"MaxRestarts", autoFailMaxRestarts,
 				"Reason", highRestartReason,
 			)
-			continue
-		}
-
-		if !result.IsPaused && autoPauseEnabled {
+		} else if !result.IsPaused && autoPauseEnabled {
 			// Handle cases related to failure to start states
 			if cannotStart {
 				result.IsPaused = true
@@ -235,6 +217,10 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 		}
 	}
 
+	// Update Failed and Paused condition
+	conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(result.NewStatus, metav1.NewTime(now), v1alpha1.ConditionTypeCanaryFailed, conditions.BoolToCondition(result.IsFailed), string(result.FailedReason), "", false, true)
+	conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(result.NewStatus, metav1.NewTime(now), v1alpha1.ConditionTypeCanaryPaused, conditions.BoolToCondition(result.IsPaused), string(result.PausedReason), "", false, true)
+
 	var lastRestartTime time.Time
 	restartCondition := conditions.GetExtendedDaemonSetReplicaSetStatusCondition(params.NewStatus, v1alpha1.ConditionTypePodRestarting)
 	if restartCondition != nil {
@@ -248,6 +234,7 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 			metav1.NewTime(newRestartTime),
 			v1alpha1.ConditionTypePodRestarting,
 			v1.ConditionTrue,
+			cannotStartPodReason,
 			restartingPodStatus,
 			false,
 			true,
@@ -260,7 +247,8 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 		conditionStatus = v1.ConditionTrue
 		params.Logger.Info(
 			"UpdateCannotStartCondition",
-			"Reason", cannotStartPodStatus,
+			"Reason", cannotStartPodReason,
+			"State", cannotStartPodStatus,
 		)
 	}
 
@@ -269,6 +257,7 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 		metav1.NewTime(now),
 		v1alpha1.ConditionTypePodCannotStart,
 		conditionStatus,
+		cannotStartPodReason,
 		cannotStartPodStatus,
 		false,
 		true,
@@ -294,17 +283,25 @@ func ensureCanaryPodLabels(client client.Client, params *Parameters) error {
 	for _, nodeName := range params.CanaryNodes {
 		node := params.NodeByName[nodeName]
 		if pod, ok := params.PodByNodeName[node]; ok && pod != nil {
-			params.Logger.V(1).Info("Add Canary label", "podName", pod.Name)
-			err := addPodLabel(
-				client,
-				pod,
-				v1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelKey,
-				v1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelValue,
-			)
+			if pod.Labels == nil {
+				continue
+			}
 
-			if err != nil {
-				params.Logger.Error(err, fmt.Sprintf("Couldn't add the canary label for pod '%s/%s', will retry later", pod.GetNamespace(), pod.GetName()))
-				return err
+			// Check if that ERS is the Pod's parent, to not label a pod
+			// from the previous ERS (if the previous Pod is not yet deleted).
+			if pod.Labels[v1alpha1.ExtendedDaemonSetReplicaSetNameLabelKey] == params.Replicaset.GetName() {
+				params.Logger.V(1).Info("Add Canary label", "podName", pod.Name)
+				err := addPodLabel(params.Logger,
+					client,
+					pod,
+					v1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelKey,
+					v1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelValue,
+				)
+
+				if err != nil {
+					params.Logger.Error(err, fmt.Sprintf("Couldn't add the canary label for pod '%s/%s', will retry later", pod.GetNamespace(), pod.GetName()))
+					return err
+				}
 			}
 		}
 	}

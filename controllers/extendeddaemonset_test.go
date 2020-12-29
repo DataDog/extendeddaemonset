@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/google/go-cmp/cmp"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -34,107 +33,10 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 	const timeout = time.Second * 30
 	const interval = time.Second * 2
 
-	intString1 := intstr.FromInt(1)
 	intString10 := intstr.FromInt(10)
 	reconcileFrequency := &metav1.Duration{Duration: time.Millisecond * 100}
 	namespace := testConfig.namespace
 	ctx := context.Background()
-
-	Context("Initial deployment", func() {
-		name := "eds-foo"
-		key := types.NamespacedName{
-			Namespace: namespace,
-			Name:      name,
-		}
-
-		It("Should handle EDS ", func() {
-			edsOptions := &testutils.NewExtendedDaemonsetOptions{
-				CanaryStrategy: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
-					Duration: &metav1.Duration{Duration: 1 * time.Minute},
-					Replicas: &intString1,
-				},
-				RollingUpdate: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate{
-					MaxUnavailable:         &intString10,
-					MaxParallelPodCreation: datadoghqv1alpha1.NewInt32(20),
-				},
-				ReconcileFrequency: reconcileFrequency,
-			}
-			eds := testutils.NewExtendedDaemonset(namespace, name, "k8s.gcr.io/pause:latest", edsOptions)
-			Expect(k8sClient.Create(ctx, eds)).Should(Succeed())
-
-			eds = &datadoghqv1alpha1.ExtendedDaemonSet{}
-			Eventually(withEDS(key, eds, func() bool {
-				return eds.Status.ActiveReplicaSet != ""
-			}), timeout, interval).Should(BeTrue())
-
-			ers := &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{}
-			ersKey := types.NamespacedName{
-				Namespace: namespace,
-				Name:      eds.Status.ActiveReplicaSet,
-			}
-			Eventually(withERS(ersKey, ers, func() bool {
-				// Info: we use ers.Status.Desired and ers.Status.Current because the pod status is not updated with the test FWK
-				// and so available and ready will never be updated
-				fmt.Fprintf(GinkgoWriter, "ERS status:\n%s\n", spew.Sdump(ers.Status))
-				return ers.Status.Status == "active" && int(ers.Status.Desired) == int(ers.Status.Current)
-			}), timeout, interval).Should(BeTrue())
-		})
-
-		It("Should do canary deployment", func() {
-			eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
-			Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
-			fmt.Fprintf(GinkgoWriter, "EDS status:\n%s\n", spew.Sdump(eds.Status))
-
-			eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("k8s.gcr.io/pause:3.1")
-			Expect(k8sClient.Update(ctx, eds)).Should(Succeed())
-
-			Eventually(withEDS(key, eds, func() bool {
-				return eds.Status.Canary != nil && eds.Status.Canary.ReplicaSet != ""
-			}), timeout, interval).Should(BeTrue())
-		})
-
-		It("Should add canary labels", func() {
-			canaryPods := &corev1.PodList{}
-			listOptions := []client.ListOption{
-				client.InNamespace(namespace),
-				client.MatchingLabels{
-					datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelKey: datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelValue,
-				},
-			}
-			Eventually(withList(listOptions, canaryPods, "canary pods", func() bool {
-				fmt.Fprintf(GinkgoWriter, "canary pods nb: %d ", len(canaryPods.Items))
-				return len(canaryPods.Items) == 1
-			}), timeout, interval).Should(BeTrue())
-		})
-
-		It("Should remove canary labels", func() {
-			eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
-			Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
-			if eds.Annotations == nil {
-				eds.Annotations = make(map[string]string)
-			}
-
-			canaryReplicaSet := eds.Status.Canary.ReplicaSet
-			eds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryValidAnnotationKey] = canaryReplicaSet
-			Expect(k8sClient.Update(ctx, eds)).Should(Succeed())
-
-			Eventually(withEDS(key, eds, func() bool {
-				return eds.Status.ActiveReplicaSet == canaryReplicaSet
-			}), timeout, interval).Should(BeTrue())
-
-			canaryPods := &corev1.PodList{}
-			listOptions := []client.ListOption{
-				client.InNamespace(namespace),
-				client.MatchingLabels{
-					datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelKey: datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelValue,
-					datadoghqv1alpha1.ExtendedDaemonSetReplicaSetNameLabelKey:   eds.Status.ActiveReplicaSet,
-				},
-			}
-			Eventually(withList(listOptions, canaryPods, "canary pods", func() bool {
-				return len(canaryPods.Items) == 0
-			}), timeout, interval).Should(BeTrue())
-		})
-	})
 
 	Context("Using ExtendedDaemonsetSetting", func() {
 		name := "eds-setting"
@@ -184,7 +86,28 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 			eds = &datadoghqv1alpha1.ExtendedDaemonSet{}
 			Eventually(withEDS(key, eds, func() bool {
 				return eds.Status.ActiveReplicaSet != ""
-			}), timeout, interval).Should(BeTrue())
+			}), timeout, interval).Should(BeTrue(), func() string {
+				return fmt.Sprintf(
+					"ActiveReplicaSet should be set EDS: %#v",
+					eds.Status,
+				)
+			},
+			)
+
+			ers := &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{}
+			erskey := types.NamespacedName{
+				Namespace: namespace,
+				Name:      eds.Status.ActiveReplicaSet,
+			}
+			Eventually(withERS(erskey, ers, func() bool {
+				return ers.Status.Desired == ers.Status.Current
+			}), timeout*2, interval).Should(BeTrue(), func() string {
+				return fmt.Sprintf(
+					"ers.Status.Desired should be equal to ers.Status.Current, status: %#v",
+					ers.Status,
+				)
+			},
+			)
 
 			podList := &corev1.PodList{}
 			listOptions := []client.ListOption{

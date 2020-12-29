@@ -147,7 +147,7 @@ func ManageDeployment(client runtimeclient.Client, params *Parameters) (*Result,
 			result.Result.Requeue = true
 		} else {
 			for _, pod := range canaryPods.Items {
-				if err = deletePodLabel(client, &pod, datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelKey); err != nil {
+				if err = deletePodLabel(params.Logger, client, &pod, datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelKey); err != nil {
 					params.Logger.Error(err, fmt.Sprintf("Couldn't remove canary label from pod '%s/%s'", pod.GetNamespace(), pod.GetName()))
 					result.Result.Requeue = true
 				}

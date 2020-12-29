@@ -26,7 +26,7 @@ func NewExtendedDaemonSetReplicaSetCondition(conditionType datadoghqv1alpha1.Ext
 }
 
 // UpdateExtendedDaemonSetReplicaSetStatusCondition used to update a specific ExtendedDaemonSetReplicaSetConditionType
-func UpdateExtendedDaemonSetReplicaSetStatusCondition(status *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus, now metav1.Time, t datadoghqv1alpha1.ExtendedDaemonSetReplicaSetConditionType, conditionStatus corev1.ConditionStatus, desc string, writeFalseIfNotExist, supportLastUpdate bool) {
+func UpdateExtendedDaemonSetReplicaSetStatusCondition(status *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus, now metav1.Time, t datadoghqv1alpha1.ExtendedDaemonSetReplicaSetConditionType, conditionStatus corev1.ConditionStatus, reason, desc string, writeFalseIfNotExist, supportLastUpdate bool) {
 	idCondition := getIndexForConditionType(status, t)
 	if idCondition >= 0 {
 		if status.Conditions[idCondition].Status != conditionStatus {
@@ -37,19 +37,22 @@ func UpdateExtendedDaemonSetReplicaSetStatusCondition(status *datadoghqv1alpha1.
 		if supportLastUpdate {
 			status.Conditions[idCondition].LastUpdateTime = now
 		}
-		status.Conditions[idCondition].Message = desc
+		if conditionStatus == corev1.ConditionTrue {
+			status.Conditions[idCondition].Message = desc
+			status.Conditions[idCondition].Reason = reason
+		}
 	} else if conditionStatus == corev1.ConditionTrue || writeFalseIfNotExist {
 		// Only add if the condition is True
-		status.Conditions = append(status.Conditions, NewExtendedDaemonSetReplicaSetCondition(t, conditionStatus, now, "", desc, supportLastUpdate))
+		status.Conditions = append(status.Conditions, NewExtendedDaemonSetReplicaSetCondition(t, conditionStatus, now, reason, desc, supportLastUpdate))
 	}
 }
 
 // UpdateErrorCondition used to update the ExtendedDaemonSetReplicaSet status error condition
 func UpdateErrorCondition(status *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus, now metav1.Time, err error, desc string) {
 	if err != nil {
-		UpdateExtendedDaemonSetReplicaSetStatusCondition(status, now, datadoghqv1alpha1.ConditionTypeReconcileError, corev1.ConditionTrue, desc, false, true)
+		UpdateExtendedDaemonSetReplicaSetStatusCondition(status, now, datadoghqv1alpha1.ConditionTypeReconcileError, corev1.ConditionTrue, "", desc, false, true)
 	} else {
-		UpdateExtendedDaemonSetReplicaSetStatusCondition(status, now, datadoghqv1alpha1.ConditionTypeReconcileError, corev1.ConditionFalse, desc, false, true)
+		UpdateExtendedDaemonSetReplicaSetStatusCondition(status, now, datadoghqv1alpha1.ConditionTypeReconcileError, corev1.ConditionFalse, "", desc, false, true)
 	}
 }
 
@@ -75,4 +78,21 @@ func GetExtendedDaemonSetReplicaSetStatusCondition(status *datadoghqv1alpha1.Ext
 		return nil
 	}
 	return &status.Conditions[idCondition]
+}
+
+// IsConditionTrue check if a condition is True. It not set return False.
+func IsConditionTrue(status *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus, t datadoghqv1alpha1.ExtendedDaemonSetReplicaSetConditionType) bool {
+	cond := GetExtendedDaemonSetReplicaSetStatusCondition(status, t)
+	if cond != nil && cond.Status == corev1.ConditionTrue {
+		return true
+	}
+	return false
+}
+
+// BoolToCondition convert bool to corev1.ConditionStatus
+func BoolToCondition(value bool) corev1.ConditionStatus {
+	if value {
+		return corev1.ConditionTrue
+	}
+	return corev1.ConditionFalse
 }

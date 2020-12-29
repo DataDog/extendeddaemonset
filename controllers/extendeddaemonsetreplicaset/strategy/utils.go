@@ -16,7 +16,6 @@ import (
 
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	utilserrors "k8s.io/apimachinery/pkg/util/errors"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -59,9 +58,15 @@ func compareWithExtendedDaemonsetSettingOverwrite(pod *corev1.Pod, node *NodeIte
 			for _, container2 := range node.ExtendedDaemonsetSetting.Spec.Containers {
 				if container.Name == container2.Name {
 					for key, val := range container2.Resources.Limits {
+						if specCopy.Containers[id].Resources.Limits == nil {
+							specCopy.Containers[id].Resources.Limits = make(corev1.ResourceList)
+						}
 						specCopy.Containers[id].Resources.Limits[key] = val
 					}
 					for key, val := range container2.Resources.Requests {
+						if specCopy.Containers[id].Resources.Requests == nil {
+							specCopy.Containers[id].Resources.Requests = make(corev1.ResourceList)
+						}
 						specCopy.Containers[id].Resources.Requests[key] = val
 					}
 					break
@@ -91,7 +96,7 @@ func cleanupPods(client client.Client, logger logr.Logger, status *datadoghqv1al
 		conditionStatus = corev1.ConditionFalse
 	}
 	if len(pods) != 0 {
-		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(status, now, datadoghqv1alpha1.ConditionTypePodsCleanupDone, conditionStatus, "", false, false)
+		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(status, now, datadoghqv1alpha1.ConditionTypePodsCleanupDone, conditionStatus, "", "", false, false)
 	}
 	return utilserrors.NewAggregate(errs)
 }
@@ -178,6 +183,7 @@ func failCanaryDeployment(client client.Client, eds *datadoghqv1alpha1.ExtendedD
 	)
 }
 
+/*
 func refetchPod(c client.Client, pod *corev1.Pod) (*corev1.Pod, error) {
 	refetchedPod := &corev1.Pod{}
 	key := types.NamespacedName{
@@ -187,51 +193,58 @@ func refetchPod(c client.Client, pod *corev1.Pod) (*corev1.Pod, error) {
 
 	err := c.Get(context.TODO(), key, refetchedPod)
 	return refetchedPod, err
-}
+}*/
 
 // addPodLabel adds a given label to a pod, no-op if the pod is nil or if the label exists
-func addPodLabel(c client.Client, pod *corev1.Pod, k, v string) error {
+func addPodLabel(logger logr.Logger, c client.Client, pod *corev1.Pod, k, v string) error {
 	if pod == nil {
 		return nil
 	}
 
-	pod, err := refetchPod(c, pod)
-	if err != nil {
-		return err
-	}
+	//pod, err := refetchPod(c, pod)
+	//if err != nil {
+	//	return err
+	//}
 
 	if label, found := pod.GetLabels()[k]; found && label == v {
+		logger.V(1).Info("Canary labels already present", "pod.name", pod.Name)
 		// The label is there, nothing to do
 		return nil
 	}
-
+	newPod := pod.DeepCopy()
 	// A merge patch will preserve other fields modified at runtime.
-	patch := client.MergeFrom(pod.DeepCopy())
-	if pod.Labels == nil {
-		pod.Labels = make(map[string]string)
+	patch := client.MergeFrom(pod)
+	if newPod.Labels == nil {
+		newPod.Labels = make(map[string]string)
 	}
-	pod.Labels[k] = v
-	return c.Patch(context.TODO(), pod, patch)
+	newPod.Labels[k] = v
+	data, err := patch.Data(newPod)
+	logger.V(1).Info("Add canary label patch", "data", string(data), "err", err, "pod.name", pod.Name)
+	return c.Patch(context.TODO(), newPod, patch)
 }
 
 // deletePodLabel deletes a given pod label, no-op if the pod is nil or if the label doesn't exists
-func deletePodLabel(c client.Client, pod *corev1.Pod, k string) error {
+func deletePodLabel(logger logr.Logger, c client.Client, pod *corev1.Pod, k string) error {
 	if pod == nil {
 		return nil
 	}
 
-	pod, err := refetchPod(c, pod)
-	if err != nil {
-		return err
-	}
+	//pod, err := refetchPod(c, pod)
+	//if err != nil {
+	//	return err
+	//}
 
 	if _, found := pod.GetLabels()[k]; !found {
+		logger.V(1).Info("Canary labels not present", "pod.name", pod.Name)
 		// The label is not there, nothing to do
 		return nil
 	}
 
 	// A merge patch will preserve other fields modified at runtime.
-	patch := client.MergeFrom(pod.DeepCopy())
-	delete(pod.Labels, k)
-	return c.Patch(context.TODO(), pod, patch)
+	newPod := pod.DeepCopy()
+	patch := client.MergeFrom(pod)
+	delete(newPod.Labels, k)
+	data, err := patch.Data(newPod)
+	logger.V(1).Info("Delete canary label patch", "data", string(data), "err", err, "pod.name", pod.Name)
+	return c.Patch(context.TODO(), newPod, patch)
 }

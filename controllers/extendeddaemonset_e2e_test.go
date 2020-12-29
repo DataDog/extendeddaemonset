@@ -16,6 +16,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/types"
+
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	corev1 "k8s.io/api/core/v1"
@@ -25,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
+	edsconditions "github.com/DataDog/extendeddaemonset/controllers/extendeddaemonset/conditions"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/conditions"
 	"github.com/DataDog/extendeddaemonset/controllers/testutils"
 	// +kubebuilder:scaffold:imports
@@ -43,6 +45,7 @@ const (
 )
 
 var (
+	intString1  = intstr.FromInt(1)
 	intString2  = intstr.FromInt(2)
 	intString10 = intstr.FromInt(10)
 	namespace   = testConfig.namespace
@@ -68,7 +71,7 @@ func ginkgoLog(format string, a ...interface{}) {
 // These tests may take several minutes to run, check you go test timeout
 var _ = Describe("ExtendedDaemonSet e2e updates and recovery", func() {
 	Context("Initial deployment", func() {
-		name := "eds-foo"
+		name := "eds-fail"
 
 		key := types.NamespacedName{
 			Namespace: namespace,
@@ -116,7 +119,7 @@ var _ = Describe("ExtendedDaemonSet e2e updates and recovery", func() {
 
 			eds.Spec.Strategy.Canary = &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
 				Duration:           &metav1.Duration{Duration: 1 * time.Minute},
-				Replicas:           &intString2,
+				Replicas:           &intString1,
 				NoRestartsDuration: &metav1.Duration{Duration: 1 * time.Minute},
 				AutoPause: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoPause{
 					Enabled:     datadoghqv1alpha1.NewBool(true),
@@ -124,7 +127,7 @@ var _ = Describe("ExtendedDaemonSet e2e updates and recovery", func() {
 				},
 				AutoFail: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoFail{
 					Enabled:     datadoghqv1alpha1.NewBool(true),
-					MaxRestarts: datadoghqv1alpha1.NewInt32(2),
+					MaxRestarts: datadoghqv1alpha1.NewInt32(3),
 				},
 			}
 			eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("gcr.io/google-containers/alpine-with-bash:1.0")
@@ -146,32 +149,42 @@ var _ = Describe("ExtendedDaemonSet e2e updates and recovery", func() {
 					)
 				},
 			)
-
-			pauseValue := eds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]
-			Expect(pauseValue).Should(
-				Equal("true"),
-				"EDS canary should be marked paused",
-			)
-
-			pauseReason := eds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey]
-			Expect(pauseReason).Should(Or(Equal("StartError")))
+			Eventually(withEDS(key, eds, func() bool {
+				return eds.Status.Reason == "StartError"
+			}), timeout, interval).Should(BeTrue(), func() string {
+				return fmt.Sprintf(
+					"EDS should be in [%s] state reason but is currently in [%s]",
+					"StartError",
+					eds.Status.Reason,
+				)
+			})
 
 			Eventually(withEDS(key, eds, func() bool {
-				return eds.Status.State == datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryFailed
+				return eds.Status.State == datadoghqv1alpha1.ExtendedDaemonSetStatusStateRunning
 			}), longTimeout, interval).Should(
 				BeTrue(),
 				func() string {
 					return fmt.Sprintf(
 						"EDS should be in [%s] state but is currently in [%s]",
-						datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryFailed,
+						datadoghqv1alpha1.ExtendedDaemonSetStatusStateRunning,
 						eds.Status.State,
 					)
 				},
 			)
 
-			Expect(eds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey]).Should(
-				Equal("true"),
-				"EDS canary should be marked failed",
+			Eventually(withEDS(key, eds, func() bool {
+				if edsconditions.GetExtendedDaemonSetStatusCondition(&eds.Status, datadoghqv1alpha1.ConditionTypeEDSCanaryFailed) != nil {
+					return true
+				}
+				return false
+			}), longTimeout, interval).ShouldNot(
+				BeNil(),
+				func() string {
+					return fmt.Sprintf(
+						"EDS canary failure should be present in the EDS.Status.Conditions: %v",
+						eds.Status.Conditions,
+					)
+				},
 			)
 		})
 
@@ -194,6 +207,9 @@ var _ = Describe("ExtendedDaemonSet e2e updates and recovery", func() {
 			}), timeout, interval).Should(BeTrue())
 
 			canaryReplicaSet := eds.Status.Canary.ReplicaSet
+			if eds.Annotations == nil {
+				eds.Annotations = make(map[string]string)
+			}
 			eds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryValidAnnotationKey] = canaryReplicaSet
 			Eventually(withUpdate(eds, "EDS"),
 				timeout, interval).Should(BeTrue())
@@ -332,11 +348,10 @@ var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition", func() {
 
 		info("EDS status:\n%s\n", spew.Sdump(eds.Status))
 
-		pausedValue := eds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]
-		Expect(pausedValue).Should(Equal("true"), "EDS canary should be marked paused")
-
-		pausedReason := eds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey]
-
+		cond := edsconditions.GetExtendedDaemonSetStatusCondition(&eds.Status, datadoghqv1alpha1.ConditionTypeEDSCanaryPaused)
+		Expect(cond).ShouldNot(BeNil())
+		Expect(cond.Status).Should(Equal(corev1.ConditionTrue))
+		pausedReason := cond.Reason
 		var matchers []GomegaMatcher
 		for _, reason := range expectedReasons {
 			matchers = append(matchers, Equal(reason))
@@ -435,6 +450,125 @@ var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition", func() {
 			}, "SlowStartTimeoutExceeded")
 		})
 	})
+})
+
+// These tests may take several minutes to run, check you go test timeout
+var _ = Describe("ExtendedDaemonSet e2e successful canary deployment update", func() {
+	Context("Initial deployment", func() {
+		name := "eds-foo"
+
+		key := types.NamespacedName{
+			Namespace: namespace,
+			Name:      name,
+		}
+
+		nodeList := &corev1.NodeList{}
+
+		It("Should deploy EDS", func() {
+			Expect(k8sClient.List(ctx, nodeList)).Should(Succeed())
+
+			edsOptions := &testutils.NewExtendedDaemonsetOptions{
+				CanaryStrategy: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
+					Duration: &metav1.Duration{Duration: 1 * time.Minute},
+					Replicas: &intString1,
+				},
+				RollingUpdate: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate{
+					MaxUnavailable:         &intString10,
+					MaxParallelPodCreation: datadoghqv1alpha1.NewInt32(20),
+				},
+			}
+
+			eds := testutils.NewExtendedDaemonset(namespace, name, "k8s.gcr.io/pause:latest", edsOptions)
+			Expect(k8sClient.Create(ctx, eds)).Should(Succeed())
+
+			eds = &datadoghqv1alpha1.ExtendedDaemonSet{}
+			Eventually(withEDS(key, eds, func() bool {
+				return eds.Status.ActiveReplicaSet != ""
+			}), timeout, interval).Should(BeTrue())
+
+			ers := &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{}
+			ersKey := types.NamespacedName{
+				Namespace: namespace,
+				Name:      eds.Status.ActiveReplicaSet,
+			}
+			Eventually(withERS(ersKey, ers, func() bool {
+				return ers.Status.Status == "active" && int(ers.Status.Available) == len(nodeList.Items)
+			}), timeout, interval).Should(BeTrue())
+		})
+
+		It("Should do canary deployment", func() {
+			eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
+			Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
+			fmt.Fprintf(GinkgoWriter, "EDS status:\n%s\n", spew.Sdump(eds.Status))
+
+			eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("k8s.gcr.io/pause:3.1")
+			Expect(k8sClient.Update(ctx, eds)).Should(Succeed())
+
+			Eventually(withEDS(key, eds, func() bool {
+				return eds.Status.Canary != nil && eds.Status.Canary.ReplicaSet != ""
+			}), timeout, interval).Should(BeTrue())
+		})
+
+		It("Should add canary labels", func() {
+			canaryPods := &corev1.PodList{}
+			listOptions := []client.ListOption{
+				client.InNamespace(namespace),
+				client.MatchingLabels{
+					datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelKey: datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelValue,
+				},
+			}
+			Eventually(withList(listOptions, canaryPods, "canary pods", func() bool {
+				fmt.Fprintf(GinkgoWriter, "canary pods nb: %d ", len(canaryPods.Items))
+				return len(canaryPods.Items) == 1
+			}), timeout, interval).Should(BeTrue())
+		})
+
+		It("Should remove canary labels", func() {
+			eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
+			Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
+			if eds.Annotations == nil {
+				eds.Annotations = make(map[string]string)
+			}
+
+			canaryReplicaSet := eds.Status.Canary.ReplicaSet
+			eds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryValidAnnotationKey] = canaryReplicaSet
+			Expect(k8sClient.Update(ctx, eds)).Should(Succeed())
+
+			Eventually(withEDS(key, eds, func() bool {
+				return eds.Status.ActiveReplicaSet == canaryReplicaSet
+			}), timeout, interval).Should(BeTrue())
+
+			canaryPods := &corev1.PodList{}
+			listOptions := []client.ListOption{
+				client.InNamespace(namespace),
+				client.MatchingLabels{
+					datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelKey: datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelValue,
+					datadoghqv1alpha1.ExtendedDaemonSetReplicaSetNameLabelKey:   eds.Status.ActiveReplicaSet,
+				},
+			}
+			Eventually(withList(listOptions, canaryPods, "canary pods", func() bool {
+				return len(canaryPods.Items) == 0
+			}), timeout, interval).Should(BeTrue())
+		})
+
+		It("Should delete EDS", func() {
+			eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
+			Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
+			Expect(k8sClient.Delete(ctx, eds)).Should(Succeed())
+
+			pods := &corev1.PodList{}
+			listOptions := []client.ListOption{
+				client.InNamespace(namespace),
+				client.MatchingLabels{
+					datadoghqv1alpha1.ExtendedDaemonSetNameLabelKey: name,
+				},
+			}
+			Eventually(withList(listOptions, pods, "EDS pods", func() bool {
+				return len(pods.Items) == 0
+			}), timeout, interval).Should(BeTrue(), "All EDS pods should be destroyed")
+		})
+	})
+
 })
 
 func withUpdate(obj runtime.Object, desc string) condFn {

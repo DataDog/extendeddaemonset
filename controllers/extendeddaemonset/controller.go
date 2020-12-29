@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
+	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonset/conditions"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/scheduler"
 	"github.com/DataDog/extendeddaemonset/pkg/controller/utils"
 	"github.com/DataDog/extendeddaemonset/pkg/controller/utils/comparison"
@@ -89,7 +90,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		defaultedInstance := datadoghqv1alpha1.DefaultExtendedDaemonSet(instance)
 		err = r.client.Update(context.TODO(), defaultedInstance)
 		if err != nil {
-			reqLogger.Error(err, "Failed to update ExtendedDaemonSet")
 			return reconcile.Result{}, err
 		}
 		// ExtendedDaemonSet is now defaulted return and requeue
@@ -145,7 +145,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		return reconcile.Result{RequeueAfter: requeueAfter}, nil
 	}
 
-	_, result, err := r.updateInstanceWithCurrentRS(reqLogger, instance, currentRS, upToDateRS, podsCounter)
+	_, result, err := r.updateInstanceWithCurrentRS(reqLogger, now, instance, currentRS, upToDateRS, podsCounter)
 	result = utils.MergeResult(result, reconcile.Result{RequeueAfter: requeueAfter})
 	return result, err
 }
@@ -194,7 +194,7 @@ func selectCurrentReplicaSet(daemonset *datadoghqv1alpha1.ExtendedDaemonSet, act
 	var isEnded bool
 	dsAnnotations := daemonset.GetAnnotations()
 	isEnded, requeueAfter = IsCanaryDeploymentEnded(daemonset.Spec.Strategy.Canary, upToDateRS, now)
-	isPaused, _ := IsCanaryDeploymentPaused(dsAnnotations)
+	isPaused, _ := IsCanaryDeploymentPaused(dsAnnotations, upToDateRS)
 	isValid := IsCanaryDeploymentValid(dsAnnotations, upToDateRS.GetName())
 	if isValid || (!isPaused && isEnded) {
 		return upToDateRS, requeueAfter
@@ -203,7 +203,7 @@ func selectCurrentReplicaSet(daemonset *datadoghqv1alpha1.ExtendedDaemonSet, act
 	return activeRS, requeueAfter
 }
 
-func (r *Reconciler) updateInstanceWithCurrentRS(logger logr.Logger, daemonset *datadoghqv1alpha1.ExtendedDaemonSet, current, upToDate *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, podsCounter podsCounterType) (*datadoghqv1alpha1.ExtendedDaemonSet, reconcile.Result, error) {
+func (r *Reconciler) updateInstanceWithCurrentRS(logger logr.Logger, now time.Time, daemonset *datadoghqv1alpha1.ExtendedDaemonSet, current, upToDate *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, podsCounter podsCounterType) (*datadoghqv1alpha1.ExtendedDaemonSet, reconcile.Result, error) {
 	newDaemonset := daemonset.DeepCopy()
 	newDaemonset.Status.Current = podsCounter.Current
 	newDaemonset.Status.Ready = podsCounter.Ready
@@ -215,23 +215,47 @@ func (r *Reconciler) updateInstanceWithCurrentRS(logger logr.Logger, daemonset *
 		newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateRunning
 		newDaemonset.Status.IgnoredUnresponsiveNodes = current.Status.IgnoredUnresponsiveNodes
 	}
+	metaNow := metav1.NewTime(now)
 
 	var updateDaemonsetSpec bool
 	// If the deployment is in Canary phase, then update status (and spec as needed)
 	if daemonset.Spec.Strategy.Canary != nil {
+
+		isCanaryPaused, reason := IsCanaryDeploymentPaused(daemonset.GetAnnotations(), upToDate)
+		isCanaryFailed := IsCanaryDeploymentFailed(daemonset.GetAnnotations(), upToDate)
+		if isCanaryFailed {
+			msg := fmt.Sprintf("canary failed with ers: %s", upToDate.GetName())
+			conditions.UpdateExtendedDaemonSetStatusCondition(&newDaemonset.Status, metaNow, datadoghqv1alpha1.ConditionTypeEDSCanaryFailed, corev1.ConditionTrue, "CanaryFailed", msg, false, false)
+			newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryFailed
+		} else {
+			conditions.UpdateExtendedDaemonSetStatusCondition(&newDaemonset.Status, metaNow, datadoghqv1alpha1.ConditionTypeEDSCanaryFailed, corev1.ConditionFalse, "", "", false, false)
+		}
+
+		if isCanaryPaused && !isCanaryFailed {
+			msg := fmt.Sprintf("canary paused with ers: %s", upToDate.GetName())
+			conditions.UpdateExtendedDaemonSetStatusCondition(&newDaemonset.Status, metaNow, datadoghqv1alpha1.ConditionTypeEDSCanaryPaused, corev1.ConditionTrue, string(reason), msg, false, false)
+			newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryPaused
+			newDaemonset.Status.Reason = reason
+		} else {
+			conditions.UpdateExtendedDaemonSetStatusCondition(&newDaemonset.Status, metaNow, datadoghqv1alpha1.ConditionTypeEDSCanaryPaused, corev1.ConditionFalse, "", "", false, false)
+		}
+
 		switch {
-		case IsCanaryDeploymentFailed(daemonset.GetAnnotations()):
+		case isCanaryFailed:
 			// Canary deployment is no longer needed because it was marked as failed
 			// This `if` block needs to be first to respect Failed Canary state until annotation is removed
 			newDaemonset.Status.Canary = nil
 			newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryFailed
+			newDaemonset.Status.Reason = ""
 			// Restore active replicaset template. Note: this requires a full daemonset update
 			newDaemonset.Spec.Template = current.Spec.Template
 			updateDaemonsetSpec = true
+			clearFailureAnnotations(newDaemonset)
 		case current.Name == upToDate.Name:
 			// Canary deployment is no longer needed because it completed without issue
 			newDaemonset.Status.Canary = nil
 			newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateRunning
+			newDaemonset.Status.Reason = ""
 		default:
 			// Else compute the Canary status
 			if newDaemonset.Status.Canary == nil {
@@ -241,6 +265,10 @@ func (r *Reconciler) updateInstanceWithCurrentRS(logger logr.Logger, daemonset *
 			newDaemonset.Status.UpToDate += upToDate.Status.Available
 			newDaemonset.Status.Available += upToDate.Status.Available
 			newDaemonset.Status.IgnoredUnresponsiveNodes += upToDate.Status.IgnoredUnresponsiveNodes
+
+			if !isCanaryPaused {
+				newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanary
+			}
 
 			newDaemonset.Status.Canary.ReplicaSet = upToDate.Name
 
@@ -256,38 +284,25 @@ func (r *Reconciler) updateInstanceWithCurrentRS(logger logr.Logger, daemonset *
 					return newDaemonset, reconcile.Result{}, err
 				}
 			}
-
-			isPaused, reason := IsCanaryDeploymentPaused(daemonset.GetAnnotations())
-			if isPaused {
-				newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryPaused
-				newDaemonset.Status.Reason = reason
-			} else {
-				newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanary
-			}
 		}
 	}
 
 	// Check if newDaemonset differs from existing daemonset, and update if so
 	if !apiequality.Semantic.DeepEqual(daemonset, newDaemonset) {
 		if updateDaemonsetSpec {
-			// Make and use a copy because undesired behaviors occur when making two update calls
-			newDaemonsetCopy := newDaemonset.DeepCopy()
 			logger.Info("Updating ExtendedDaemonSet")
-			if err := r.client.Update(context.TODO(), newDaemonsetCopy); err != nil {
-				logger.Error(err, "Failed to update ExtendedDaemonSet")
-				return newDaemonsetCopy, reconcile.Result{}, err
+			if err := r.client.Update(context.TODO(), newDaemonset); err != nil {
+				return newDaemonset, reconcile.Result{}, fmt.Errorf("failed to update ExtendedDaemonSet, %w", err)
 			}
 			// Not need to update the status, `r.client.Update()` update both
-
-			return newDaemonsetCopy, reconcile.Result{}, nil
+			return newDaemonset, reconcile.Result{}, nil
 		}
 
 		logger.Info("Updating ExtendedDaemonSet status")
 		if err := r.client.Status().Update(context.TODO(), newDaemonset); err != nil {
-			logger.Error(err, "Failed to update ExtendedDaemonSet status")
-			return newDaemonset, reconcile.Result{}, err
+			return newDaemonset, reconcile.Result{}, fmt.Errorf("failed to update ExtendedDaemonSet status, %w", err)
 		}
-		return newDaemonset, reconcile.Result{}, nil
+
 	}
 
 	return newDaemonset, reconcile.Result{}, nil
@@ -502,6 +517,13 @@ func (r *Reconciler) cleanupReplicaSet(logger logr.Logger, rsList *datadoghqv1al
 		}
 	}
 	return utilserrors.NewAggregate(errs)
+}
+
+func clearFailureAnnotations(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
+	delete(eds.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey)
+	delete(eds.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey)
+	delete(eds.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey)
+	delete(eds.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedReasonAnnotationKey)
 }
 
 type podsCounterType struct {

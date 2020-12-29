@@ -59,7 +59,16 @@ func IsCanaryDeploymentEnded(specCanary *datadoghqv1alpha1.ExtendedDaemonSetSpec
 }
 
 // IsCanaryDeploymentPaused checks if the Canary deployment has been paused
-func IsCanaryDeploymentPaused(dsAnnotations map[string]string) (bool, datadoghqv1alpha1.ExtendedDaemonSetStatusReason) {
+func IsCanaryDeploymentPaused(dsAnnotations map[string]string, ers *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) (bool, datadoghqv1alpha1.ExtendedDaemonSetStatusReason) {
+
+	// check ERS status to detect if a Canary paused
+	if ers != nil && conditions.IsConditionTrue(&ers.Status, datadoghqv1alpha1.ConditionTypeCanaryPaused) {
+		cond := conditions.GetExtendedDaemonSetReplicaSetStatusCondition(&ers.Status, datadoghqv1alpha1.ConditionTypeCanaryPaused)
+
+		return true, datadoghqv1alpha1.ExtendedDaemonSetStatusReason(cond.Reason)
+	}
+
+	// Check annotations is a user have added the pause annotation.
 	isPaused, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]
 	if found && isPaused == "true" { //nolint:goconst
 		if reason, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey]; found {
@@ -81,7 +90,13 @@ func IsCanaryDeploymentValid(dsAnnotations map[string]string, rsName string) boo
 }
 
 // IsCanaryDeploymentFailed checks if the Canary deployment has been failed
-func IsCanaryDeploymentFailed(dsAnnotations map[string]string) bool {
+func IsCanaryDeploymentFailed(dsAnnotations map[string]string, ers *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) bool {
+	// Check ERS status to detect if a Canary failed
+	if ers != nil && conditions.IsConditionTrue(&ers.Status, datadoghqv1alpha1.ConditionTypeCanaryFailed) {
+		return true
+	}
+
+	// Check also failed annotations if a user wanted to force a canary failure
 	if value, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey]; found {
 		return value == "true"
 	}
