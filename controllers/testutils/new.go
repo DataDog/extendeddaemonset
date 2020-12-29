@@ -19,10 +19,11 @@ import (
 
 // NewExtendedDaemonsetOptions used to provide creation options to the NewExtendedDaemonset function
 type NewExtendedDaemonsetOptions struct {
-	ExtraLabels      map[string]string
-	ExtraAnnotations map[string]string
-	CanaryStrategy   *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary
-	RollingUpdate    *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate
+	ExtraLabels        map[string]string
+	ExtraAnnotations   map[string]string
+	CanaryStrategy     *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary
+	RollingUpdate      *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate
+	ReconcileFrequency *metav1.Duration
 }
 
 // NewExtendedDaemonset returns new ExtendedDaemonSet instance
@@ -83,6 +84,10 @@ func NewExtendedDaemonset(ns, name, image string, options *NewExtendedDaemonsetO
 			for key, val := range options.ExtraAnnotations {
 				newDaemonset.ObjectMeta.Annotations[key] = val
 			}
+		}
+
+		if options.ReconcileFrequency != nil {
+			newDaemonset.Spec.Strategy.ReconcileFrequency = options.ReconcileFrequency
 		}
 	}
 	return newDaemonset

@@ -34,8 +34,9 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 	const timeout = time.Second * 30
 	const interval = time.Second * 2
 
-	intString2 := intstr.FromInt(2)
+	intString1 := intstr.FromInt(1)
 	intString10 := intstr.FromInt(10)
+	reconcileFrequency := &metav1.Duration{Duration: time.Millisecond * 100}
 	namespace := testConfig.namespace
 	ctx := context.Background()
 
@@ -53,12 +54,13 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 			edsOptions := &testutils.NewExtendedDaemonsetOptions{
 				CanaryStrategy: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
 					Duration: &metav1.Duration{Duration: 1 * time.Minute},
-					Replicas: &intString2,
+					Replicas: &intString1,
 				},
 				RollingUpdate: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate{
 					MaxUnavailable:         &intString10,
 					MaxParallelPodCreation: datadoghqv1alpha1.NewInt32(20),
 				},
+				ReconcileFrequency: reconcileFrequency,
 			}
 			eds := testutils.NewExtendedDaemonset(namespace, name, "k8s.gcr.io/pause:latest", edsOptions)
 			Expect(k8sClient.Create(ctx, eds)).Should(Succeed())
@@ -74,7 +76,9 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 				Name:      eds.Status.ActiveReplicaSet,
 			}
 			Eventually(withERS(ersKey, ers, func() bool {
-				return ers.Status.Status == "active" && int(ers.Status.Available) == len(nodeList.Items)
+				// Info: we use ers.Status.Desired or ers.Status.Current because the pod status is not updated with the test FWK
+				// and so available and ready will never be updated
+				return ers.Status.Status == "active" && int(ers.Status.Desired) == len(nodeList.Items)
 			}), timeout, interval).Should(BeTrue())
 		})
 
@@ -100,7 +104,7 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 				},
 			}
 			Eventually(withList(listOptions, canaryPods, "canary pods", func() bool {
-				return len(canaryPods.Items) == 2
+				return len(canaryPods.Items) == 1
 			}), timeout, interval).Should(BeTrue())
 		})
 
@@ -167,10 +171,13 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 				RollingUpdate: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate{
 					MaxPodSchedulerFailure: &intString10,
 					MaxUnavailable:         &intString10,
+					MaxParallelPodCreation: datadoghqv1alpha1.NewInt32(20),
 					SlowStartIntervalDuration: &metav1.Duration{
 						Duration: 1 * time.Millisecond,
 					},
+					SlowStartAdditiveIncrease: &intString10,
 				},
+				ReconcileFrequency: reconcileFrequency,
 			}
 			eds := testutils.NewExtendedDaemonset(namespace, name, "k8s.gcr.io/pause:latest", edsOptions)
 			Expect(k8sClient.Create(ctx, eds)).Should(Succeed())
