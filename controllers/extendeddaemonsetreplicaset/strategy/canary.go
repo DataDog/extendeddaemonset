@@ -294,6 +294,7 @@ func ensureCanaryPodLabels(client client.Client, params *Parameters) error {
 	for _, nodeName := range params.CanaryNodes {
 		node := params.NodeByName[nodeName]
 		if pod, ok := params.PodByNodeName[node]; ok && pod != nil {
+			params.Logger.V(1).Info("Add Canary label", "podName", pod.Name)
 			err := addPodLabel(
 				client,
 				pod,

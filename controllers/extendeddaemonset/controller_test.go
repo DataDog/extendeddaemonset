@@ -16,7 +16,7 @@ import (
 	test "github.com/DataDog/extendeddaemonset/api/v1alpha1/test"
 	commontest "github.com/DataDog/extendeddaemonset/pkg/controller/test"
 	"github.com/DataDog/extendeddaemonset/pkg/controller/utils/comparison"
-	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
@@ -777,12 +777,8 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 				t.Errorf("ReconcileExtendedDaemonSet.updateInstanceWithCurrentRS() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if diff := cmp.Diff(tt.want, got); diff != "" {
-				t.Errorf("ReconcileExtendedDaemonSet.updateInstanceWithCurrentRS() (-want +got):\n%s", diff)
-			}
-			if diff := cmp.Diff(tt.wantResult, got1); diff != "" {
-				t.Errorf("ReconcileExtendedDaemonSet.updateInstanceWithCurrentRS().result (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, tt.want, got, "econcileExtendedDaemonSet.updateInstanceWithCurrentRS()")
+			assert.Equal(t, tt.wantResult, got1, "econcileExtendedDaemonSet.updateInstanceWithCurrentRS().result")
 		})
 	}
 }
