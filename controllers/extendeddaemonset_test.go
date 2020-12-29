@@ -48,9 +48,6 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 		}
 
 		It("Should handle EDS ", func() {
-			nodeList := &corev1.NodeList{}
-			Expect(k8sClient.List(ctx, nodeList)).Should(Succeed())
-
 			edsOptions := &testutils.NewExtendedDaemonsetOptions{
 				CanaryStrategy: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
 					Duration: &metav1.Duration{Duration: 1 * time.Minute},
@@ -76,9 +73,10 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 				Name:      eds.Status.ActiveReplicaSet,
 			}
 			Eventually(withERS(ersKey, ers, func() bool {
-				// Info: we use ers.Status.Desired or ers.Status.Current because the pod status is not updated with the test FWK
+				// Info: we use ers.Status.Desired and ers.Status.Current because the pod status is not updated with the test FWK
 				// and so available and ready will never be updated
-				return ers.Status.Status == "active" && int(ers.Status.Desired) == len(nodeList.Items)
+				fmt.Fprintf(GinkgoWriter, "ERS status:\n%s\n", spew.Sdump(ers.Status))
+				return ers.Status.Status == "active" && int(ers.Status.Desired) == int(ers.Status.Current)
 			}), timeout, interval).Should(BeTrue())
 		})
 
@@ -104,6 +102,7 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 				},
 			}
 			Eventually(withList(listOptions, canaryPods, "canary pods", func() bool {
+				fmt.Fprintf(GinkgoWriter, "canary pods nb: %d ", len(canaryPods.Items))
 				return len(canaryPods.Items) == 1
 			}), timeout, interval).Should(BeTrue())
 		})

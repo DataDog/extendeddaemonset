@@ -81,8 +81,16 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	}
 
 	if !datadoghqv1alpha1.IsDefaultedExtendedDaemonSet(daemonsetInstance) {
-		reqLogger.Info("Parent ExtendedDaemonSet is not defaulted, requeuing")
-		return reconcile.Result{RequeueAfter: time.Second}, nil
+		message := "Parent ExtendedDaemonSet is not defaulted, requeuing"
+		reqLogger.Info(message)
+		err = fmt.Errorf("parent ExtendedDaemonSet is not defaulted")
+		newStatus := replicaSetInstance.Status.DeepCopy()
+		// Updating the status with a new condition will trigger a new Event on the ExtendedDaemonSet-controller
+		// and so the ExtendedDamonset will be defaulted.
+		// It is better to only update a Resource Kind from its own controller, to avoid conccurent update.
+		conditions.UpdateErrorCondition(newStatus, now, err, message)
+		err = r.updateReplicaSet(replicaSetInstance, newStatus)
+		return reconcile.Result{RequeueAfter: time.Second}, err
 	}
 
 	lastResyncTimeStampCond := conditions.GetExtendedDaemonSetReplicaSetStatusCondition(&replicaSetInstance.Status, datadoghqv1alpha1.ConditionTypeLastFullSync)
@@ -123,9 +131,15 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(newStatus, now, datadoghqv1alpha1.ConditionTypeUnschedule, status, desc, false, false)
 
 	// start actions on pods
+	requeueAfter := 5 * time.Second
+	if daemonsetInstance.Spec.Strategy.ReconcileFrequency != nil {
+		requeueAfter = daemonsetInstance.Spec.Strategy.ReconcileFrequency.Duration
+	}
+
 	lastPodDeletionCondition := conditions.GetExtendedDaemonSetReplicaSetStatusCondition(newStatus, datadoghqv1alpha1.ConditionTypePodDeletion)
-	if lastPodDeletionCondition != nil && now.Sub(lastPodDeletionCondition.LastUpdateTime.Time) < 5*time.Second {
-		result.RequeueAfter = 5 * time.Second
+	if lastPodDeletionCondition != nil && now.Sub(lastPodDeletionCondition.LastUpdateTime.Time) < requeueAfter {
+		reqLogger.V(1).Info("Delay pods deletion", "deplay", requeueAfter, "since", now.Sub(lastPodDeletionCondition.LastUpdateTime.Time))
+		result.RequeueAfter = requeueAfter
 	} else {
 		errs = append(errs, deletePods(reqLogger, r.client, strategyParams.PodByNodeName, strategyResult.PodsToDelete)...)
 		if len(strategyResult.PodsToDelete) > 0 {
@@ -135,7 +149,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 
 	lastPodCreationCondition := conditions.GetExtendedDaemonSetReplicaSetStatusCondition(newStatus, datadoghqv1alpha1.ConditionTypePodCreation)
 	if lastPodCreationCondition != nil && now.Sub(lastPodCreationCondition.LastUpdateTime.Time) < daemonsetInstance.Spec.Strategy.ReconcileFrequency.Duration {
-		result.RequeueAfter = daemonsetInstance.Spec.Strategy.ReconcileFrequency.Duration
+		reqLogger.V(1).Info("Delay pods creation", "deplay:", requeueAfter, "since", now.Sub(lastPodDeletionCondition.LastUpdateTime.Time))
+		result.RequeueAfter = requeueAfter
 	} else {
 		errs = append(errs, createPods(reqLogger, r.client, r.scheme, r.options.IsNodeAffinitySupported, replicaSetInstance, strategyResult.PodsToCreate)...)
 		if len(strategyResult.PodsToCreate) > 0 {
@@ -267,6 +282,7 @@ func (r *Reconciler) updateReplicaSet(replicaset *datadoghqv1alpha1.ExtendedDaem
 		newRS.Status = *newStatus
 		return r.client.Status().Update(context.TODO(), newRS)
 	}
+
 	return nil
 }
 

@@ -277,14 +277,8 @@ func (r *Reconciler) updateInstanceWithCurrentRS(logger logr.Logger, daemonset *
 				logger.Error(err, "Failed to update ExtendedDaemonSet")
 				return newDaemonsetCopy, reconcile.Result{}, err
 			}
+			// Not need to update the status, `r.client.Update()` update both
 
-			// This ensures that the first client update respects the desired new status
-			newDaemonsetCopy.Status = newDaemonset.Status
-			logger.Info("Updating ExtendedDaemonSet status")
-			if err := r.client.Status().Update(context.TODO(), newDaemonsetCopy); err != nil {
-				logger.Error(err, "Failed to update ExtendedDaemonSet status")
-				return newDaemonsetCopy, reconcile.Result{}, err
-			}
 			return newDaemonsetCopy, reconcile.Result{}, nil
 		}
 

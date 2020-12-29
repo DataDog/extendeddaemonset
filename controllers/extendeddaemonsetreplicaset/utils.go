@@ -22,6 +22,7 @@ import (
 )
 
 func createPods(logger logr.Logger, client client.Client, scheme *runtime.Scheme, podAffinitySupported bool, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, podsToCreate []*strategy.NodeItem) []error {
+	logger.V(1).Info("Create pods", "nb-pods", len(podsToCreate))
 	var errs []error
 	var wg sync.WaitGroup
 	errsChan := make(chan error, len(podsToCreate))
@@ -57,6 +58,7 @@ func createPods(logger logr.Logger, client client.Client, scheme *runtime.Scheme
 }
 
 func deletePods(logger logr.Logger, c client.Client, podByNodeName map[*strategy.NodeItem]*corev1.Pod, nodes []*strategy.NodeItem) []error {
+	logger.V(1).Info("Delete pods", "nb-pods", len(podByNodeName))
 	var errs []error
 	var wg sync.WaitGroup
 	errsChan := make(chan error, len(nodes))

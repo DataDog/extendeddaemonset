@@ -120,11 +120,11 @@ var _ = Describe("ExtendedDaemonSet e2e updates and recovery", func() {
 				NoRestartsDuration: &metav1.Duration{Duration: 1 * time.Minute},
 				AutoPause: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoPause{
 					Enabled:     datadoghqv1alpha1.NewBool(true),
-					MaxRestarts: datadoghqv1alpha1.NewInt32(2),
+					MaxRestarts: datadoghqv1alpha1.NewInt32(1),
 				},
 				AutoFail: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoFail{
 					Enabled:     datadoghqv1alpha1.NewBool(true),
-					MaxRestarts: datadoghqv1alpha1.NewInt32(3),
+					MaxRestarts: datadoghqv1alpha1.NewInt32(2),
 				},
 			}
 			eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("gcr.io/google-containers/alpine-with-bash:1.0")

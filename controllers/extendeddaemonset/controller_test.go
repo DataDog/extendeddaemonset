@@ -16,6 +16,7 @@ import (
 	test "github.com/DataDog/extendeddaemonset/api/v1alpha1/test"
 	commontest "github.com/DataDog/extendeddaemonset/pkg/controller/test"
 	"github.com/DataDog/extendeddaemonset/pkg/controller/utils/comparison"
+	"github.com/google/go-cmp/cmp"
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
@@ -643,7 +644,7 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 	}
 	daemonsetWithCanaryFailedNewStatus := daemonsetWithCanaryFailedOldStatus.DeepCopy()
 	{
-		daemonsetWithCanaryFailedNewStatus.ResourceVersion = "3"
+		daemonsetWithCanaryFailedNewStatus.ResourceVersion = "2"
 		daemonsetWithCanaryFailedNewStatus.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryFailed
 		daemonsetWithCanaryFailedNewStatus.Status.Canary = nil
 	}
@@ -776,11 +777,11 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 				t.Errorf("ReconcileExtendedDaemonSet.updateInstanceWithCurrentRS() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !apiequality.Semantic.DeepEqual(got, tt.want) {
-				t.Errorf("ReconcileExtendedDaemonSet.updateInstanceWithCurrentRS() got = %#v, \n want %#v", got, tt.want)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("ReconcileExtendedDaemonSet.updateInstanceWithCurrentRS() (-want +got):\n%s", diff)
 			}
-			if !reflect.DeepEqual(got1, tt.wantResult) {
-				t.Errorf("ReconcileExtendedDaemonSet.updateInstanceWithCurrentRS() gotResult = %v, \n wantResult %v", got1, tt.wantResult)
+			if diff := cmp.Diff(tt.wantResult, got1); diff != "" {
+				t.Errorf("ReconcileExtendedDaemonSet.updateInstanceWithCurrentRS().result (-want +got):\n%s", diff)
 			}
 		})
 	}
