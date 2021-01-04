@@ -565,7 +565,7 @@ var _ = Describe("ExtendedDaemonSet e2e successful canary deployment update", fu
 			}
 			Eventually(withList(listOptions, pods, "EDS pods", func() bool {
 				return len(pods.Items) == 0
-			}), timeout, interval).Should(BeTrue(), "All EDS pods should be destroyed")
+			}), timeout*2, interval).Should(BeTrue(), "All EDS pods should be destroyed")
 		})
 	})
 

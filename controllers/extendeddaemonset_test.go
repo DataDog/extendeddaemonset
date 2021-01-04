@@ -31,6 +31,7 @@ import (
 // This test may take ~30s to run, check you go test timeout
 var _ = Describe("ExtendedDaemonSet Controller", func() {
 	const timeout = time.Second * 30
+	const longTimeout = time.Second * 120
 	const interval = time.Second * 2
 
 	intString10 := intstr.FromInt(10)
@@ -101,7 +102,7 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 			}
 			Eventually(withERS(erskey, ers, func() bool {
 				return ers.Status.Desired == ers.Status.Current
-			}), timeout*2, interval).Should(BeTrue(), func() string {
+			}), longTimeout, interval).Should(BeTrue(), func() string {
 				return fmt.Sprintf(
 					"ers.Status.Desired should be equal to ers.Status.Current, status: %#v",
 					ers.Status,
