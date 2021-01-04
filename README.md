@@ -382,10 +382,10 @@ these test are located in `/controllers/extendeddaemonset_test.go`
 
 #### end2end test
 
-End2end tests are also present. Contrarily to the tests that use the `envtest`, the e2e tests need to have access to a running kubernetes cluster.
+End2end tests are also present. Unlike the tests that use the `envtest`, the e2e tests need to have access to a running kubernetes cluster.
 The envvar KUBECONFIG should be set in the terminal where the `make e2e` is executed.
 
-[Kind](https://kind.sh/) is a great solution to start a multi-nodes cluster localy.
+[Kind](https://kind.sh/) is a great solution to start a multi-nodes cluster locally.
 
 ```console
 $ kind create cluster --config examples/kind-cluster-configuration.yaml
