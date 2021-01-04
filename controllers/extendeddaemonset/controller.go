@@ -289,20 +289,27 @@ func (r *Reconciler) updateInstanceWithCurrentRS(logger logr.Logger, now time.Ti
 
 	// Check if newDaemonset differs from existing daemonset, and update if so
 	if !apiequality.Semantic.DeepEqual(daemonset, newDaemonset) {
-		if updateDaemonsetSpec {
-			logger.Info("Updating ExtendedDaemonSet")
-			if err := r.client.Update(context.TODO(), newDaemonset); err != nil {
-				return newDaemonset, reconcile.Result{}, fmt.Errorf("failed to update ExtendedDaemonSet, %w", err)
-			}
-			// Not need to update the status, `r.client.Update()` update both
-			return newDaemonset, reconcile.Result{}, nil
-		}
-
 		logger.Info("Updating ExtendedDaemonSet status")
-		if err := r.client.Status().Update(context.TODO(), newDaemonset); err != nil {
-			return newDaemonset, reconcile.Result{}, fmt.Errorf("failed to update ExtendedDaemonSet status, %w", err)
+
+		// Updating the status in any case.
+		// Make and use a copy because undesired behaviors occur when making two update calls
+		// The returned EDS instance has losted the ExtendedDaemonSet.spec update part.
+		extendedDaemonsetCopy := newDaemonset.DeepCopy()
+		if err := r.client.Status().Update(context.TODO(), extendedDaemonsetCopy); err != nil {
+			return extendedDaemonsetCopy, reconcile.Result{}, fmt.Errorf("failed to update ExtendedDaemonSet status, %w", err)
 		}
 
+		if updateDaemonsetSpec {
+			// Copy the spec part in to the last updatedEDS. Like this we have the object metadata (resource version)
+			extendedDaemonsetCopy.Spec = *newDaemonset.Spec.DeepCopy()
+			// In case of canaryFailed, we also update the ExtendedDaemonset.Spec
+			logger.Info("Updating ExtendedDaemonSet.Spec")
+			if err := r.client.Update(context.TODO(), extendedDaemonsetCopy); err != nil {
+				return extendedDaemonsetCopy, reconcile.Result{}, fmt.Errorf("failed to update ExtendedDaemonSet, %w", err)
+			}
+		}
+
+		newDaemonset = extendedDaemonsetCopy
 	}
 
 	return newDaemonset, reconcile.Result{}, nil

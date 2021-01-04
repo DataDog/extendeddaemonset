@@ -20,8 +20,7 @@ import (
 )
 
 const (
-	cmdFail  = true
-	cmdReset = false
+	cmdFail = true
 )
 
 var (
@@ -64,31 +63,6 @@ func newCmdFail(streams genericclioptions.IOStreams) *cobra.Command {
 		Use:          "fail [ExtendedDaemonSet name]",
 		Short:        "fail canary deployment",
 		Example:      fmt.Sprintf(failExample, "fail"),
-		SilenceUsage: true,
-		RunE: func(c *cobra.Command, args []string) error {
-			if err := o.complete(c, args); err != nil {
-				return err
-			}
-			if err := o.validate(); err != nil {
-				return err
-			}
-			return o.run()
-		},
-	}
-
-	o.configFlags.AddFlags(cmd.Flags())
-
-	return cmd
-}
-
-// newCmdReset provides a cobra command wrapping failOptions
-func newCmdReset(streams genericclioptions.IOStreams) *cobra.Command {
-	o := newfailOptions(streams, cmdReset)
-
-	cmd := &cobra.Command{
-		Use:          "reset [ExtendedDaemonSet name]",
-		Short:        "reset failed status of canary deployment",
-		Example:      fmt.Sprintf(failExample, "reset"),
 		SilenceUsage: true,
 		RunE: func(c *cobra.Command, args []string) error {
 			if err := o.complete(c, args); err != nil {

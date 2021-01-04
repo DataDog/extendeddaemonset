@@ -16,7 +16,6 @@ func NewCmdCanary(streams genericclioptions.IOStreams) *cobra.Command {
 	cmd.AddCommand(newCmdPause(streams))
 	cmd.AddCommand(newCmdUnpause(streams))
 	cmd.AddCommand(newCmdFail(streams))
-	cmd.AddCommand(newCmdReset(streams))
 	cmd.AddCommand(newCmdPods(streams))
 
 	return cmd

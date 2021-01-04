@@ -701,7 +701,7 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 	{
 		delete(daemonsetWithCanaryFailedWithoutAnnotationsWanted.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey)
 		delete(daemonsetWithCanaryFailedWithoutAnnotationsWanted.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedReasonAnnotationKey)
-		daemonsetWithCanaryFailedWithoutAnnotationsWanted.ResourceVersion = "2"
+		daemonsetWithCanaryFailedWithoutAnnotationsWanted.ResourceVersion = "3"
 		daemonsetWithCanaryFailedWithoutAnnotationsWanted.Status.Canary = nil
 		daemonsetWithCanaryFailedWithoutAnnotationsWanted.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryFailed
 		daemonsetWithCanaryFailedWithoutAnnotationsWanted.Status.Conditions = []datadoghqv1alpha1.ExtendedDaemonSetCondition{
