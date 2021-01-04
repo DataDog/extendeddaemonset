@@ -183,28 +183,11 @@ func failCanaryDeployment(client client.Client, eds *datadoghqv1alpha1.ExtendedD
 	)
 }
 
-/*
-func refetchPod(c client.Client, pod *corev1.Pod) (*corev1.Pod, error) {
-	refetchedPod := &corev1.Pod{}
-	key := types.NamespacedName{
-		Namespace: pod.Namespace,
-		Name:      pod.Name,
-	}
-
-	err := c.Get(context.TODO(), key, refetchedPod)
-	return refetchedPod, err
-}*/
-
 // addPodLabel adds a given label to a pod, no-op if the pod is nil or if the label exists
 func addPodLabel(logger logr.Logger, c client.Client, pod *corev1.Pod, k, v string) error {
 	if pod == nil {
 		return nil
 	}
-
-	//pod, err := refetchPod(c, pod)
-	//if err != nil {
-	//	return err
-	//}
 
 	if label, found := pod.GetLabels()[k]; found && label == v {
 		logger.V(1).Info("Canary labels already present", "pod.name", pod.Name)
@@ -228,11 +211,6 @@ func deletePodLabel(logger logr.Logger, c client.Client, pod *corev1.Pod, k stri
 	if pod == nil {
 		return nil
 	}
-
-	//pod, err := refetchPod(c, pod)
-	//if err != nil {
-	//	return err
-	//}
 
 	if _, found := pod.GetLabels()[k]; !found {
 		logger.V(1).Info("Canary labels not present", "pod.name", pod.Name)

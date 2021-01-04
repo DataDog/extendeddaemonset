@@ -57,17 +57,15 @@ func UpdateErrorCondition(status *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetS
 }
 
 func getIndexForConditionType(status *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus, t datadoghqv1alpha1.ExtendedDaemonSetReplicaSetConditionType) int {
-	idCondition := -1
 	if status == nil {
-		return idCondition
+		return -1
 	}
 	for i, condition := range status.Conditions {
 		if condition.Type == t {
-			idCondition = i
-			break
+			return i
 		}
 	}
-	return idCondition
+	return -1
 }
 
 // GetExtendedDaemonSetReplicaSetStatusCondition return the condition struct corresponding to the ExtendedDaemonSetReplicaSetConditionType provided in argument.
