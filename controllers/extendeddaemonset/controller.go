@@ -250,7 +250,7 @@ func (r *Reconciler) updateInstanceWithCurrentRS(logger logr.Logger, now time.Ti
 			// Restore active replicaset template. Note: this requires a full daemonset update
 			newDaemonset.Spec.Template = current.Spec.Template
 			updateDaemonsetSpec = true
-			clearFailureAnnotations(newDaemonset)
+			clearCanaryAnnotations(newDaemonset)
 		case current.Name == upToDate.Name:
 			// Canary deployment is no longer needed because it completed without issue
 			newDaemonset.Status.Canary = nil
@@ -293,7 +293,7 @@ func (r *Reconciler) updateInstanceWithCurrentRS(logger logr.Logger, now time.Ti
 
 		// Updating the status in any case.
 		// Make and use a copy because undesired behaviors occur when making two update calls
-		// The returned EDS instance has losted the ExtendedDaemonSet.spec update part.
+		// The EDS instance will lose its new spec as a result of the Status update
 		extendedDaemonsetCopy := newDaemonset.DeepCopy()
 		if err := r.client.Status().Update(context.TODO(), extendedDaemonsetCopy); err != nil {
 			return extendedDaemonsetCopy, reconcile.Result{}, fmt.Errorf("failed to update ExtendedDaemonSet status, %w", err)
@@ -526,7 +526,7 @@ func (r *Reconciler) cleanupReplicaSet(logger logr.Logger, rsList *datadoghqv1al
 	return utilserrors.NewAggregate(errs)
 }
 
-func clearFailureAnnotations(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
+func clearCanaryAnnotations(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
 	delete(eds.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey)
 	delete(eds.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey)
 	delete(eds.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey)

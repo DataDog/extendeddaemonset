@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/google/go-cmp/cmp"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/types"
@@ -20,6 +21,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -193,7 +195,7 @@ var _ = Describe("ExtendedDaemonSet e2e updates and recovery", func() {
 			Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
 			info("EDS status:\n%s\n", spew.Sdump(eds.Status))
 
-			clearFailureAnnotations(eds)
+			clearCanaryAnnotations(eds)
 
 			eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("gcr.io/google-containers/alpine-with-bash:1.0")
 			eds.Spec.Template.Spec.Containers[0].Command = []string{
@@ -571,6 +573,128 @@ var _ = Describe("ExtendedDaemonSet e2e successful canary deployment update", fu
 
 })
 
+// This test may take ~30s to run, check you go test timeout
+var _ = Describe("ExtendedDaemonSet Controller", func() {
+	const timeout = time.Second * 30
+	const longTimeout = time.Second * 120
+	const interval = time.Second * 2
+
+	intString10 := intstr.FromInt(10)
+	reconcileFrequency := &metav1.Duration{Duration: time.Millisecond * 100}
+	namespace := testConfig.namespace
+	ctx := context.Background()
+
+	Context("Using ExtendedDaemonsetSetting", func() {
+		name := "eds-setting"
+		key := types.NamespacedName{
+			Namespace: namespace,
+			Name:      name,
+		}
+
+		It("Add label on a node", func() {
+			nodeList := &corev1.NodeList{}
+			Expect(k8sClient.List(ctx, nodeList)).Should(Succeed())
+
+			Expect(len(nodeList.Items) > 0).Should(BeTrue())
+			node := nodeList.Items[0].DeepCopy()
+			if node.Labels == nil {
+				node.Labels = make(map[string]string)
+			}
+			node.Labels["role"] = "eds-setting-worker"
+			Expect(k8sClient.Update(ctx, node)).Should(Succeed())
+		})
+
+		It("Should use DaemonsetSetting", func() {
+			resouresRef := corev1.ResourceList{
+				"cpu":    resource.MustParse("0.1"),
+				"memory": resource.MustParse("20M"),
+			}
+			edsNodeSetting := testutils.NewExtendedDaemonsetSetting(namespace, "eds-setting-worker", name, &testutils.NewExtendedDaemonsetSettingOptions{
+				Selector: map[string]string{"role": "eds-setting-worker"},
+				Resources: map[string]corev1.ResourceRequirements{
+					"main": {
+						Requests: resouresRef,
+					},
+				},
+			})
+			Expect(k8sClient.Create(ctx, edsNodeSetting)).Should(Succeed())
+
+			edsOptions := &testutils.NewExtendedDaemonsetOptions{
+				CanaryStrategy: nil,
+				RollingUpdate: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate{
+					MaxPodSchedulerFailure: &intString10,
+					MaxUnavailable:         &intString10,
+					MaxParallelPodCreation: datadoghqv1alpha1.NewInt32(20),
+					SlowStartIntervalDuration: &metav1.Duration{
+						Duration: 1 * time.Millisecond,
+					},
+					SlowStartAdditiveIncrease: &intString10,
+				},
+				ReconcileFrequency: reconcileFrequency,
+			}
+			eds := testutils.NewExtendedDaemonset(namespace, name, "k8s.gcr.io/pause:latest", edsOptions)
+			Expect(k8sClient.Create(ctx, eds)).Should(Succeed())
+
+			eds = &datadoghqv1alpha1.ExtendedDaemonSet{}
+			Eventually(withEDS(key, eds, func() bool {
+				return eds.Status.ActiveReplicaSet != ""
+			}), timeout, interval).Should(BeTrue(), func() string {
+				return fmt.Sprintf(
+					"ActiveReplicaSet should be set EDS: %#v",
+					eds.Status,
+				)
+			},
+			)
+
+			ers := &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{}
+			erskey := types.NamespacedName{
+				Namespace: namespace,
+				Name:      eds.Status.ActiveReplicaSet,
+			}
+			Eventually(withERS(erskey, ers, func() bool {
+				return ers.Status.Desired == ers.Status.Current
+			}), longTimeout, interval).Should(BeTrue(), func() string {
+				return fmt.Sprintf(
+					"ers.Status.Desired should be equal to ers.Status.Current, status: %#v",
+					ers.Status,
+				)
+			},
+			)
+
+			podList := &corev1.PodList{}
+			listOptions := []client.ListOption{
+				client.InNamespace(namespace),
+				client.MatchingLabels{
+					"extendeddaemonset.datadoghq.com/name": name,
+				},
+			}
+			Eventually(withList(listOptions, podList, "pods", func() bool {
+				// remove terminated pods
+				for index, pod := range podList.Items {
+					if pod.DeletionTimestamp != nil {
+						podList.Items = append(podList.Items[:index], podList.Items[index+1:]...)
+					}
+				}
+				return len(podList.Items) == 3
+			}), timeout, interval).Should(BeTrue())
+
+			// TODO: This loop below does not assert on anything in any way
+			for _, pod := range podList.Items {
+				if pod.Spec.NodeName == "node-worker" {
+					for _, container := range pod.Spec.Containers {
+						if container.Name != "main" {
+							continue
+						}
+						if diff := cmp.Diff(resouresRef, container.Resources.Requests); diff != "" {
+							fmt.Fprintf(GinkgoWriter, "diff pods resources: %s", diff)
+						}
+					}
+				}
+			}
+		})
+	})
+})
+
 func withUpdate(obj runtime.Object, desc string) condFn {
 	return func() bool {
 		err := k8sClient.Update(context.Background(), obj)
@@ -582,7 +706,18 @@ func withUpdate(obj runtime.Object, desc string) condFn {
 	}
 }
 
-func clearFailureAnnotations(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
+func withList(listOptions []client.ListOption, obj runtime.Object, desc string, condition condFn) condFn {
+	return func() bool {
+		err := k8sClient.List(context.Background(), obj, listOptions...)
+		if err != nil {
+			fmt.Fprintf(GinkgoWriter, "Failed to list %s: %v", desc, err)
+			return false
+		}
+		return condition()
+	}
+}
+
+func clearCanaryAnnotations(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
 	delete(eds.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey)
 	delete(eds.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey)
 	delete(eds.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey)

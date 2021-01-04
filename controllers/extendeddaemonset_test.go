@@ -12,13 +12,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/go-cmp/cmp"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -31,7 +27,6 @@ import (
 // This test may take ~30s to run, check you go test timeout
 var _ = Describe("ExtendedDaemonSet Controller", func() {
 	const timeout = time.Second * 30
-	const longTimeout = time.Second * 120
 	const interval = time.Second * 2
 
 	intString10 := intstr.FromInt(10)
@@ -46,28 +41,7 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 			Name:      name,
 		}
 
-		It("Should create node", func() {
-			nodeWorker := testutils.NewNode("node-worker", map[string]string{
-				"role": "eds-setting-worker",
-			})
-			Expect(k8sClient.Create(ctx, nodeWorker)).Should(Succeed())
-		})
-
-		It("Should use DaemonsetSetting", func() {
-			resouresRef := corev1.ResourceList{
-				"cpu":    resource.MustParse("0.1"),
-				"memory": resource.MustParse("20M"),
-			}
-			edsNodeSetting := testutils.NewExtendedDaemonsetSetting(namespace, "eds-setting-worker", name, &testutils.NewExtendedDaemonsetSettingOptions{
-				Selector: map[string]string{"role": "eds-setting-worker"},
-				Resources: map[string]corev1.ResourceRequirements{
-					"main": {
-						Requests: resouresRef,
-					},
-				},
-			})
-			Expect(k8sClient.Create(ctx, edsNodeSetting)).Should(Succeed())
-
+		It("Should create one pod by nods", func() {
 			edsOptions := &testutils.NewExtendedDaemonsetOptions{
 				CanaryStrategy: nil,
 				RollingUpdate: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate{
@@ -102,38 +76,13 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 			}
 			Eventually(withERS(erskey, ers, func() bool {
 				return ers.Status.Desired == ers.Status.Current
-			}), longTimeout, interval).Should(BeTrue(), func() string {
+			}), timeout, interval).Should(BeTrue(), func() string {
 				return fmt.Sprintf(
 					"ers.Status.Desired should be equal to ers.Status.Current, status: %#v",
 					ers.Status,
 				)
 			},
 			)
-
-			podList := &corev1.PodList{}
-			listOptions := []client.ListOption{
-				client.InNamespace(namespace),
-				client.MatchingLabels{
-					"extendeddaemonset.datadoghq.com/name": name,
-				},
-			}
-			Eventually(withList(listOptions, podList, "pods", func() bool {
-				return len(podList.Items) == 3
-			}), timeout, interval).Should(BeTrue())
-
-			// TODO: This loop below does not assert on anything in any way
-			for _, pod := range podList.Items {
-				if pod.Spec.NodeName == "node-worker" {
-					for _, container := range pod.Spec.Containers {
-						if container.Name != "main" {
-							continue
-						}
-						if diff := cmp.Diff(resouresRef, container.Resources.Requests); diff != "" {
-							fmt.Fprintf(GinkgoWriter, "diff pods resources: %s", diff)
-						}
-					}
-				}
-			}
 		})
 	})
 })

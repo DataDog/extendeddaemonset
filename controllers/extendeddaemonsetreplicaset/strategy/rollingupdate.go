@@ -59,6 +59,7 @@ func ManageDeployment(client runtimeclient.Client, params *Parameters) (*Result,
 				nbIgnoredUnresponsiveNodes++
 				continue
 			}
+
 			allPods++
 			if !compareCurrentPodWithNewPod(params, pod, node) {
 				if pod.DeletionTimestamp == nil {

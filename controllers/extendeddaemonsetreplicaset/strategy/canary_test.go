@@ -107,6 +107,11 @@ func withDeletionTimestamp(pod *v1.Pod) *v1.Pod {
 	return pod
 }
 
+func withHostIP(pod *v1.Pod, ip string) *v1.Pod {
+	pod.Status.HostIP = ip
+	return pod
+}
+
 type canaryStatusTest struct {
 	annotations map[string]string
 	params      *Parameters
@@ -241,7 +246,7 @@ func TestManageCanaryStatus_NoRestartsAndPodWithDeletionTimestamp(t *testing.T) 
 			CanaryNodes: testCanaryNodeNames,
 			NodeByName:  testCanaryNodes,
 			PodByNodeName: map[*NodeItem]*v1.Pod{
-				testCanaryNodes["a"]: withDeletionTimestamp(newTestCanaryPod("foo-a", "v1", readyPodStatus)),
+				testCanaryNodes["a"]: withHostIP(withDeletionTimestamp(newTestCanaryPod("foo-a", "v1", readyPodStatus)), "1.2.3.4"),
 				testCanaryNodes["b"]: nil,
 				testCanaryNodes["c"]: nil,
 			},

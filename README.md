@@ -308,14 +308,6 @@ The Canary deployment can be manually failed. This command will restore the curr
 
 `kubectl-eds canary fail <ExtendedDaemonSet name>`
 
-#### Reset Canary deployment
-
-Following failure of the Canary deployment, the `fail` annotation should be reset with this command.
-
-`kubectl-eds canary reset <ExtendedDaemonSet name>`
-
-
-
 ### How to migrate from a DaemonSet
 
 If you already have an application running in your cluster with a DaemonSet, it is possible to migrate to an ExtendedDaemonSet with a `smooth` migration path.
