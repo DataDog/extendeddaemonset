@@ -569,6 +569,7 @@ func (r *Reconciler) cleanupReplicaSet(logger logr.Logger, rsList *datadoghqv1al
 func clearCanaryAnnotations(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
 	delete(eds.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey)
 	delete(eds.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey)
+	delete(eds.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryUnpausedAnnotationKey)
 	delete(eds.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey)
 	delete(eds.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedReasonAnnotationKey)
 }

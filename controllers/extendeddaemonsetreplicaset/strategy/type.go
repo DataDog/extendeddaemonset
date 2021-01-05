@@ -63,6 +63,8 @@ type Result struct {
 	IsPaused bool
 	// PausedReason provides the reason for the paused deployment
 	PausedReason datadoghqv1alpha1.ExtendedDaemonSetStatusReason
+	// IsUnpaused represents if the deployment was manually unpaused
+	IsUnpaused bool
 
 	// IsFailed represents failed state of the deployment
 	IsFailed bool

@@ -133,16 +133,19 @@ func (o *failOptions) run() error {
 	}
 
 	if eds.Spec.Strategy.Canary == nil {
-		return fmt.Errorf("the ExtendedDaemonset does not have a canary")
+		return fmt.Errorf("the ExtendedDaemonset does not have a canary strategy")
+	}
+	if eds.Status.Canary == nil {
+		return fmt.Errorf("the ExtendedDaemonset does not have an active canary deployment")
 	}
 
 	newEds := eds.DeepCopy()
 	if newEds.Annotations == nil {
 		newEds.Annotations = make(map[string]string)
 	} else if isFailed, ok := newEds.Annotations[v1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey]; ok {
-		if o.failStatus && isFailed == "true" {
+		if o.failStatus && isFailed == "true" { //nolint:goconst
 			return fmt.Errorf("canary deployment already failed")
-		} else if !o.failStatus && isFailed == "false" {
+		} else if !o.failStatus && isFailed == "false" { //nolint:goconst
 			return fmt.Errorf("canary deployment already reset")
 		}
 	}

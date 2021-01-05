@@ -51,6 +51,7 @@ func manageCanaryStatus(annotations map[string]string, params *Parameters, now t
 
 	result.IsFailed = eds.IsCanaryDeploymentFailed(annotations, params.Replicaset)
 	result.IsPaused, _ = eds.IsCanaryDeploymentPaused(annotations, params.Replicaset)
+	result.IsUnpaused = eds.IsCanaryDeploymentUnpaused(annotations)
 
 	var (
 		metaNow = metav1.NewTime(now)
@@ -194,7 +195,7 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 				"MaxRestarts", autoFailMaxRestarts,
 				"Reason", highRestartReason,
 			)
-		} else if !result.IsPaused && autoPauseEnabled {
+		} else if !result.IsPaused && autoPauseEnabled && !result.IsUnpaused {
 			// Handle cases related to failure to start states
 			if cannotStart {
 				result.IsPaused = true

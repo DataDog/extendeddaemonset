@@ -79,6 +79,15 @@ func IsCanaryDeploymentPaused(dsAnnotations map[string]string, ers *datadoghqv1a
 	return false, ""
 }
 
+// IsCanaryDeploymentUnpaused checks if the Canary deployment has been manually unpaused
+func IsCanaryDeploymentUnpaused(dsAnnotations map[string]string) bool {
+	isUnpaused, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryUnpausedAnnotationKey]
+	if found {
+		return isUnpaused == "true" //nolint:goconst
+	}
+	return false
+}
+
 // IsCanaryDeploymentValid used to know if the Canary deployment has been declared
 // valid even if its duration has not finished yet.
 // If the ExtendedDaemonSet has the corresponding annotation: return true
