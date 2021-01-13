@@ -12,13 +12,9 @@ import (
 	"testing"
 	"time"
 
-	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
-	test "github.com/DataDog/extendeddaemonset/api/v1alpha1/test"
-	commontest "github.com/DataDog/extendeddaemonset/pkg/controller/test"
-	"github.com/DataDog/extendeddaemonset/pkg/controller/utils/comparison"
-	"github.com/stretchr/testify/assert"
-
 	"github.com/go-logr/logr"
+	cmp "github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -31,6 +27,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+
+	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
+	test "github.com/DataDog/extendeddaemonset/api/v1alpha1/test"
+	commontest "github.com/DataDog/extendeddaemonset/pkg/controller/test"
+	"github.com/DataDog/extendeddaemonset/pkg/controller/utils/comparison"
 )
 
 var (
@@ -1173,6 +1174,157 @@ func Test_getAntiAffinityKeysValue(t *testing.T) {
 			got := getAntiAffinityKeysValue(&tt.node, &tt.daemonsetSpec)
 			if got != tt.want {
 				t.Errorf("getAntiAffinityKeysValue(%#v, %#v) = %s, want %s", tt.node, tt.daemonsetSpec, got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_isCanaryActive(t *testing.T) {
+	type args struct {
+		daemonset       *datadoghqv1alpha1.ExtendedDaemonSet
+		activeERSName   string
+		upToDateERSName string
+		isCanaryFailed  bool
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "canary spec not set",
+			args: args{
+				daemonset: test.NewExtendedDaemonSet("ns-foo", "foo", &test.NewExtendedDaemonSetOptions{Canary: nil}),
+			},
+			want: false,
+		},
+		{
+			name: "CanarySpec Enabled, 2 ers, canary not failed",
+			args: args{
+				daemonset:       test.NewExtendedDaemonSet("ns-foo", "foo", &test.NewExtendedDaemonSetOptions{Canary: datadoghqv1alpha1.DefaultExtendedDaemonSetSpecStrategyCanary(&datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{})}),
+				activeERSName:   "foo-old",
+				upToDateERSName: "foo-new",
+				isCanaryFailed:  false,
+			},
+			want: true,
+		},
+		{
+			name: "CanarySpec Enabled, But canary failed",
+			args: args{
+				daemonset:       test.NewExtendedDaemonSet("ns-foo", "foo", &test.NewExtendedDaemonSetOptions{Canary: datadoghqv1alpha1.DefaultExtendedDaemonSetSpecStrategyCanary(&datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{})}),
+				activeERSName:   "foo-old",
+				upToDateERSName: "foo-new",
+				isCanaryFailed:  true,
+			},
+			want: false,
+		},
+		{
+			name: "CanarySpec Enabled, but ERS active == ERS up-to-date",
+			args: args{
+				daemonset:       test.NewExtendedDaemonSet("ns-foo", "foo", &test.NewExtendedDaemonSetOptions{Canary: datadoghqv1alpha1.DefaultExtendedDaemonSetSpecStrategyCanary(&datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{})}),
+				activeERSName:   "foo-new",
+				upToDateERSName: "foo-new",
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := isCanaryActive(tt.args.daemonset, tt.args.activeERSName, tt.args.upToDateERSName, tt.args.isCanaryFailed); got != tt.want {
+				t.Errorf("isCanaryActive() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_manageCanaryStatus(t *testing.T) {
+	ns := "bar"
+	edsName := "foo"
+	ersName := fmt.Sprintf("%s-dsdvdv", edsName)
+
+	blankStatus := datadoghqv1alpha1.ExtendedDaemonSetStatus{}
+
+	statusFailed := datadoghqv1alpha1.ExtendedDaemonSetStatus{
+		State: datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryFailed,
+	}
+
+	statusActive := datadoghqv1alpha1.ExtendedDaemonSetStatus{
+		State: datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanary,
+		Canary: &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{
+			ReplicaSet: ersName,
+		},
+	}
+
+	statusPaused := datadoghqv1alpha1.ExtendedDaemonSetStatus{
+		State:  datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryPaused,
+		Reason: datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM,
+		Canary: &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{
+			ReplicaSet: ersName,
+		},
+	}
+
+	statusRunning := datadoghqv1alpha1.ExtendedDaemonSetStatus{
+		State: datadoghqv1alpha1.ExtendedDaemonSetStatusStateRunning,
+	}
+
+	type args struct {
+		status         *datadoghqv1alpha1.ExtendedDaemonSetStatus
+		upToDate       *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet
+		isCanaryActive bool
+		isCanaryFailed bool
+		isCanaryPaused bool
+		pausedReason   datadoghqv1alpha1.ExtendedDaemonSetStatusReason
+	}
+	tests := []struct {
+		name string
+		args args
+		want *datadoghqv1alpha1.ExtendedDaemonSetStatus
+	}{
+		{
+			name: "CanaryFailed",
+			args: args{
+				status:         blankStatus.DeepCopy(),
+				upToDate:       test.NewExtendedDaemonSetReplicaSet(ns, ersName, nil),
+				isCanaryFailed: true,
+			},
+			want: &statusFailed,
+		},
+		{
+			name: "CanaryActive",
+			args: args{
+				status:         blankStatus.DeepCopy(),
+				upToDate:       test.NewExtendedDaemonSetReplicaSet(ns, ersName, nil),
+				isCanaryActive: true,
+			},
+			want: &statusActive,
+		},
+		{
+			name: "CanaryPause",
+			args: args{
+				status:         blankStatus.DeepCopy(),
+				upToDate:       test.NewExtendedDaemonSetReplicaSet(ns, ersName, nil),
+				isCanaryPaused: true,
+				isCanaryActive: true,
+				pausedReason:   datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM,
+			},
+			want: &statusPaused,
+		},
+		{
+			name: "No canary",
+			args: args{
+				status:         blankStatus.DeepCopy(),
+				upToDate:       test.NewExtendedDaemonSetReplicaSet(ns, ersName, nil),
+				isCanaryPaused: false,
+				isCanaryActive: false,
+			},
+			want: &statusRunning,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := manageCanaryStatus(tt.args.status, tt.args.upToDate, tt.args.isCanaryActive, tt.args.isCanaryFailed, tt.args.isCanaryPaused, tt.args.pausedReason)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("manageCanaryStatus() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}

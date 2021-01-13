@@ -21,6 +21,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -222,9 +223,7 @@ var _ = Describe("ExtendedDaemonSet e2e updates and recovery", func() {
 		})
 
 		It("Should delete EDS", func() {
-			eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
-			Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
-			Expect(k8sClient.Delete(ctx, eds)).Should(Succeed())
+			Eventually(deleteEDS(k8sClient, key), timeout, interval).Should(BeTrue(), "EDS should be deleted")
 
 			pods := &corev1.PodList{}
 			listOptions := []client.ListOption{
@@ -290,7 +289,7 @@ var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition", func() {
 		info("AfterEach: Destroying EDS %s - canary replicaset: %s\n", name, eds.Status.Canary.ReplicaSet)
 		info("AfterEach: Destroying EDS %s - active replicaset: %s\n", name, eds.Status.ActiveReplicaSet)
 
-		Expect(k8sClient.Delete(ctx, eds)).Should(Succeed())
+		Eventually(deleteEDS(k8sClient, key), timeout, interval).Should(BeTrue(), "EDS should be deleted")
 
 		pods := &corev1.PodList{}
 		listOptions := []client.ListOption{
@@ -301,15 +300,7 @@ var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition", func() {
 		}
 		Eventually(withList(listOptions, pods, "EDS pods", func() bool {
 			return len(pods.Items) == 0
-		}), timeout, interval).Should(BeTrue(), "All EDS pods should be destroyed")
-
-		edslist := &datadoghqv1alpha1.ExtendedDaemonSetList{}
-		listOptions = []client.ListOption{
-			client.InNamespace(namespace),
-		}
-		Eventually(withList(listOptions, edslist, "EDS instances", func() bool {
-			return len(edslist.Items) == 0
-		}), timeout, interval).Should(BeTrue(), "All EDS instances should be destroyed")
+		}), longTimeout, interval).Should(BeTrue(), "All EDS pods should be destroyed")
 
 		erslist := &datadoghqv1alpha1.ExtendedDaemonSetReplicaSetList{}
 		Eventually(withList(listOptions, erslist, "ERS instances", func() bool {
@@ -554,9 +545,7 @@ var _ = Describe("ExtendedDaemonSet e2e successful canary deployment update", fu
 		})
 
 		It("Should delete EDS", func() {
-			eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
-			Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
-			Expect(k8sClient.Delete(ctx, eds)).Should(Succeed())
+			Eventually(deleteEDS(k8sClient, key), timeout, interval).Should(BeTrue(), "EDS should be deleted")
 
 			pods := &corev1.PodList{}
 			listOptions := []client.ListOption{
@@ -722,4 +711,25 @@ func clearCanaryAnnotations(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
 	delete(eds.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey)
 	delete(eds.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey)
 	delete(eds.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedReasonAnnotationKey)
+}
+
+func deleteEDS(k8sclient client.Client, key types.NamespacedName) condFn {
+	return func() bool {
+		eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
+		if err := k8sClient.Get(ctx, key, eds); err != nil {
+			if apierrors.IsNotFound(err) {
+				return true
+			}
+			return false
+		}
+		if err := k8sClient.Delete(ctx, eds); err != nil {
+			return false
+		}
+
+		if err := k8sClient.Get(ctx, key, eds); apierrors.IsNotFound(err) {
+			return true
+		}
+		warn("Failed to delete eds %v\n", key)
+		return false
+	}
 }
