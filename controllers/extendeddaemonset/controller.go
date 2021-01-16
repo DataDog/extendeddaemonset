@@ -438,8 +438,6 @@ func manageCanaryStatusConditions(status *datadoghqv1alpha1.ExtendedDaemonSetSta
 	if isCanaryPaused && !isCanaryFailed {
 		msg := fmt.Sprintf("canary paused with ers: %s", ersName)
 		conditions.UpdateExtendedDaemonSetStatusCondition(status, now, datadoghqv1alpha1.ConditionTypeEDSCanaryPaused, corev1.ConditionTrue, string(pausedReason), msg, updateOptions)
-		status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryPaused
-		status.Reason = pausedReason
 	} else {
 		conditions.UpdateExtendedDaemonSetStatusCondition(status, now, datadoghqv1alpha1.ConditionTypeEDSCanaryPaused, corev1.ConditionFalse, "", "", updateOptions)
 	}
