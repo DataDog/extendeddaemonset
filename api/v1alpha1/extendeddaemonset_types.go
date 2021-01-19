@@ -135,6 +135,38 @@ const (
 	ExtendedDaemonSetStatusReasonUnknown ExtendedDaemonSetStatusReason = "Unknown"
 )
 
+// ExtendedDaemonSetConditionType type use to represent a ExtendedDaemonSetR condition
+type ExtendedDaemonSetConditionType string
+
+const (
+	// ConditionTypeEDSReconcileError the controller wasn't able to run properly the reconcile loop with this ExtendedDaemonSet
+	ConditionTypeEDSReconcileError ExtendedDaemonSetConditionType = "ReconcileError"
+	// ConditionTypeEDSCanaryPaused ExtendedDaemonSet is in canary mode
+	ConditionTypeEDSCanaryPaused ExtendedDaemonSetConditionType = "Canary-Paused"
+	// ConditionTypeEDSCanaryFailed ExtendedDaemonSetis in canary mode
+	ConditionTypeEDSCanaryFailed ExtendedDaemonSetConditionType = "Canary-Failed"
+)
+
+// ExtendedDaemonSetCondition describes the state of a ExtendedDaemonSet at a certain point.
+type ExtendedDaemonSetCondition struct {
+	// Type of ExtendedDaemonSetReplicaSet condition.
+	Type ExtendedDaemonSetConditionType `json:"type"`
+	// Status of the condition, one of True, False, Unknown.
+	Status corev1.ConditionStatus `json:"status"`
+	// Last time the condition transitioned from one status to another.
+	// +optional
+	LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty"`
+	// Last time the condition was updated.
+	// +optional
+	LastUpdateTime metav1.Time `json:"lastUpdateTime,omitempty"`
+	// The reason for the condition's last transition.
+	// +optional
+	Reason string `json:"reason,omitempty"`
+	// A human readable message indicating details about the transition.
+	// +optional
+	Message string `json:"message,omitempty"`
+}
+
 // ExtendedDaemonSetStatus defines the observed state of ExtendedDaemonSet
 // +k8s:openapi-gen=true
 type ExtendedDaemonSetStatus struct {
@@ -152,6 +184,11 @@ type ExtendedDaemonSetStatus struct {
 	// Reason provides an explanation for canary deployment autopause
 	// +optional
 	Reason ExtendedDaemonSetStatusReason `json:"reason,omitempty"`
+
+	// Conditions Represents the latest available observations of a DaemonSet's current state.
+	// +listType=map
+	// +listMapKey=type
+	Conditions []ExtendedDaemonSetCondition `json:"conditions,omitempty"`
 }
 
 // ExtendedDaemonSetStatusCanary defines the observed state of ExtendedDaemonSet canary deployment

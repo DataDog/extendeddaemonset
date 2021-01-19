@@ -570,12 +570,33 @@ func schema__api_v1alpha1_ExtendedDaemonSetStatus(ref common.ReferenceCallback) 
 							Format:      "",
 						},
 					},
+					"conditions": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"type",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Conditions Represents the latest available observations of a DaemonSet's current state.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("./api/v1alpha1.ExtendedDaemonSetCondition"),
+									},
+								},
+							},
+						},
+					},
 				},
 				Required: []string{"desired", "current", "ready", "available", "upToDate", "ignoredUnresponsiveNodes", "activeReplicaSet"},
 			},
 		},
 		Dependencies: []string{
-			"./api/v1alpha1.ExtendedDaemonSetStatusCanary"},
+			"./api/v1alpha1.ExtendedDaemonSetCondition", "./api/v1alpha1.ExtendedDaemonSetStatusCanary"},
 	}
 }
 

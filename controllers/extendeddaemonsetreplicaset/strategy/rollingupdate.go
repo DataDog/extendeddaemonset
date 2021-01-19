@@ -37,7 +37,7 @@ func ManageDeployment(client runtimeclient.Client, params *Parameters) (*Result,
 	}
 	now := time.Now()
 	metaNow := metav1.NewTime(now)
-	var desiredPods, availablePods, readyPods, currentPods, oldAvailablePods, podsTerminating, nbIgnoredUnresponsiveNodes int32
+	var desiredPods, availablePods, readyPods, createdPods, allPods, oldAvailablePods, podsTerminating, nbIgnoredUnresponsiveNodes int32
 
 	allPodToCreate := []*NodeItem{}
 	allPodToDelete := []*NodeItem{}
@@ -59,6 +59,8 @@ func ManageDeployment(client runtimeclient.Client, params *Parameters) (*Result,
 				nbIgnoredUnresponsiveNodes++
 				continue
 			}
+
+			allPods++
 			if !compareCurrentPodWithNewPod(params, pod, node) {
 				if pod.DeletionTimestamp == nil {
 					allPodToDelete = append(allPodToDelete, node)
@@ -70,7 +72,7 @@ func ManageDeployment(client runtimeclient.Client, params *Parameters) (*Result,
 					oldAvailablePods++
 				}
 			} else {
-				currentPods++
+				createdPods++
 				if podutils.IsPodAvailable(pod, 0, metaNow) {
 					availablePods++
 				}
@@ -87,7 +89,6 @@ func ManageDeployment(client runtimeclient.Client, params *Parameters) (*Result,
 		params.Logger.Error(err, "unable to retrieve maxUnavailable pod from the strategy.RollingUpdate.MaxUnavailable parameter")
 		return result, err
 	}
-	params.Logger.V(1).Info("Parameters", "nbNodes", nbNodes, "createdPod", currentPods, "nbPodReady", readyPods, "availablePods", availablePods, "oldAvailablePods", oldAvailablePods, "maxUnavailable", maxUnavailable, "nbPodToCreate", len(allPodToCreate), "nbPodToDelete", len(allPodToDelete), "podsTerminating", podsTerminating)
 
 	rollingUpdateStartTime := getRollingUpdateStartTime(&params.Replicaset.Status, now)
 	maxCreation, err := calculateMaxCreation(&params.Strategy.RollingUpdate, nbNodes, rollingUpdateStartTime, now)
@@ -95,14 +96,15 @@ func ManageDeployment(client runtimeclient.Client, params *Parameters) (*Result,
 		params.Logger.Error(err, "error during calculateMaxCreation execution")
 		return result, err
 	}
+	params.Logger.V(1).Info("Parameters", "nbNodes", nbNodes, "createdPods", createdPods, "allPods", allPods, "nbPodReady", readyPods, "availablePods", availablePods, "oldAvailablePods", oldAvailablePods, "maxPodsCreation", maxCreation, "maxUnavailable", maxUnavailable, "nbPodToCreate", len(allPodToCreate), "nbPodToDelete", len(allPodToDelete), "podsTerminating", podsTerminating)
 
 	limitParams := limits.Parameters{
 		NbNodes: nbNodes,
 
-		NbPods:             int(currentPods),
+		NbPods:             int(allPods),
 		NbAvailablesPod:    int(availablePods),
 		NbOldAvailablesPod: int(oldAvailablePods),
-		NbCreatedPod:       int(currentPods),
+		NbCreatedPod:       int(createdPods),
 		MaxUnavailablePod:  maxUnavailable,
 		MaxPodCreation:     maxCreation,
 	}
@@ -118,7 +120,7 @@ func ManageDeployment(client runtimeclient.Client, params *Parameters) (*Result,
 		result.NewStatus.Status = string(ReplicaSetStatusActive)
 		result.NewStatus.Desired = desiredPods
 		result.NewStatus.Ready = readyPods
-		result.NewStatus.Current = currentPods
+		result.NewStatus.Current = createdPods
 		result.NewStatus.Available = availablePods
 		result.NewStatus.IgnoredUnresponsiveNodes = nbIgnoredUnresponsiveNodes
 	}
@@ -146,7 +148,7 @@ func ManageDeployment(client runtimeclient.Client, params *Parameters) (*Result,
 			result.Result.Requeue = true
 		} else {
 			for _, pod := range canaryPods.Items {
-				if err = deletePodLabel(client, &pod, datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelKey); err != nil {
+				if err = deletePodLabel(params.Logger, client, &pod, datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelKey); err != nil {
 					params.Logger.Error(err, fmt.Sprintf("Couldn't remove canary label from pod '%s/%s'", pod.GetNamespace(), pod.GetName()))
 					result.Result.Requeue = true
 				}

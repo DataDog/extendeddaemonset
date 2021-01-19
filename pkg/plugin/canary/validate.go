@@ -143,7 +143,8 @@ func (o *validateOptions) run() error {
 		}
 	}
 	newEds.Annotations[v1alpha1.ExtendedDaemonSetCanaryValidAnnotationKey] = rsName
-	if err = o.client.Update(context.TODO(), newEds); err != nil {
+	patch := client.MergeFrom(eds)
+	if err = o.client.Patch(context.TODO(), newEds, patch); err != nil {
 		return fmt.Errorf("unable to validate the canary replicaset, err: %v", err)
 	}
 
