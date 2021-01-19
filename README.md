@@ -308,14 +308,6 @@ The Canary deployment can be manually failed. This command will restore the curr
 
 `kubectl-eds canary fail <ExtendedDaemonSet name>`
 
-#### Reset Canary deployment
-
-Following failure of the Canary deployment, the `fail` annotation should be reset with this command.
-
-`kubectl-eds canary reset <ExtendedDaemonSet name>`
-
-
-
 ### How to migrate from a DaemonSet
 
 If you already have an application running in your cluster with a DaemonSet, it is possible to migrate to an ExtendedDaemonSet with a `smooth` migration path.
@@ -348,6 +340,10 @@ $ make build
 CGO_ENABLED=0 go build -i -installsuffix cgo -ldflags '-w' -o controller ./cmd/manager/main.go
 ```
 
+### Implementation documentation
+
+* [Reconcile loops interactions](./docs/canary-worflows.md)
+
 ### How to test it
 
 ### Custom image
@@ -367,6 +363,31 @@ ok      github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplic
 ok      github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/strategy        1.036s  coverage: 5.3% of statements
 ok      github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/strategy/limits 1.016s  coverage: 83.3% of statements
 ok      github.com/DataDog/extendeddaemonset/pkg/controller/utils       1.015s  coverage: 100.0% of statements
+```
+
+##### controller-runtime envtest
+
+This project is using the `controller-runtime` [envtest](https://book.kubebuilder.io/reference/envtest.html) to test reconcile controllers loop against an API-Server dynamically started to run the tests.
+One advantage of using the controller-runtime `envtest` is that tests run faster compared to tests that run against a real k8s cluster. The downside is: only the `API-Server` is running but not the other controllers, so resources such as Pods are not updated by a Kubelet. You can find more information about the `envtest` limitation [here](https://book.kubebuilder.io/reference/envtest.html#testing-considerations).
+
+these test are located in `/controllers/extendeddaemonset_test.go`
+
+#### end2end test
+
+End2end tests are also present. Unlike the tests that use the `envtest`, the e2e tests need to have access to a running kubernetes cluster.
+The envvar KUBECONFIG should be set in the terminal where the `make e2e` is executed.
+
+[Kind](https://kind.sh/) is a great solution to start a multi-nodes cluster locally.
+
+```console
+$ kind create cluster --config examples/kind-cluster-configuration.yaml
+cluster created
+$ make e2e
+Ran 12 of 12 Specs in 242.249 seconds
+SUCCESS! -- 12 Passed | 0 Failed | 0 Pending | 0 Skipped
+--- PASS: TestAPIs (242.25s)
+PASS
+ok      github.com/DataDog/extendeddaemonset/controllers        242.686s
 ```
 
 ### Linter validation

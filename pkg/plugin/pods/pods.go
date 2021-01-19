@@ -56,7 +56,7 @@ func NewCmdPods(streams genericclioptions.IOStreams) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:          "pods [flags] [ExtendedDaemonSet name]",
 		Short:        "print the list pods managed by the EDS",
-		Example:      fmt.Sprintf(podsExample, "kubectl"),
+		Example:      fmt.Sprintf(podsExample, "kubectl eds"),
 		SilenceUsage: true,
 		RunE: func(c *cobra.Command, args []string) error {
 			if err := o.complete(c, args); err != nil {

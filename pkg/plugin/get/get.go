@@ -62,7 +62,7 @@ func NewCmdGet(streams genericclioptions.IOStreams) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:          "get [ExtendedDaemonSet name]",
 		Short:        "get ExtendedDaemonSet deployment(s)",
-		Example:      fmt.Sprintf(getExample, "kubectl"),
+		Example:      fmt.Sprintf(getExample, "kubectl eds"),
 		SilenceUsage: true,
 		RunE: func(c *cobra.Command, args []string) error {
 			if err := o.complete(c, args); err != nil {

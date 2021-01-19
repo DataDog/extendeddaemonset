@@ -16,6 +16,7 @@ import (
 func TestIsCanaryDeploymentPaused(t *testing.T) {
 	type args struct {
 		dsAnnotations map[string]string
+		// TODO(clamoriniere): add test with ERS.status
 	}
 
 	tests := []struct {
@@ -87,7 +88,7 @@ func TestIsCanaryDeploymentPaused(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, gotReason := IsCanaryDeploymentPaused(tt.args.dsAnnotations)
+			got, gotReason := IsCanaryDeploymentPaused(tt.args.dsAnnotations, nil)
 			if got != tt.want {
 				t.Errorf("IsCanaryDeploymentPaused() = %v, want %v", got, tt.want)
 			}
@@ -328,7 +329,7 @@ func TestIsCanaryDeploymentFailed(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := IsCanaryDeploymentFailed(tt.args.dsAnnotations); got != tt.want {
+			if got := IsCanaryDeploymentFailed(tt.args.dsAnnotations, nil); got != tt.want {
 				t.Errorf("IsCanaryDeploymentFailed() = %v, want %v", got, tt.want)
 			}
 		})

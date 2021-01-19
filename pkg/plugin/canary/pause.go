@@ -177,7 +177,8 @@ func (o *pauseOptions) run() error {
 	}
 	newEds.Annotations[v1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey] = fmt.Sprintf("%v", o.pauseStatus)
 
-	if err = o.client.Update(context.TODO(), newEds); err != nil {
+	patch := client.MergeFrom(eds)
+	if err = o.client.Patch(context.TODO(), newEds, patch); err != nil {
 		return fmt.Errorf("unable to %s ExtendedDaemonset deployment, err: %v", fmt.Sprintf("%v", o.pauseStatus), err)
 	}
 
