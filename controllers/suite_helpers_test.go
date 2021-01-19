@@ -12,7 +12,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 )
@@ -36,15 +35,4 @@ func withEDS(nsName types.NamespacedName, eds *datadoghqv1alpha1.ExtendedDaemonS
 
 func withERS(nsName types.NamespacedName, ers *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, condition condFn) condFn {
 	return withGet(nsName, ers, "ERS", condition)
-}
-
-func withList(listOptions []client.ListOption, obj runtime.Object, desc string, condition condFn) condFn {
-	return func() bool {
-		err := k8sClient.List(context.Background(), obj, listOptions...)
-		if err != nil {
-			fmt.Fprintf(GinkgoWriter, "Failed to list %s: %v", desc, err)
-			return false
-		}
-		return condition()
-	}
 }

@@ -162,11 +162,27 @@ func TestCalculatePodToCreateAndDelete(t *testing.T) {
 			wantNbDeletion: 3,
 		},
 		{
+			name: "10 nodes, 10 pods exist and 10ready, maxPodCreation=5,MaxUnavailablePod=3",
+			args: args{
+				params: Parameters{
+					NbNodes: 10,
+					NbPods:  10,
+
+					NbAvailablesPod:   9,
+					NbCreatedPod:      9,
+					MaxUnavailablePod: 3,
+					MaxPodCreation:    5,
+				},
+			},
+			wantNbCreation: 0,
+			wantNbDeletion: 2,
+		},
+		{
 			name: "10 nodes, 10 old ds pods exist and 0ready, maxPodCreation=5,MaxUnavailablePod=3",
 			args: args{
 				params: Parameters{
 					NbNodes: 10,
-					NbPods:  0,
+					NbPods:  10,
 
 					NbAvailablesPod:    0,
 					NbOldAvailablesPod: 10,
@@ -183,7 +199,7 @@ func TestCalculatePodToCreateAndDelete(t *testing.T) {
 			args: args{
 				params: Parameters{
 					NbNodes: 166,
-					NbPods:  0,
+					NbPods:  149,
 
 					NbAvailablesPod:    0,
 					NbOldAvailablesPod: 149,

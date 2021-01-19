@@ -107,6 +107,11 @@ func withDeletionTimestamp(pod *v1.Pod) *v1.Pod {
 	return pod
 }
 
+func withHostIP(pod *v1.Pod, ip string) *v1.Pod {
+	pod.Status.HostIP = ip
+	return pod
+}
+
 type canaryStatusTest struct {
 	annotations map[string]string
 	params      *Parameters
@@ -241,7 +246,7 @@ func TestManageCanaryStatus_NoRestartsAndPodWithDeletionTimestamp(t *testing.T) 
 			CanaryNodes: testCanaryNodeNames,
 			NodeByName:  testCanaryNodes,
 			PodByNodeName: map[*NodeItem]*v1.Pod{
-				testCanaryNodes["a"]: withDeletionTimestamp(newTestCanaryPod("foo-a", "v1", readyPodStatus)),
+				testCanaryNodes["a"]: withHostIP(withDeletionTimestamp(newTestCanaryPod("foo-a", "v1", readyPodStatus)), "1.2.3.4"),
 				testCanaryNodes["b"]: nil,
 				testCanaryNodes["c"]: nil,
 			},
@@ -321,6 +326,7 @@ func TestManageCanaryStatus_HighRestartsLeadingToPause(t *testing.T) {
 	now := time.Now()
 	restartedAt := now.Add(-time.Minute)
 	test := canaryStatusTest{
+		now: now,
 		params: &Parameters{
 			EDSName: "foo",
 			Strategy: &v1alpha1.ExtendedDaemonSetSpecStrategy{
@@ -359,6 +365,14 @@ func TestManageCanaryStatus_HighRestartsLeadingToPause(t *testing.T) {
 				Available: 0,
 				Conditions: []v1alpha1.ExtendedDaemonSetReplicaSetCondition{
 					{
+						Type:               v1alpha1.ConditionTypeCanaryPaused,
+						Status:             v1.ConditionTrue,
+						LastTransitionTime: metav1.NewTime(now),
+						LastUpdateTime:     metav1.NewTime(now),
+						Reason:             "CrashLoopBackOff",
+						Message:            "",
+					},
+					{
 						Type:               v1alpha1.ConditionTypePodRestarting,
 						Status:             v1.ConditionTrue,
 						LastTransitionTime: metav1.NewTime(restartedAt),
@@ -379,6 +393,7 @@ func TestManageCanaryStatus_HighRestartsLeadingToFail(t *testing.T) {
 	now := time.Now()
 	restartedAt := now.Add(-time.Minute)
 	test := canaryStatusTest{
+		now: now,
 		params: &Parameters{
 			EDSName: "foo",
 			Strategy: &v1alpha1.ExtendedDaemonSetSpecStrategy{
@@ -416,6 +431,14 @@ func TestManageCanaryStatus_HighRestartsLeadingToFail(t *testing.T) {
 				Ready:     0,
 				Available: 0,
 				Conditions: []v1alpha1.ExtendedDaemonSetReplicaSetCondition{
+					{
+						Type:               v1alpha1.ConditionTypeCanaryFailed,
+						Status:             v1.ConditionTrue,
+						LastTransitionTime: metav1.NewTime(now),
+						LastUpdateTime:     metav1.NewTime(now),
+						Reason:             "CrashLoopBackOff",
+						Message:            "",
+					},
 					{
 						Type:               v1alpha1.ConditionTypePodRestarting,
 						Status:             v1.ConditionTrue,
@@ -546,10 +569,18 @@ func TestManageCanaryStatus_ImagePullErrorLeadingToPause(t *testing.T) {
 				Available: 0,
 				Conditions: []v1alpha1.ExtendedDaemonSetReplicaSetCondition{
 					{
+						Type:               v1alpha1.ConditionTypeCanaryPaused,
+						Status:             v1.ConditionTrue,
+						LastTransitionTime: metav1.NewTime(now),
+						LastUpdateTime:     metav1.NewTime(now),
+						Reason:             "ImagePullBackOff",
+					},
+					{
 						Type:               v1alpha1.ConditionTypePodCannotStart,
 						Status:             v1.ConditionTrue,
 						LastTransitionTime: metav1.NewTime(now),
 						LastUpdateTime:     metav1.NewTime(now),
+						Reason:             "ImagePullBackOff",
 						Message:            "Pod foo-a cannot start with reason: ImagePullBackOff",
 					},
 				},

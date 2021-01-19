@@ -81,8 +81,16 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	}
 
 	if !datadoghqv1alpha1.IsDefaultedExtendedDaemonSet(daemonsetInstance) {
-		reqLogger.Info("Parent ExtendedDaemonSet is not defaulted, requeuing")
-		return reconcile.Result{RequeueAfter: time.Second}, nil
+		message := "Parent ExtendedDaemonSet is not defaulted, requeuing"
+		reqLogger.Info(message)
+		err = fmt.Errorf("parent ExtendedDaemonSet is not defaulted")
+		newStatus := replicaSetInstance.Status.DeepCopy()
+		// Updating the status with a new condition will trigger a new Event on the ExtendedDaemonSet-controller
+		// and so the ExtendedDamonset will be defaulted.
+		// It is better to only update a Resource Kind from its own controller, to avoid conccurent update.
+		conditions.UpdateErrorCondition(newStatus, now, err, message)
+		err = r.updateReplicaSet(replicaSetInstance, newStatus)
+		return reconcile.Result{RequeueAfter: time.Second}, err
 	}
 
 	lastResyncTimeStampCond := conditions.GetExtendedDaemonSetReplicaSetStatusCondition(&replicaSetInstance.Status, datadoghqv1alpha1.ConditionTypeLastFullSync)
@@ -120,39 +128,42 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	} else {
 		status = corev1.ConditionFalse
 	}
-	conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(newStatus, now, datadoghqv1alpha1.ConditionTypeUnschedule, status, desc, false, false)
+	conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(newStatus, now, datadoghqv1alpha1.ConditionTypeUnschedule, status, "", desc, false, false)
 
 	// start actions on pods
+	requeueAfter := 5 * time.Second
+	if daemonsetInstance.Spec.Strategy.ReconcileFrequency != nil {
+		requeueAfter = daemonsetInstance.Spec.Strategy.ReconcileFrequency.Duration
+	}
+
 	lastPodDeletionCondition := conditions.GetExtendedDaemonSetReplicaSetStatusCondition(newStatus, datadoghqv1alpha1.ConditionTypePodDeletion)
-	if lastPodDeletionCondition != nil && now.Sub(lastPodDeletionCondition.LastUpdateTime.Time) < 5*time.Second {
-		result.RequeueAfter = 5 * time.Second
+	if lastPodDeletionCondition != nil && now.Sub(lastPodDeletionCondition.LastUpdateTime.Time) < requeueAfter {
+		reqLogger.V(1).Info("Delay pods deletion", "deplay", requeueAfter, "since", now.Sub(lastPodDeletionCondition.LastUpdateTime.Time))
+		result.RequeueAfter = requeueAfter
 	} else {
 		errs = append(errs, deletePods(reqLogger, r.client, strategyParams.PodByNodeName, strategyResult.PodsToDelete)...)
 		if len(strategyResult.PodsToDelete) > 0 {
-			conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(newStatus, now, datadoghqv1alpha1.ConditionTypePodDeletion, corev1.ConditionTrue, "pods deleted", false, true)
+			conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(newStatus, now, datadoghqv1alpha1.ConditionTypePodDeletion, corev1.ConditionTrue, "", "pods deleted", false, true)
 		}
 	}
 
 	lastPodCreationCondition := conditions.GetExtendedDaemonSetReplicaSetStatusCondition(newStatus, datadoghqv1alpha1.ConditionTypePodCreation)
 	if lastPodCreationCondition != nil && now.Sub(lastPodCreationCondition.LastUpdateTime.Time) < daemonsetInstance.Spec.Strategy.ReconcileFrequency.Duration {
-		result.RequeueAfter = daemonsetInstance.Spec.Strategy.ReconcileFrequency.Duration
+		reqLogger.V(1).Info("Delay pods creation", "deplay:", requeueAfter, "since", now.Sub(lastPodDeletionCondition.LastUpdateTime.Time))
+		result.RequeueAfter = requeueAfter
 	} else {
 		errs = append(errs, createPods(reqLogger, r.client, r.scheme, r.options.IsNodeAffinitySupported, replicaSetInstance, strategyResult.PodsToCreate)...)
 		if len(strategyResult.PodsToCreate) > 0 {
-			conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(newStatus, now, datadoghqv1alpha1.ConditionTypePodCreation, corev1.ConditionTrue, "pods created", false, true)
+			conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(newStatus, now, datadoghqv1alpha1.ConditionTypePodCreation, corev1.ConditionTrue, "", "pods created", false, true)
 		}
 	}
 
 	err = utilserrors.NewAggregate(errs)
 	conditions.UpdateErrorCondition(newStatus, now, err, "")
-	conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(newStatus, now, datadoghqv1alpha1.ConditionTypeLastFullSync, corev1.ConditionTrue, "full sync", true, true)
+	conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(newStatus, now, datadoghqv1alpha1.ConditionTypeLastFullSync, corev1.ConditionTrue, "", "full sync", true, true)
 
 	reqLogger.V(1).Info("Updating ExtendedDaemonSetReplicaSet status")
 	err = r.updateReplicaSet(replicaSetInstance, newStatus)
-	if err != nil {
-		reqLogger.Error(err, "Failed to update ExtendedDaemonSetReplicaSet status")
-	}
-	reqLogger.V(1).Info("Reconcile end", "return", result, "error", err)
 	return result, err
 }
 
@@ -190,16 +201,16 @@ func (r *Reconciler) buildStrategyParams(logger logr.Logger, daemonset *datadogh
 func (r *Reconciler) applyStrategy(logger logr.Logger, daemonset *datadoghqv1alpha1.ExtendedDaemonSet, now metav1.Time, strategyParams *strategy.Parameters) (*strategy.Result, error) {
 	var strategyResult *strategy.Result
 	var err error
-
+	logger.V(1).Info("DaemonsetStatus: ", "status", daemonset.Status)
 	switch strategy.ReplicaSetStatus(strategyParams.ReplicaSetStatus) {
 	case strategy.ReplicaSetStatusActive:
 		logger.Info("manage deployment")
-		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(strategyParams.NewStatus, now, datadoghqv1alpha1.ConditionTypeActive, corev1.ConditionTrue, "", false, false)
-		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(strategyParams.NewStatus, now, datadoghqv1alpha1.ConditionTypeCanary, corev1.ConditionFalse, "", false, false)
+		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(strategyParams.NewStatus, now, datadoghqv1alpha1.ConditionTypeActive, corev1.ConditionTrue, "", "", false, false)
+		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(strategyParams.NewStatus, now, datadoghqv1alpha1.ConditionTypeCanary, corev1.ConditionFalse, "", "", false, false)
 		strategyResult, err = strategy.ManageDeployment(r.client, strategyParams)
 	case strategy.ReplicaSetStatusCanary:
-		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(strategyParams.NewStatus, now, datadoghqv1alpha1.ConditionTypeCanary, corev1.ConditionTrue, "", false, false)
-		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(strategyParams.NewStatus, now, datadoghqv1alpha1.ConditionTypeActive, corev1.ConditionFalse, "", false, false)
+		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(strategyParams.NewStatus, now, datadoghqv1alpha1.ConditionTypeCanary, corev1.ConditionTrue, "", "", false, false)
+		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(strategyParams.NewStatus, now, datadoghqv1alpha1.ConditionTypeActive, corev1.ConditionFalse, "", "", false, false)
 		logger.Info("manage canary deployment")
 		strategyResult, err = strategy.ManageCanaryDeployment(r.client, daemonset, strategyParams)
 	case strategy.ReplicaSetStatusCanaryFailed:
@@ -208,8 +219,8 @@ func (r *Reconciler) applyStrategy(logger logr.Logger, daemonset *datadoghqv1alp
 			NewStatus: strategyParams.NewStatus.DeepCopy(),
 		}
 	case strategy.ReplicaSetStatusUnknown:
-		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(strategyParams.NewStatus, now, datadoghqv1alpha1.ConditionTypeCanary, corev1.ConditionFalse, "", false, false)
-		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(strategyParams.NewStatus, now, datadoghqv1alpha1.ConditionTypeActive, corev1.ConditionFalse, "", false, false)
+		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(strategyParams.NewStatus, now, datadoghqv1alpha1.ConditionTypeCanary, corev1.ConditionFalse, "", "", false, false)
+		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(strategyParams.NewStatus, now, datadoghqv1alpha1.ConditionTypeActive, corev1.ConditionFalse, "", "", false, false)
 		logger.Info("ignore this replicaset, since it's not the replicas active or canary")
 		strategyResult, err = strategy.ManageUnknown(r.client, strategyParams)
 	}
@@ -267,6 +278,7 @@ func (r *Reconciler) updateReplicaSet(replicaset *datadoghqv1alpha1.ExtendedDaem
 		newRS.Status = *newStatus
 		return r.client.Status().Update(context.TODO(), newRS)
 	}
+
 	return nil
 }
 
