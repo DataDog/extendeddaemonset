@@ -36,4 +36,9 @@ const (
 	ExtendedDaemonSetRessourceNodeAnnotationKey = "resources.extendeddaemonset.datadoghq.com/%s.%s.%s"
 	// MD5NodeExtendedDaemonSetAnnotationKey annotation key use on Pods in order to identify which Node Resources Overwride have been used to generate it.
 	MD5NodeExtendedDaemonSetAnnotationKey = "extendeddaemonset.datadoghq.com/nodehash"
+
+	// ValueStringTrue is the string value of bool `true`
+	ValueStringTrue = "true"
+	// ValueStringFalse is the string value of bool `false`
+	ValueStringFalse = "false"
 )

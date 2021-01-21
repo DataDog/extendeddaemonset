@@ -186,7 +186,8 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 			continue
 		}
 
-		if autoFailEnabled && restartCount > autoFailMaxRestarts {
+		switch {
+		case autoFailEnabled && restartCount > autoFailMaxRestarts:
 			result.IsFailed = true
 			result.FailedReason = highRestartReason
 			params.Logger.Info(
@@ -195,7 +196,11 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 				"MaxRestarts", autoFailMaxRestarts,
 				"Reason", highRestartReason,
 			)
-		} else if !result.IsPaused && autoPauseEnabled && !result.IsUnpaused {
+		case result.IsUnpaused:
+			// Unpausing is a manual action and takes precedence
+			result.IsPaused = false
+			result.PausedReason = ""
+		case !result.IsPaused && autoPauseEnabled:
 			// Handle cases related to failure to start states
 			if cannotStart {
 				result.IsPaused = true

@@ -143,9 +143,9 @@ func (o *failOptions) run() error {
 	if newEds.Annotations == nil {
 		newEds.Annotations = make(map[string]string)
 	} else if isFailed, ok := newEds.Annotations[v1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey]; ok {
-		if o.failStatus && isFailed == "true" { //nolint:goconst
+		if o.failStatus && isFailed == v1alpha1.ValueStringTrue {
 			return fmt.Errorf("canary deployment already failed")
-		} else if !o.failStatus && isFailed == "false" { //nolint:goconst
+		} else if !o.failStatus && isFailed == v1alpha1.ValueStringFalse {
 			return fmt.Errorf("canary deployment already reset")
 		}
 	}

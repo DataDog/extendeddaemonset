@@ -22,10 +22,8 @@ import (
 )
 
 const (
-	cmdPause    = true
-	cmdUnpause  = false
-	stringTrue  = "true"
-	stringFalse = "false"
+	cmdPause   = true
+	cmdUnpause = false
 )
 
 var (
@@ -174,20 +172,20 @@ func (o *pauseOptions) run() error {
 	if newEds.Annotations == nil {
 		newEds.Annotations = make(map[string]string)
 	} else if isPaused, ok := newEds.Annotations[v1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]; ok {
-		if o.pauseStatus && isPaused == stringTrue {
+		if o.pauseStatus && isPaused == v1alpha1.ValueStringTrue {
 			return fmt.Errorf("canary deployment already paused")
-		} else if !o.pauseStatus && isPaused == stringFalse {
+		} else if !o.pauseStatus && isPaused == v1alpha1.ValueStringFalse {
 			return fmt.Errorf("canary deployment is not paused; cannot unpause")
 		}
 	}
 	// Set appropriate annotation depending on whether cmd is to pause or unpause
 	if o.pauseStatus {
-		newEds.Annotations[v1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey] = stringTrue
+		newEds.Annotations[v1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey] = v1alpha1.ValueStringTrue
 		// Set to false in case it was previously true
-		newEds.Annotations[v1alpha1.ExtendedDaemonSetCanaryUnpausedAnnotationKey] = stringFalse
+		newEds.Annotations[v1alpha1.ExtendedDaemonSetCanaryUnpausedAnnotationKey] = v1alpha1.ValueStringFalse
 	} else {
-		newEds.Annotations[v1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey] = stringFalse
-		newEds.Annotations[v1alpha1.ExtendedDaemonSetCanaryUnpausedAnnotationKey] = stringTrue
+		newEds.Annotations[v1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey] = v1alpha1.ValueStringFalse
+		newEds.Annotations[v1alpha1.ExtendedDaemonSetCanaryUnpausedAnnotationKey] = v1alpha1.ValueStringTrue
 	}
 
 	patch := client.MergeFrom(eds)
