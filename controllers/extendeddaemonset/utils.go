@@ -60,7 +60,6 @@ func IsCanaryDeploymentEnded(specCanary *datadoghqv1alpha1.ExtendedDaemonSetSpec
 
 // IsCanaryDeploymentPaused checks if the Canary deployment has been paused
 func IsCanaryDeploymentPaused(dsAnnotations map[string]string, ers *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) (bool, datadoghqv1alpha1.ExtendedDaemonSetStatusReason) {
-
 	// check ERS status to detect if a Canary paused
 	if ers != nil && conditions.IsConditionTrue(&ers.Status, datadoghqv1alpha1.ConditionTypeCanaryPaused) {
 		cond := conditions.GetExtendedDaemonSetReplicaSetStatusCondition(&ers.Status, datadoghqv1alpha1.ConditionTypeCanaryPaused)
@@ -70,13 +69,22 @@ func IsCanaryDeploymentPaused(dsAnnotations map[string]string, ers *datadoghqv1a
 
 	// Check annotations is a user have added the pause annotation.
 	isPaused, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]
-	if found && isPaused == "true" { //nolint:goconst
+	if found && isPaused == v1alpha1.ValueStringTrue {
 		if reason, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey]; found {
 			return true, datadoghqv1alpha1.ExtendedDaemonSetStatusReason(reason)
 		}
 		return true, datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown
 	}
 	return false, ""
+}
+
+// IsCanaryDeploymentUnpaused checks if the Canary deployment has been manually unpaused
+func IsCanaryDeploymentUnpaused(dsAnnotations map[string]string) bool {
+	isUnpaused, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryUnpausedAnnotationKey]
+	if found {
+		return isUnpaused == v1alpha1.ValueStringTrue
+	}
+	return false
 }
 
 // IsCanaryDeploymentValid used to know if the Canary deployment has been declared
@@ -98,7 +106,7 @@ func IsCanaryDeploymentFailed(dsAnnotations map[string]string, ers *datadoghqv1a
 
 	// Check also failed annotations if a user wanted to force a canary failure
 	if value, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey]; found {
-		return value == "true"
+		return value == v1alpha1.ValueStringTrue
 	}
 	return false
 }

@@ -71,7 +71,7 @@ func ginkgoLog(format string, a ...interface{}) {
 	fmt.Fprintf(GinkgoWriter, format, a...)
 }
 
-// These tests may take several minutes to run, check you go test timeout
+// These tests may take several minutes to run, check your go test timeout
 var _ = Describe("ExtendedDaemonSet e2e updates and recovery", func() {
 	Context("Initial deployment", func() {
 		name := "eds-fail"
@@ -200,7 +200,7 @@ var _ = Describe("ExtendedDaemonSet e2e updates and recovery", func() {
 			Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
 			info("EDS status:\n%s\n", spew.Sdump(eds.Status))
 
-			clearCanaryAnnotations(eds)
+			_ = clearCanaryAnnotations(eds)
 
 			eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("gcr.io/google-containers/alpine-with-bash:1.0")
 			eds.Spec.Template.Spec.Containers[0].Command = []string{
@@ -224,6 +224,11 @@ var _ = Describe("ExtendedDaemonSet e2e updates and recovery", func() {
 			Eventually(withEDS(key, eds, func() bool {
 				return eds.Status.State == datadoghqv1alpha1.ExtendedDaemonSetStatusStateRunning
 			}), timeout, interval).Should(BeTrue())
+
+			Eventually(withEDS(key, eds, func() bool {
+				_, found := eds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey]
+				return found
+			}), timeout, interval).Should(BeFalse())
 		})
 
 		It("Should delete EDS", func() {
@@ -448,7 +453,7 @@ var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition", func() {
 	})
 })
 
-// These tests may take several minutes to run, check you go test timeout
+// These tests may take several minutes to run, check your go test timeout
 var _ = Describe("ExtendedDaemonSet e2e successful canary deployment update", func() {
 	Context("Initial deployment", func() {
 		name := fmt.Sprintf("eds-foo-%d", time.Now().Unix())
@@ -581,7 +586,7 @@ var _ = Describe("ExtendedDaemonSet e2e successful canary deployment update", fu
 
 })
 
-// This test may take ~30s to run, check you go test timeout
+// This test may take ~30s to run, check your go test timeout
 var _ = Describe("ExtendedDaemonSet Controller", func() {
 	const timeout = time.Second * 30
 	const longTimeout = time.Second * 120
@@ -725,11 +730,22 @@ func withList(listOptions []client.ListOption, obj runtime.Object, desc string, 
 	}
 }
 
-func clearCanaryAnnotations(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
-	delete(eds.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey)
-	delete(eds.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey)
-	delete(eds.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey)
-	delete(eds.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedReasonAnnotationKey)
+func clearCanaryAnnotations(eds *datadoghqv1alpha1.ExtendedDaemonSet) bool {
+	keysToDelete := []string{
+		datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey,
+		datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey,
+		datadoghqv1alpha1.ExtendedDaemonSetCanaryUnpausedAnnotationKey,
+		datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey,
+		datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedReasonAnnotationKey,
+	}
+	var updated bool
+	for _, key := range keysToDelete {
+		if _, ok := eds.Annotations[key]; ok {
+			delete(eds.Annotations, key)
+			updated = true
+		}
+	}
+	return updated
 }
 
 func deleteEDS(k8sclient client.Client, key types.NamespacedName) condFn {
