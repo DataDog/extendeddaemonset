@@ -915,8 +915,8 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 				t.Errorf("ReconcileExtendedDaemonSet.updateInstanceWithCurrentRS() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			assert.Equal(t, tt.want, got, "econcileExtendedDaemonSet.updateInstanceWithCurrentRS()")
-			assert.Equal(t, tt.wantResult, got1, "econcileExtendedDaemonSet.updateInstanceWithCurrentRS().result")
+			assert.Equal(t, tt.want, got, "ReconcileExtendedDaemonSet.updateInstanceWithCurrentRS()")
+			assert.Equal(t, tt.wantResult, got1, "ReconcileExtendedDaemonSet.updateInstanceWithCurrentRS().result")
 		})
 	}
 }
