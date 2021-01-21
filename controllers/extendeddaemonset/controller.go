@@ -218,6 +218,7 @@ func (r *Reconciler) updateInstanceWithCurrentRS(logger logr.Logger, now time.Ti
 	metaNow := metav1.NewTime(now)
 
 	var updateDaemonsetSpec bool
+	var updateDaemonsetAnnotations bool
 	// If the deployment is in Canary phase, then update status (and spec as needed)
 	if daemonset.Spec.Strategy.Canary != nil {
 
@@ -252,7 +253,7 @@ func (r *Reconciler) updateInstanceWithCurrentRS(logger logr.Logger, now time.Ti
 			}
 		} else {
 			// if the Canary Deployment is not active anymore remove the canary annotations
-			clearCanaryAnnotations(newDaemonset)
+			updateDaemonsetAnnotations = clearCanaryAnnotations(newDaemonset)
 		}
 	}
 
@@ -268,10 +269,11 @@ func (r *Reconciler) updateInstanceWithCurrentRS(logger logr.Logger, now time.Ti
 			return extendedDaemonsetCopy, reconcile.Result{}, fmt.Errorf("failed to update ExtendedDaemonSet status, %w", err)
 		}
 
-		if updateDaemonsetSpec {
+		if updateDaemonsetSpec || updateDaemonsetAnnotations {
 			// we use the `extendedDaemonsetCopy` instance to have last version. that contains the latest metadata info (resource version)
 			// Copy the spec part into the extendedDaemonsetCopy.
 			extendedDaemonsetCopy.Spec = *newDaemonset.Spec.DeepCopy()
+			extendedDaemonsetCopy.Annotations = newDaemonset.Annotations
 			// In case of canaryFailed, we also update the ExtendedDaemonset.Spec
 			logger.Info("Updating ExtendedDaemonSet.Spec")
 			if err := r.client.Update(context.TODO(), extendedDaemonsetCopy); err != nil {
@@ -566,11 +568,22 @@ func (r *Reconciler) cleanupReplicaSet(logger logr.Logger, rsList *datadoghqv1al
 	return utilserrors.NewAggregate(errs)
 }
 
-func clearCanaryAnnotations(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
-	delete(eds.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey)
-	delete(eds.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey)
-	delete(eds.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey)
-	delete(eds.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedReasonAnnotationKey)
+func clearCanaryAnnotations(eds *datadoghqv1alpha1.ExtendedDaemonSet) bool {
+	keysToDelete := []string{
+		datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey,
+		datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey,
+		datadoghqv1alpha1.ExtendedDaemonSetCanaryUnpausedAnnotationKey,
+		datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey,
+		datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedReasonAnnotationKey,
+	}
+	var updated bool
+	for _, key := range keysToDelete {
+		if _, ok := eds.Annotations[key]; ok {
+			delete(eds.Annotations, key)
+			updated = true
+		}
+	}
+	return updated
 }
 
 type podsCounterType struct {

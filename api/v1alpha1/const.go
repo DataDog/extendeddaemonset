@@ -22,6 +22,8 @@ const (
 	ExtendedDaemonSetCanaryPausedAnnotationKey = "extendeddaemonset.datadoghq.com/canary-paused"
 	// ExtendedDaemonSetCanaryPausedReasonAnnotationKey annotation key used on ExtendedDaemonset to provide a reason that the a canary deployment is paused.
 	ExtendedDaemonSetCanaryPausedReasonAnnotationKey = "extendeddaemonset.datadoghq.com/canary-paused-reason"
+	// ExtendedDaemonSetCanaryUnpausedAnnotationKey annotation key used on ExtendedDaemonset in order to detect if a canary deployment is manually unpaused.
+	ExtendedDaemonSetCanaryUnpausedAnnotationKey = "extendeddaemonset.datadoghq.com/canary-unpaused"
 	// ExtendedDaemonSetCanaryFailedAnnotationKey annotation key used on ExtendedDaemonset in order to detect if a canary deployment has failed.
 	ExtendedDaemonSetCanaryFailedAnnotationKey = "extendeddaemonset.datadoghq.com/canary-failed"
 	// ExtendedDaemonSetCanaryFailedReasonAnnotationKey annotation key used on ExtendedDaemonset in order to provide a reason that the a canary deployment is failed.
@@ -34,4 +36,9 @@ const (
 	ExtendedDaemonSetRessourceNodeAnnotationKey = "resources.extendeddaemonset.datadoghq.com/%s.%s.%s"
 	// MD5NodeExtendedDaemonSetAnnotationKey annotation key use on Pods in order to identify which Node Resources Overwride have been used to generate it.
 	MD5NodeExtendedDaemonSetAnnotationKey = "extendeddaemonset.datadoghq.com/nodehash"
+
+	// ValueStringTrue is the string value of bool `true`
+	ValueStringTrue = "true"
+	// ValueStringFalse is the string value of bool `false`
+	ValueStringFalse = "false"
 )

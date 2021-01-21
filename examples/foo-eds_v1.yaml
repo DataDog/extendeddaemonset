@@ -7,6 +7,8 @@ spec:
     canary:
       replicas: 1
       duration: 5m
+      autoFail:
+        enabled: false
     rollingUpdate:
       maxParallelPodCreation: 1
       slowStartIntervalDuration: 1m
