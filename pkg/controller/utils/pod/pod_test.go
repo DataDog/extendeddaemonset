@@ -6,6 +6,7 @@
 package pod
 
 import (
+	"reflect"
 	"testing"
 	"time"
 
@@ -276,5 +277,64 @@ func newPod(now metav1.Time, ready bool, beforeSec int) *v1.Pod {
 				},
 			},
 		},
+	}
+}
+
+func Test_convertReasonToEDSStatusReason(t *testing.T) {
+	tests := []struct {
+		reason string
+		want   datadoghqv1alpha1.ExtendedDaemonSetStatusReason
+	}{
+		{
+			reason: "CrashLoopBackOff",
+			want:   datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB,
+		},
+		{
+			reason: "OOMKilled",
+			want:   datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM,
+		},
+		{
+			reason: "RestartsTimeoutExceeded",
+			want:   datadoghqv1alpha1.ExtendedDaemonSetStatusRestartsTimeoutExceeded,
+		},
+		{
+			reason: "SlowStartTimeoutExceeded",
+			want:   datadoghqv1alpha1.ExtendedDaemonSetStatusSlowStartTimeoutExceeded,
+		},
+		{
+			reason: "ErrImagePull",
+			want:   datadoghqv1alpha1.ExtendedDaemonSetStatusReasonErrImagePull,
+		},
+		{
+			reason: "ImagePullBackOff",
+			want:   datadoghqv1alpha1.ExtendedDaemonSetStatusReasonImagePullBackOff,
+		},
+		{
+			reason: "CreateContainerConfigError",
+			want:   datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCreateContainerConfigError,
+		},
+		{
+			reason: "CreateContainerError",
+			want:   datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCreateContainerError,
+		},
+		{
+			reason: "PreStartHookError",
+			want:   datadoghqv1alpha1.ExtendedDaemonSetStatusReasonPreStartHookError,
+		},
+		{
+			reason: "PostStartHookError",
+			want:   datadoghqv1alpha1.ExtendedDaemonSetStatusReasonPostStartHookError,
+		},
+		{
+			reason: "does not exist",
+			want:   datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.reason, func(t *testing.T) {
+			if got := convertReasonToEDSStatusReason(tt.reason); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("convertReasonToEDSStatusReason() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
