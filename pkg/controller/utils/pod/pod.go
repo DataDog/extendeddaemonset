@@ -99,6 +99,11 @@ func GetPodConditionFromList(conditions []v1.PodCondition, conditionType v1.PodC
 	return -1, nil
 }
 
+func containerStatusList(pod *v1.Pod) []v1.ContainerStatus {
+	containersStatus := append(pod.Status.ContainerStatuses, pod.Status.InitContainerStatuses...)
+	return append(containersStatus, pod.Status.EphemeralContainerStatuses...)
+}
+
 // HighestRestartCount checks if a pod in the Canary deployment is restarting
 // This returns the count and the "reason" for the pod with the most restarts
 func HighestRestartCount(pod *v1.Pod) (int, datadoghqv1alpha1.ExtendedDaemonSetStatusReason) {
@@ -108,7 +113,7 @@ func HighestRestartCount(pod *v1.Pod) (int, datadoghqv1alpha1.ExtendedDaemonSetS
 		reason       datadoghqv1alpha1.ExtendedDaemonSetStatusReason
 	)
 
-	for _, s := range pod.Status.ContainerStatuses {
+	for _, s := range containerStatusList(pod) {
 		if s.RestartCount > restartCount {
 			restartCount = s.RestartCount
 			reason = datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown
@@ -126,7 +131,7 @@ func MostRecentRestart(pod *v1.Pod) (time.Time, datadoghqv1alpha1.ExtendedDaemon
 		restartTime time.Time
 		reason      datadoghqv1alpha1.ExtendedDaemonSetStatusReason
 	)
-	for _, s := range pod.Status.ContainerStatuses {
+	for _, s := range containerStatusList(pod) {
 		if s.RestartCount != 0 && s.LastTerminationState != (v1.ContainerState{}) && s.LastTerminationState.Terminated != (&v1.ContainerStateTerminated{}) {
 			if s.LastTerminationState.Terminated.FinishedAt.After(restartTime) {
 				restartTime = s.LastTerminationState.Terminated.FinishedAt.Time
@@ -158,17 +163,36 @@ func IsCannotStartReason(reason string) bool {
 
 // CannotStart returns true if the Pod is currently experiencing abnormal start condition
 func CannotStart(pod *v1.Pod) (bool, datadoghqv1alpha1.ExtendedDaemonSetStatusReason) {
-	for _, s := range pod.Status.ContainerStatuses {
+	for _, s := range containerStatusList(pod) {
 		if s.State.Waiting != nil && IsCannotStartReason(s.State.Waiting.Reason) {
-			return true, datadoghqv1alpha1.ExtendedDaemonSetStatusReason(s.State.Waiting.Reason)
+			return true, convertReasonToEDSStatusReason(s.State.Waiting.Reason)
 		}
 	}
 	return false, datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown
 }
 
+func convertReasonToEDSStatusReason(reason string) datadoghqv1alpha1.ExtendedDaemonSetStatusReason {
+	t := datadoghqv1alpha1.ExtendedDaemonSetStatusReason(reason)
+	switch t {
+	case datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB,
+		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM,
+		datadoghqv1alpha1.ExtendedDaemonSetStatusRestartsTimeoutExceeded,
+		datadoghqv1alpha1.ExtendedDaemonSetStatusSlowStartTimeoutExceeded,
+		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonErrImagePull,
+		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonImagePullBackOff,
+		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCreateContainerConfigError,
+		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCreateContainerError,
+		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonPreStartHookError,
+		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonPostStartHookError:
+		return t
+	default:
+		return datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown
+	}
+}
+
 // PendingCreate returns true if the Pod is pending create (may be an eventually resolving state)
 func PendingCreate(pod *v1.Pod) bool {
-	for _, s := range pod.Status.ContainerStatuses {
+	for _, s := range containerStatusList(pod) {
 		if s.State.Waiting != nil && s.State.Waiting.Reason == "ContainerCreating" {
 			return true
 		}

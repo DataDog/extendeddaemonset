@@ -147,7 +147,7 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 		restartingPodStatus string
 
 		cannotStart          bool
-		cannotStartPodReason string
+		cannotStartPodReason v1alpha1.ExtendedDaemonSetStatusReason
 		cannotStartPodStatus string
 	)
 
@@ -167,7 +167,7 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 		cannotStart, cannotStartReason = podUtils.CannotStart(pod)
 		if cannotStart {
 			cannotStartPodStatus = fmt.Sprintf("Pod %s cannot start with reason: %s", pod.ObjectMeta.Name, string(cannotStartReason))
-			cannotStartPodReason = string(cannotStartReason)
+			cannotStartPodReason = cannotStartReason
 		} else if autoPauseEnabled && podUtils.PendingCreate(pod) && params.Strategy.Canary.AutoPause.MaxSlowStartDuration != nil {
 			if time.Now().After(pod.Status.StartTime.Time.Add(params.Strategy.Canary.AutoPause.MaxSlowStartDuration.Duration)) {
 				params.Logger.Info(
@@ -178,7 +178,7 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 				cannotStart = true
 				cannotStartReason = v1alpha1.ExtendedDaemonSetStatusSlowStartTimeoutExceeded
 				cannotStartPodStatus = fmt.Sprintf("Pod %s cannot start with reason: %s", pod.ObjectMeta.Name, cannotStartReason)
-				cannotStartPodReason = string(cannotStartReason)
+				cannotStartPodReason = cannotStartReason
 			}
 		}
 
@@ -240,7 +240,7 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 			metav1.NewTime(newRestartTime),
 			v1alpha1.ConditionTypePodRestarting,
 			v1.ConditionTrue,
-			cannotStartPodReason,
+			string(cannotStartPodReason),
 			restartingPodStatus,
 			false,
 			true,
@@ -263,7 +263,7 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 		metav1.NewTime(now),
 		v1alpha1.ConditionTypePodCannotStart,
 		conditionStatus,
-		cannotStartPodReason,
+		string(cannotStartPodReason),
 		cannotStartPodStatus,
 		false,
 		true,
