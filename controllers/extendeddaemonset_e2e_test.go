@@ -492,6 +492,7 @@ var _ = Describe("ExtendedDaemonSet e2e successful canary deployment update", fu
 				Name:      eds.Status.ActiveReplicaSet,
 			}
 			Eventually(withERS(ersKey, ers, func() bool {
+				fmt.Fprintf(GinkgoWriter, "ERS status:\n%s\n", spew.Sdump(ers.Status))
 				return ers.Status.Status == "active" && int(ers.Status.Available) == len(nodeList.Items)
 			}), timeout, interval).Should(BeTrue())
 		})
@@ -538,7 +539,6 @@ var _ = Describe("ExtendedDaemonSet e2e successful canary deployment update", fu
 				if eds.Annotations == nil {
 					eds.Annotations = make(map[string]string)
 				}
-
 				eds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryValidAnnotationKey] = canaryReplicaSet
 				eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("k8s.gcr.io/pause:3.1")
 			}
@@ -548,12 +548,9 @@ var _ = Describe("ExtendedDaemonSet e2e successful canary deployment update", fu
 				func() string { return "Unable to update the EDS" },
 			)
 
-			Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
-			fmt.Fprintf(GinkgoWriter, "EDS status:\n%s\n", spew.Sdump(eds.Status))
-
 			Eventually(withEDS(key, eds, func() bool {
 				return eds.Status.ActiveReplicaSet == canaryReplicaSet
-			}), timeout, interval).Should(BeTrue())
+			}), timeout, interval).Should(BeTrue(), "eds status should be updated")
 
 			canaryPods := &corev1.PodList{}
 			listOptions := []client.ListOption{
