@@ -200,7 +200,7 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 			// Unpausing is a manual action and takes precedence
 			result.IsPaused = false
 			result.PausedReason = ""
-		case !result.IsPaused && autoPauseEnabled:
+		case autoPauseEnabled:
 			// Handle cases related to failure to start states
 			if cannotStart {
 				result.IsPaused = true
