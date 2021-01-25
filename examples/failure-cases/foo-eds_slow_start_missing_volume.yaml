@@ -18,6 +18,7 @@ spec:
         maxRestartsDuration: 10m
     rollingUpdate:
       maxParallelPodCreation: 1
+      maxUnavailable: 2
       slowStartIntervalDuration: 1m
   template:
     spec:

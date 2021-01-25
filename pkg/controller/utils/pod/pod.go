@@ -183,7 +183,8 @@ func convertReasonToEDSStatusReason(reason string) datadoghqv1alpha1.ExtendedDae
 		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCreateContainerConfigError,
 		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCreateContainerError,
 		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonPreStartHookError,
-		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonPostStartHookError:
+		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonPostStartHookError,
+		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonStartError:
 		return t
 	default:
 		return datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown
