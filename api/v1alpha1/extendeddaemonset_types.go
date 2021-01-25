@@ -143,6 +143,8 @@ const (
 	ExtendedDaemonSetStatusReasonPreStartHookError ExtendedDaemonSetStatusReason = "PreStartHookError"
 	// ExtendedDaemonSetStatusReasonPostStartHookError represent PostStartHookError as the reason for the ExtendedDaemonSet status state
 	ExtendedDaemonSetStatusReasonPostStartHookError ExtendedDaemonSetStatusReason = "PostStartHookError"
+	// ExtendedDaemonSetStatusReasonStartError represent StartError as the reason for the ExtendedDaemonSet status state
+	ExtendedDaemonSetStatusReasonStartError ExtendedDaemonSetStatusReason = "StartError"
 	// ExtendedDaemonSetStatusReasonUnknown represents an Unknown reason for the status state
 	ExtendedDaemonSetStatusReasonUnknown ExtendedDaemonSetStatusReason = "Unknown"
 )

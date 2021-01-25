@@ -11,6 +11,7 @@ spec:
         enabled: false
     rollingUpdate:
       maxParallelPodCreation: 1
+      maxUnavailable: 2
       slowStartIntervalDuration: 1m
   template:
     spec: 
