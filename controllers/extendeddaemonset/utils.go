@@ -10,12 +10,9 @@ import (
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
-
+	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"k8s.io/apimachinery/pkg/labels"
-
-	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/conditions"
 )
@@ -35,7 +32,7 @@ func IsCanaryDeploymentEnded(specCanary *datadoghqv1alpha1.ExtendedDaemonSetSpec
 
 	var lastRestartTime time.Time
 
-	restartCondition := conditions.GetExtendedDaemonSetReplicaSetStatusCondition(&rs.Status, v1alpha1.ConditionTypePodRestarting)
+	restartCondition := conditions.GetExtendedDaemonSetReplicaSetStatusCondition(&rs.Status, datadoghqv1alpha1.ConditionTypePodRestarting)
 	if restartCondition != nil {
 		lastRestartTime = restartCondition.LastUpdateTime.Time
 	}
@@ -69,7 +66,7 @@ func IsCanaryDeploymentPaused(dsAnnotations map[string]string, ers *datadoghqv1a
 
 	// Check annotations is a user have added the pause annotation.
 	isPaused, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]
-	if found && isPaused == v1alpha1.ValueStringTrue {
+	if found && isPaused == datadoghqv1alpha1.ValueStringTrue {
 		if reason, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey]; found {
 			return true, datadoghqv1alpha1.ExtendedDaemonSetStatusReason(reason)
 		}
@@ -82,7 +79,7 @@ func IsCanaryDeploymentPaused(dsAnnotations map[string]string, ers *datadoghqv1a
 func IsCanaryDeploymentUnpaused(dsAnnotations map[string]string) bool {
 	isUnpaused, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryUnpausedAnnotationKey]
 	if found {
-		return isUnpaused == v1alpha1.ValueStringTrue
+		return isUnpaused == datadoghqv1alpha1.ValueStringTrue
 	}
 	return false
 }
@@ -106,7 +103,7 @@ func IsCanaryDeploymentFailed(dsAnnotations map[string]string, ers *datadoghqv1a
 
 	// Check also failed annotations if a user wanted to force a canary failure
 	if value, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey]; found {
-		return value == v1alpha1.ValueStringTrue
+		return value == datadoghqv1alpha1.ValueStringTrue
 	}
 	return false
 }

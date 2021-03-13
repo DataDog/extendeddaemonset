@@ -13,6 +13,9 @@ import (
 	goruntime "runtime"
 	"strings"
 
+	"github.com/blang/semver"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	kversion "k8s.io/apimachinery/pkg/version"
@@ -29,10 +32,6 @@ import (
 	"github.com/DataDog/extendeddaemonset/pkg/controller/debug"
 	"github.com/DataDog/extendeddaemonset/pkg/controller/metrics"
 	"github.com/DataDog/extendeddaemonset/pkg/version"
-	"github.com/blang/semver"
-
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	// +kubebuilder:scaffold:imports
 )
 

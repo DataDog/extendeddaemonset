@@ -6,9 +6,8 @@
 package extendeddaemonset
 
 import (
-	"sigs.k8s.io/controller-runtime/pkg/manager"
-
 	ksmetric "k8s.io/kube-state-metrics/pkg/metric"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonset/conditions"

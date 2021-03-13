@@ -9,16 +9,14 @@ import (
 	"context"
 	"sync"
 
+	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
-
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/strategy"
 	podutils "github.com/DataDog/extendeddaemonset/pkg/controller/utils/pod"
-	"github.com/go-logr/logr"
 )
 
 func createPods(logger logr.Logger, client client.Client, scheme *runtime.Scheme, podAffinitySupported bool, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, podsToCreate []*strategy.NodeItem) []error {

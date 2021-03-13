@@ -11,13 +11,10 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-
 	corev1 "k8s.io/api/core/v1"
-
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilserrors "k8s.io/apimachinery/pkg/util/errors"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"

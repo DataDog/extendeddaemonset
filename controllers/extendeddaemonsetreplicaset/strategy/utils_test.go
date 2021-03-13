@@ -9,11 +9,7 @@ import (
 	"context"
 	"testing"
 
-	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
-	"github.com/DataDog/extendeddaemonset/api/v1alpha1/test"
-	commontest "github.com/DataDog/extendeddaemonset/pkg/controller/test"
 	"github.com/stretchr/testify/assert"
-
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/types"
@@ -22,6 +18,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+
+	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
+	"github.com/DataDog/extendeddaemonset/api/v1alpha1/test"
+	commontest "github.com/DataDog/extendeddaemonset/pkg/controller/test"
 )
 
 func Test_compareWithExtendedDaemonsetSettingOverwrite(t *testing.T) {

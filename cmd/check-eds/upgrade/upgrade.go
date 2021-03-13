@@ -10,14 +10,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/wait"
-
-	"github.com/spf13/cobra"
-
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	"github.com/DataDog/extendeddaemonset/pkg/plugin/common"

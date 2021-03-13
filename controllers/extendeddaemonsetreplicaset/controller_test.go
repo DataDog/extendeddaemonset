@@ -11,12 +11,7 @@ import (
 	"testing"
 	"time"
 
-	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
-	"github.com/DataDog/extendeddaemonset/api/v1alpha1/test"
-	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/strategy"
-	ctrltest "github.com/DataDog/extendeddaemonset/pkg/controller/test"
 	"github.com/go-logr/logr"
-
 	corev1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,6 +24,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
+	"github.com/DataDog/extendeddaemonset/api/v1alpha1/test"
+	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/strategy"
+	ctrltest "github.com/DataDog/extendeddaemonset/pkg/controller/test"
 )
 
 var testLogger logr.Logger = logf.Log.WithName("controller-test")

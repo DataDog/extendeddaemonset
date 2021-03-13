@@ -1,10 +1,10 @@
 package root
 
 import (
-	"github.com/DataDog/extendeddaemonset/cmd/check-eds/upgrade"
 	"github.com/spf13/cobra"
-
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+
+	"github.com/DataDog/extendeddaemonset/cmd/check-eds/upgrade"
 )
 
 // Options provides information required to manage Root

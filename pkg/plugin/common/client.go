@@ -8,12 +8,12 @@ package common
 import (
 	"fmt"
 
-	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
-
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
+
+	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
 )
 
 // NewClient returns new client instance

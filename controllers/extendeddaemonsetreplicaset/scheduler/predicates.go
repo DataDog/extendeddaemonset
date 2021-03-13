@@ -8,13 +8,11 @@ package scheduler
 import (
 	"fmt"
 
+	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
-
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
-
-	"github.com/go-logr/logr"
 
 	podaffinity "github.com/DataDog/extendeddaemonset/pkg/controller/utils/affinity"
 )

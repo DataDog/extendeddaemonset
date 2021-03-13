@@ -10,13 +10,13 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
-
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
 )
 
 // PrintCanaryPods prints the list of canary pods

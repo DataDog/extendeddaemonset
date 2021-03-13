@@ -7,9 +7,8 @@ package strategy
 
 import (
 	"github.com/go-logr/logr"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
 	corev1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 )

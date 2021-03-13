@@ -3,6 +3,7 @@
 package tools
 
 import (
+
 	// Code generators built at runtime.
 	_ "k8s.io/kube-openapi/cmd/openapi-gen"
 )

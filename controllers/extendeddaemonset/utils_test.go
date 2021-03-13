@@ -9,8 +9,9 @@ import (
 	"testing"
 	"time"
 
-	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 )
 
 func TestIsCanaryDeploymentPaused(t *testing.T) {

@@ -6,12 +6,12 @@
 package plugin
 
 import (
+	"github.com/spf13/cobra"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
+
 	"github.com/DataDog/extendeddaemonset/pkg/plugin/canary"
 	"github.com/DataDog/extendeddaemonset/pkg/plugin/get"
 	"github.com/DataDog/extendeddaemonset/pkg/plugin/pods"
-
-	"github.com/spf13/cobra"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
 // ExtendedDaemonsetOptions provides information required to manage ExtendedDaemonset

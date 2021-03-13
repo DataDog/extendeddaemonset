@@ -15,7 +15,6 @@ import (
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/scheduler"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/strategy"
-	"github.com/DataDog/extendeddaemonset/pkg/controller/utils/pod"
 	podutils "github.com/DataDog/extendeddaemonset/pkg/controller/utils/pod"
 )
 
@@ -133,7 +132,7 @@ func FilterPodsByNode(podsByNodeName map[string][]*corev1.Pod, nodesMap map[stri
 // shouldIgnorePod returns true if the pod is in an unknown phase or was evicted
 // if ignoreEvictedPods is disabled, only the unknown phase will be considered
 func shouldIgnorePod(status corev1.PodStatus) bool {
-	return status.Phase == corev1.PodUnknown || (ignoreEvictedPods && pod.IsEvicted(&status))
+	return status.Phase == corev1.PodUnknown || (ignoreEvictedPods && podutils.IsEvicted(&status))
 }
 
 type sortPodByNodeName []*corev1.Pod

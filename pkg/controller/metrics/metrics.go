@@ -3,20 +3,18 @@ package metrics
 import (
 	"context"
 
-	"github.com/DataDog/extendeddaemonset/pkg/config"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
-
 	ksmetric "k8s.io/kube-state-metrics/pkg/metric"
 	metricsstore "k8s.io/kube-state-metrics/pkg/metrics_store"
-
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+
+	"github.com/DataDog/extendeddaemonset/pkg/config"
 )
 
 // AddMetrics add given metricFamilies for type given in gvk

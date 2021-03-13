@@ -8,8 +8,6 @@ package enqueue
 import (
 	"context"
 
-	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -18,6 +16,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
 )
 
 var _ handler.EventHandler = &RequestForExtendedDaemonSetLabel{}

@@ -10,10 +10,8 @@ import (
 	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
-
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/errors"
-
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"

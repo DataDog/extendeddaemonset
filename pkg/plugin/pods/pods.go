@@ -8,11 +8,11 @@ package pods
 import (
 	"fmt"
 
-	"github.com/DataDog/extendeddaemonset/pkg/plugin/common"
-
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/DataDog/extendeddaemonset/pkg/plugin/common"
 )
 
 var (
