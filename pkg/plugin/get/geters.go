@@ -24,14 +24,12 @@ import (
 	"github.com/DataDog/extendeddaemonset/pkg/plugin/common"
 )
 
-var (
-	getErsExample = `
+var getErsExample = `
 	# view all extendeddaemonsetreplicaset
 	%[1]s get-ers in the current namespace
 	# view extendeddaemonsetreplicaset foo-dsfsfs
 	%[1]s get-ers foo-dsfsfs
 `
-)
 
 // getERSOptions provides information required to manage Kanary
 type getERSOptions struct {
@@ -114,7 +112,6 @@ func (o *getERSOptions) complete(cmd *cobra.Command, args []string) error {
 
 // validate ensures that all required arguments and flag values are provided
 func (o *getERSOptions) validate() error {
-
 	if len(o.args) > 1 {
 		return fmt.Errorf("either one or no arguments are allowed")
 	}

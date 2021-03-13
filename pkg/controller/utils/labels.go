@@ -17,9 +17,7 @@ const (
 	resourceNamespacePromLabel = "namespace"
 )
 
-var (
-	invalidLabelCharRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
-)
+var invalidLabelCharRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
 
 // GetLabelsValues returns name and namespace as label values
 func GetLabelsValues(obj *metav1.ObjectMeta) ([]string, []string) {

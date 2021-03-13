@@ -17,10 +17,8 @@ import (
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 )
 
-var (
-	// apiVersion datadoghqv1alpha1 api version
-	apiVersion = fmt.Sprintf("%s/%s", datadoghqv1alpha1.GroupVersion.Group, datadoghqv1alpha1.GroupVersion.Version)
-)
+// apiVersion datadoghqv1alpha1 api version
+var apiVersion = fmt.Sprintf("%s/%s", datadoghqv1alpha1.GroupVersion.Group, datadoghqv1alpha1.GroupVersion.Version)
 
 // NewExtendedDaemonSetOptions set of option for the ExtendedDaemonset creation
 type NewExtendedDaemonSetOptions struct {

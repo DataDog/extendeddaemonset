@@ -31,9 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-var (
-	testLogger logr.Logger = logf.Log.WithName("controller-test")
-)
+var testLogger logr.Logger = logf.Log.WithName("controller-test")
 
 func TestReconcileExtendedDaemonSetReplicaSet_Reconcile(t *testing.T) {
 	eventBroadcaster := record.NewBroadcaster()
@@ -379,7 +377,8 @@ func TestReconcileExtendedDaemonSetReplicaSet_getNodeList(t *testing.T) {
 	s.AddKnownTypes(corev1.SchemeGroupVersion, &corev1.NodeList{})
 	eds := test.NewExtendedDaemonSet("bar", "foo", nil)
 	replicasset := test.NewExtendedDaemonSetReplicaSet("bar", "foo-1", &test.NewExtendedDaemonSetReplicaSetOptions{
-		Labels: map[string]string{"foo-key": "bar-value"}})
+		Labels: map[string]string{"foo-key": "bar-value"},
+	})
 
 	nodeOptions := &ctrltest.NewNodeOptions{
 		Conditions: []corev1.NodeCondition{
@@ -448,15 +447,16 @@ func TestReconcileExtendedDaemonSetReplicaSet_getNodeList(t *testing.T) {
 }
 
 func TestReconcileExtendedDaemonSetReplicaSet_getDaemonsetOwner(t *testing.T) {
-
 	s := scheme.Scheme
 	s.AddKnownTypes(datadoghqv1alpha1.GroupVersion, &datadoghqv1alpha1.ExtendedDaemonSet{})
 
 	replicasset := test.NewExtendedDaemonSetReplicaSet("bar", "foo-1", &test.NewExtendedDaemonSetReplicaSetOptions{
-		Labels: map[string]string{"foo-key": "bar-value"}})
+		Labels: map[string]string{"foo-key": "bar-value"},
+	})
 	replicassetWithOwner := test.NewExtendedDaemonSetReplicaSet("bar", "foo-1", &test.NewExtendedDaemonSetReplicaSetOptions{
 		Labels:       map[string]string{"foo-key": "bar-value"},
-		OwnerRefName: "foo"},
+		OwnerRefName: "foo",
+	},
 	)
 	daemonset := test.NewExtendedDaemonSet("bar", "foo", &test.NewExtendedDaemonSetOptions{Labels: map[string]string{"foo-key": "bar-value"}})
 
@@ -538,7 +538,8 @@ func TestReconcileExtendedDaemonSetReplicaSet_updateReplicaSet(t *testing.T) {
 
 	replicasset := test.NewExtendedDaemonSetReplicaSet("bar", "foo-1", &test.NewExtendedDaemonSetReplicaSetOptions{
 		Labels:       map[string]string{"foo-key": "bar-value"},
-		OwnerRefName: "foo"},
+		OwnerRefName: "foo",
+	},
 	)
 
 	newStatus := replicasset.Status.DeepCopy()

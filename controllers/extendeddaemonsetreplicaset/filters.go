@@ -19,9 +19,7 @@ import (
 	podutils "github.com/DataDog/extendeddaemonset/pkg/controller/utils/pod"
 )
 
-var (
-	ignoreEvictedPods = false
-)
+var ignoreEvictedPods = false
 
 func init() {
 	pflag.BoolVarP(&ignoreEvictedPods, "ignoreEvictedPods", "i", ignoreEvictedPods, "Enabling this will force new pods creation on nodes where pods are evicted")

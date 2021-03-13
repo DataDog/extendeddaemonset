@@ -123,7 +123,7 @@ func main() {
 }
 
 func customSetupEnvironment(mgr manager.Manager) {
-	//auto discover if Node affinity match is supported in the current cluster
+	// auto discover if Node affinity match is supported in the current cluster
 	if os.Getenv(config.NodeAffinityMatchSupportEnvVar) == "" {
 		discoveryClient := discovery.NewDiscoveryClientForConfigOrDie(mgr.GetConfig())
 		var err error
@@ -189,7 +189,6 @@ func customSetupHealthChecks(mgr manager.Manager) {
 		}
 		return nil
 	})
-
 	if err != nil {
 		setupLog.Error(err, "Unable to start ")
 	}

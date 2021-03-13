@@ -80,7 +80,6 @@ func IsDefaultedExtendedDaemonSetSpecStrategyRollingUpdate(rollingupdate *Extend
 // IsDefaultedExtendedDaemonSetSpecStrategyCanary used to know if a ExtendedDaemonSetSpecStrategyCanary is already defaulted
 // returns true if yes, else no
 func IsDefaultedExtendedDaemonSetSpecStrategyCanary(canary *ExtendedDaemonSetSpecStrategyCanary) bool {
-
 	if canary.Replicas == nil {
 		return false
 	}

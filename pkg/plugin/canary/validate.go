@@ -21,12 +21,10 @@ import (
 	"github.com/DataDog/extendeddaemonset/pkg/plugin/common"
 )
 
-var (
-	validateExample = `
+var validateExample = `
 	# validate a canary replicaset
 	%[1]s canary validate foo
 `
-)
 
 // validateOptions provides information required to manage ExtendedDaemonSet
 type validateOptions struct {
@@ -109,7 +107,6 @@ func (o *validateOptions) complete(cmd *cobra.Command, args []string) error {
 
 // validate ensures that all required arguments and flag values are provided
 func (o *validateOptions) validate() error {
-
 	if len(o.args) < 1 {
 		return fmt.Errorf("the extendeddaemonset name is required")
 	}
@@ -119,7 +116,6 @@ func (o *validateOptions) validate() error {
 
 // run use to run the command
 func (o *validateOptions) run() error {
-
 	eds := &v1alpha1.ExtendedDaemonSet{}
 	err := o.client.Get(context.TODO(), client.ObjectKey{Namespace: o.userNamespace, Name: o.userExtendedDaemonSetName}, eds)
 	if err != nil && errors.IsNotFound(err) {

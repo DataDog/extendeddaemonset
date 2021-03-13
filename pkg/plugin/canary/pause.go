@@ -26,12 +26,10 @@ const (
 	cmdUnpause = false
 )
 
-var (
-	pauseExample = `
+var pauseExample = `
 	# %[1]s a canary deployment
 	kubectl eds %[1]s foo
 `
-)
 
 // pauseOptions provides information required to manage ExtendedDaemonSet
 type pauseOptions struct {
@@ -142,7 +140,6 @@ func (o *pauseOptions) complete(cmd *cobra.Command, args []string) error {
 
 // validate ensures that all required arguments and flag values are provided
 func (o *pauseOptions) validate() error {
-
 	if len(o.args) < 1 {
 		return fmt.Errorf("the extendeddaemonset name is required")
 	}

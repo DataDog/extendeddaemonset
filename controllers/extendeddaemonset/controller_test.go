@@ -35,9 +35,7 @@ import (
 	"github.com/DataDog/extendeddaemonset/pkg/controller/utils/comparison"
 )
 
-var (
-	testLogger logr.Logger = logf.Log.WithName("test")
-)
+var testLogger logr.Logger = logf.Log.WithName("test")
 
 func TestReconciler_selectNodes(t *testing.T) {
 	// Register operator types with the runtime scheme.
@@ -260,14 +258,17 @@ func Test_selectCurrentReplicaSet(t *testing.T) {
 
 	replicassetUpToDate := test.NewExtendedDaemonSetReplicaSet("bar", "foo-1", &test.NewExtendedDaemonSetReplicaSetOptions{
 		CreationTime: &now,
-		Labels:       map[string]string{"foo-key": "bar-value"}})
+		Labels:       map[string]string{"foo-key": "bar-value"},
+	})
 
 	replicassetUpToDateDone := test.NewExtendedDaemonSetReplicaSet("bar", "foo-1", &test.NewExtendedDaemonSetReplicaSetOptions{
 		CreationTime: &creationTimeRSDone,
-		Labels:       map[string]string{"foo-key": "bar-value"}})
+		Labels:       map[string]string{"foo-key": "bar-value"},
+	})
 	replicassetOld := test.NewExtendedDaemonSetReplicaSet("bar", "foo-old", &test.NewExtendedDaemonSetReplicaSetOptions{
 		CreationTime: &creationTimeDaemonset,
-		Labels:       map[string]string{"foo-key": "old-value"}})
+		Labels:       map[string]string{"foo-key": "old-value"},
+	})
 
 	daemonset := test.NewExtendedDaemonSet("bar", "foo", &test.NewExtendedDaemonSetOptions{Labels: map[string]string{"foo-key": "bar-value"}})
 	intString1 := intstr.FromInt(1)
@@ -433,12 +434,15 @@ func TestReconciler_cleanupReplicaSet(t *testing.T) {
 	s.AddKnownTypes(datadoghqv1alpha1.GroupVersion, &datadoghqv1alpha1.ExtendedDaemonSet{})
 
 	replicassetUpToDate := test.NewExtendedDaemonSetReplicaSet("bar", "foo-1", &test.NewExtendedDaemonSetReplicaSetOptions{
-		Labels: map[string]string{"foo-key": "bar-value"}})
+		Labels: map[string]string{"foo-key": "bar-value"},
+	})
 	replicassetCurrent := test.NewExtendedDaemonSetReplicaSet("bar", "current", &test.NewExtendedDaemonSetReplicaSetOptions{
-		Labels: map[string]string{"foo-key": "bar-value"}})
+		Labels: map[string]string{"foo-key": "bar-value"},
+	})
 
 	replicassetOld := test.NewExtendedDaemonSetReplicaSet("bar", "old", &test.NewExtendedDaemonSetReplicaSetOptions{
-		Labels: map[string]string{"foo-key": "bar-value"}})
+		Labels: map[string]string{"foo-key": "bar-value"},
+	})
 
 	type fields struct {
 		client client.Client
@@ -559,6 +563,7 @@ func TestReconciler_createNewReplicaSet(t *testing.T) {
 		})
 	}
 }
+
 func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 	eventBroadcaster := record.NewBroadcaster()
 	now := time.Now()
@@ -573,14 +578,16 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 
 	daemonset := test.NewExtendedDaemonSet("bar", "foo", &test.NewExtendedDaemonSetOptions{Labels: map[string]string{"foo-key": "bar-value"}})
 	replicassetUpToDate := test.NewExtendedDaemonSetReplicaSet("bar", "foo-1", &test.NewExtendedDaemonSetReplicaSetOptions{
-		Labels: map[string]string{"foo-key": "bar-value"}})
+		Labels: map[string]string{"foo-key": "bar-value"},
+	})
 	replicassetCurrent := test.NewExtendedDaemonSetReplicaSet("bar", "current", &test.NewExtendedDaemonSetReplicaSetOptions{
 		Labels: map[string]string{"foo-key": "current-value"},
 		Status: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus{
 			Desired:   3,
 			Available: 3,
 			Ready:     2,
-		}})
+		},
+	})
 
 	replicassetUpToDateWithPauseCondition := replicassetUpToDate.DeepCopy()
 	{

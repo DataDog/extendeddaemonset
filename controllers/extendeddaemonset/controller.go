@@ -46,8 +46,7 @@ type Reconciler struct {
 }
 
 // ReconcilerOptions provides options read from command line
-type ReconcilerOptions struct {
-}
+type ReconcilerOptions struct{}
 
 // NewReconciler returns a reconciler for DatadogAgent
 func NewReconciler(options ReconcilerOptions, client client.Client, scheme *runtime.Scheme, log logr.Logger, recorder record.EventRecorder) (*Reconciler, error) {

@@ -303,7 +303,6 @@ func ensureCanaryPodLabels(client client.Client, params *Parameters) error {
 					v1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelKey,
 					v1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelValue,
 				)
-
 				if err != nil {
 					params.Logger.Error(err, fmt.Sprintf("Couldn't add the canary label for pod '%s/%s', will retry later", pod.GetNamespace(), pod.GetName()))
 					return err

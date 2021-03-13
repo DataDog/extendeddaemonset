@@ -24,14 +24,12 @@ import (
 	"github.com/DataDog/extendeddaemonset/pkg/plugin/common"
 )
 
-var (
-	getExample = `
+var getExample = `
 	# view all extendeddaemonset
 	%[1]s get in the current namespace
 	# view extendeddaemonset foo
 	%[1]s get foo
 `
-)
 
 // getOptions provides information required to manage Kanary
 type getOptions struct {
@@ -114,7 +112,6 @@ func (o *getOptions) complete(cmd *cobra.Command, args []string) error {
 
 // validate ensures that all required arguments and flag values are provided
 func (o *getOptions) validate() error {
-
 	if len(o.args) > 1 {
 		return fmt.Errorf("either one or no arguments are allowed")
 	}

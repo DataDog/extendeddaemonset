@@ -81,7 +81,8 @@ func schema__api_v1alpha1_ExtendedDaemonSet(ref common.ReferenceCallback) common
 			},
 		},
 		Dependencies: []string{
-			"./api/v1alpha1.ExtendedDaemonSetSpec", "./api/v1alpha1.ExtendedDaemonSetStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"./api/v1alpha1.ExtendedDaemonSetSpec", "./api/v1alpha1.ExtendedDaemonSetStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta",
+		},
 	}
 }
 
@@ -128,7 +129,8 @@ func schema__api_v1alpha1_ExtendedDaemonSetReplicaSet(ref common.ReferenceCallba
 			},
 		},
 		Dependencies: []string{
-			"./api/v1alpha1.ExtendedDaemonSetReplicaSetSpec", "./api/v1alpha1.ExtendedDaemonSetReplicaSetStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"./api/v1alpha1.ExtendedDaemonSetReplicaSetSpec", "./api/v1alpha1.ExtendedDaemonSetReplicaSetStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta",
+		},
 	}
 }
 
@@ -164,7 +166,8 @@ func schema__api_v1alpha1_ExtendedDaemonSetReplicaSetSpec(ref common.ReferenceCa
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.PodTemplateSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"},
+			"k8s.io/api/core/v1.PodTemplateSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector",
+		},
 	}
 }
 
@@ -191,7 +194,8 @@ func schema__api_v1alpha1_ExtendedDaemonSetReplicaSetSpecStrategy(ref common.Ref
 			},
 		},
 		Dependencies: []string{
-			"./api/v1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate", "k8s.io/apimachinery/pkg/apis/meta/v1.Duration"},
+			"./api/v1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate", "k8s.io/apimachinery/pkg/apis/meta/v1.Duration",
+		},
 	}
 }
 
@@ -271,7 +275,8 @@ func schema__api_v1alpha1_ExtendedDaemonSetReplicaSetStatus(ref common.Reference
 			},
 		},
 		Dependencies: []string{
-			"./api/v1alpha1.ExtendedDaemonSetReplicaSetCondition"},
+			"./api/v1alpha1.ExtendedDaemonSetReplicaSetCondition",
+		},
 	}
 }
 
@@ -307,7 +312,8 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpec(ref common.ReferenceCallback) co
 			},
 		},
 		Dependencies: []string{
-			"./api/v1alpha1.ExtendedDaemonSetSpecStrategy", "k8s.io/api/core/v1.PodTemplateSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"},
+			"./api/v1alpha1.ExtendedDaemonSetSpecStrategy", "k8s.io/api/core/v1.PodTemplateSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector",
+		},
 	}
 }
 
@@ -340,7 +346,8 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategy(ref common.ReferenceCall
 			},
 		},
 		Dependencies: []string{
-			"./api/v1alpha1.ExtendedDaemonSetSpecStrategyCanary", "./api/v1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate", "k8s.io/apimachinery/pkg/apis/meta/v1.Duration"},
+			"./api/v1alpha1.ExtendedDaemonSetSpecStrategyCanary", "./api/v1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate", "k8s.io/apimachinery/pkg/apis/meta/v1.Duration",
+		},
 	}
 }
 
@@ -405,7 +412,8 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanary(ref common.Referen
 			},
 		},
 		Dependencies: []string{
-			"./api/v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoFail", "./api/v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoPause", "k8s.io/apimachinery/pkg/apis/meta/v1.Duration", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector", "k8s.io/apimachinery/pkg/util/intstr.IntOrString"},
+			"./api/v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoFail", "./api/v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoPause", "k8s.io/apimachinery/pkg/apis/meta/v1.Duration", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector", "k8s.io/apimachinery/pkg/util/intstr.IntOrString",
+		},
 	}
 }
 
@@ -439,7 +447,8 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanaryAutoFail(ref common
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.Duration"},
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Duration",
+		},
 	}
 }
 
@@ -473,7 +482,8 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanaryAutoPause(ref commo
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.Duration"},
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Duration",
+		},
 	}
 }
 
@@ -519,7 +529,8 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyRollingUpdate(ref common.
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.Duration", "k8s.io/apimachinery/pkg/util/intstr.IntOrString"},
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Duration", "k8s.io/apimachinery/pkg/util/intstr.IntOrString",
+		},
 	}
 }
 
@@ -624,7 +635,8 @@ func schema__api_v1alpha1_ExtendedDaemonSetStatus(ref common.ReferenceCallback) 
 			},
 		},
 		Dependencies: []string{
-			"./api/v1alpha1.ExtendedDaemonSetCondition", "./api/v1alpha1.ExtendedDaemonSetStatusCanary"},
+			"./api/v1alpha1.ExtendedDaemonSetCondition", "./api/v1alpha1.ExtendedDaemonSetStatusCanary",
+		},
 	}
 }
 
@@ -711,7 +723,8 @@ func schema__api_v1alpha1_ExtendedDaemonsetSetting(ref common.ReferenceCallback)
 			},
 		},
 		Dependencies: []string{
-			"./api/v1alpha1.ExtendedDaemonsetSettingSpec", "./api/v1alpha1.ExtendedDaemonsetSettingStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"./api/v1alpha1.ExtendedDaemonsetSettingSpec", "./api/v1alpha1.ExtendedDaemonsetSettingStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta",
+		},
 	}
 }
 
@@ -740,7 +753,8 @@ func schema__api_v1alpha1_ExtendedDaemonsetSettingContainerSpec(ref common.Refer
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.ResourceRequirements"},
+			"k8s.io/api/core/v1.ResourceRequirements",
+		},
 	}
 }
 
@@ -791,7 +805,8 @@ func schema__api_v1alpha1_ExtendedDaemonsetSettingSpec(ref common.ReferenceCallb
 			},
 		},
 		Dependencies: []string{
-			"./api/v1alpha1.ExtendedDaemonsetSettingContainerSpec", "k8s.io/api/autoscaling/v1.CrossVersionObjectReference", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"},
+			"./api/v1alpha1.ExtendedDaemonsetSettingContainerSpec", "k8s.io/api/autoscaling/v1.CrossVersionObjectReference", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector",
+		},
 	}
 }
 

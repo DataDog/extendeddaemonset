@@ -15,12 +15,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var (
-	podsExample = `
+var podsExample = `
 	# list the canary pods
 	%[1]s canary pods foo
 `
-)
 
 // podsOptions provides information required to manage ExtendedDaemonSet
 type podsOptions struct {

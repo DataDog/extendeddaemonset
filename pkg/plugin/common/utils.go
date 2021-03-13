@@ -53,7 +53,7 @@ func containersInfo(pod *corev1.Pod) (string, string, string) {
 
 // getNodeReadiness returns whether a node is ready
 func getNodeReadiness(c client.Client, nodename string) string {
-	var isNodeReady = func(node *corev1.Node) bool {
+	isNodeReady := func(node *corev1.Node) bool {
 		for _, cond := range node.Status.Conditions {
 			if cond.Type == corev1.NodeReady && cond.Status == corev1.ConditionTrue {
 				return true

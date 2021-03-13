@@ -38,7 +38,6 @@ type UpdateConditionOptions struct {
 
 // UpdateExtendedDaemonSetStatusCondition used to update a specific ExtendedDaemonSetConditionType
 func UpdateExtendedDaemonSetStatusCondition(status *datadoghqv1alpha1.ExtendedDaemonSetStatus, now metav1.Time, t datadoghqv1alpha1.ExtendedDaemonSetConditionType, conditionStatus corev1.ConditionStatus, reason, desc string, options *UpdateConditionOptions) {
-
 	// manage options
 	var writeFalseIfNotExist, supportLastUpdate bool
 	if options != nil {

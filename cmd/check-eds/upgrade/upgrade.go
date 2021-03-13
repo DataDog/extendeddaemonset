@@ -23,12 +23,10 @@ import (
 	"github.com/DataDog/extendeddaemonset/pkg/plugin/common"
 )
 
-var (
-	upgradeExample = `
+var upgradeExample = `
 	# wait until the end of the extendeddaemonset foo upgrade
 	%[1]s upgrade foo
 `
-)
 
 // Options provides information required to manage Kanary
 type Options struct {
@@ -115,7 +113,6 @@ func (o *Options) Complete(cmd *cobra.Command, args []string) error {
 
 // Validate ensures that all required arguments and flag values are provided
 func (o *Options) Validate() error {
-
 	if o.userExtendedDaemonSetName == "" {
 		return fmt.Errorf("the ExtendedDaemonset name needs to be provided")
 	}

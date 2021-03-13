@@ -76,7 +76,8 @@ func Test_overwriteResourcesFromNode(t *testing.T) {
 				node: ctrltest.NewNode("node1", &ctrltest.NewNodeOptions{
 					Annotations: map[string]string{
 						fmt.Sprintf(datadoghqv1alpha1.ExtendedDaemonSetRessourceNodeAnnotationKey, "bar", "foo", "container1"): `{"Requests": {"cpu": "1.5"}}`,
-					}}),
+					},
+				}),
 			},
 			wantErr: false,
 			wantTemplate: &corev1.PodTemplateSpec{
@@ -109,7 +110,8 @@ func Test_overwriteResourcesFromNode(t *testing.T) {
 				node: ctrltest.NewNode("node1", &ctrltest.NewNodeOptions{
 					Annotations: map[string]string{
 						fmt.Sprintf(datadoghqv1alpha1.ExtendedDaemonSetRessourceNodeAnnotationKey, "bar", "foo", "container1"): `{"Requests": invalid {"cpu": "1.5"}}`,
-					}}),
+					},
+				}),
 			},
 			wantErr: true,
 		},

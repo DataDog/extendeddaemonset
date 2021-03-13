@@ -7,10 +7,8 @@ package v1alpha1
 
 import "errors"
 
-var (
-	// ErrInvalidAutoFailRestarts is returned in case of a validation failure for maxRestarts in autoFail
-	ErrInvalidAutoFailRestarts = errors.New("canary autoFail.maxRestarts must be higher than autoPause.maxRestarts")
-)
+// ErrInvalidAutoFailRestarts is returned in case of a validation failure for maxRestarts in autoFail
+var ErrInvalidAutoFailRestarts = errors.New("canary autoFail.maxRestarts must be higher than autoPause.maxRestarts")
 
 // ValidateExtendedDaemonSetSpec validates an ExtendedDaemonSet spec
 // returns true if yes, else no

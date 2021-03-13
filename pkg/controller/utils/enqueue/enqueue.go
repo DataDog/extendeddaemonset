@@ -23,8 +23,7 @@ import (
 var _ handler.EventHandler = &RequestForExtendedDaemonSetLabel{}
 
 // RequestForExtendedDaemonSetLabel enqueues Requests for the ExtendedDaemonSet corresponding to the label value.
-type RequestForExtendedDaemonSetLabel struct {
-}
+type RequestForExtendedDaemonSetLabel struct{}
 
 // Create implements EventHandler
 func (e *RequestForExtendedDaemonSetLabel) Create(evt event.CreateEvent, q workqueue.RateLimitingInterface) {
@@ -63,8 +62,7 @@ func (e RequestForExtendedDaemonSetLabel) add(meta metav1.Object, q workqueue.Ra
 var _ handler.EventHandler = &RequestForExtendedDaemonSetLabel{}
 
 // RequestForExtendedDaemonSetReplicaSetLabel enqueues Requests for the ExtendedDaemonSet corresponding to the label value.
-type RequestForExtendedDaemonSetReplicaSetLabel struct {
-}
+type RequestForExtendedDaemonSetReplicaSetLabel struct{}
 
 // Create implements EventHandler
 func (e *RequestForExtendedDaemonSetReplicaSetLabel) Create(evt event.CreateEvent, q workqueue.RateLimitingInterface) {
@@ -105,8 +103,7 @@ func (e *RequestForExtendedDaemonSetReplicaSetLabel) add(meta metav1.Object, q w
 var _ handler.EventHandler = &RequestForExtendedDaemonSetStatus{}
 
 // RequestForExtendedDaemonSetStatus enqueues Requests for the ExtendedDaemonSet corresponding to the label value.
-type RequestForExtendedDaemonSetStatus struct {
-}
+type RequestForExtendedDaemonSetStatus struct{}
 
 // Create implements EventHandler
 func (e *RequestForExtendedDaemonSetStatus) Create(evt event.CreateEvent, q workqueue.RateLimitingInterface) {
@@ -168,7 +165,7 @@ func (e *RequestForAllReplicaSetFromNodeEvent) Create(evt event.CreateEvent, q w
 
 // Update implements EventHandler
 func (e *RequestForAllReplicaSetFromNodeEvent) Update(evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
-	//e.add(q)
+	// e.add(q)
 }
 
 // Delete implements EventHandler
@@ -178,7 +175,7 @@ func (e *RequestForAllReplicaSetFromNodeEvent) Delete(evt event.DeleteEvent, q w
 
 // Generic implements EventHandler
 func (e *RequestForAllReplicaSetFromNodeEvent) Generic(evt event.GenericEvent, q workqueue.RateLimitingInterface) {
-	//e.add(q)
+	// e.add(q)
 }
 
 func (e RequestForAllReplicaSetFromNodeEvent) add(q workqueue.RateLimitingInterface) {

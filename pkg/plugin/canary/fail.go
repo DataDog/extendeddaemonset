@@ -23,12 +23,10 @@ const (
 	cmdFail = true
 )
 
-var (
-	failExample = `
+var failExample = `
     # %[1]s a canary deployment
     kubectl eds %[1]s foo
 `
-)
 
 // failOptions provides information required to manage ExtendedDaemonSet
 type failOptions struct {
@@ -114,7 +112,6 @@ func (o *failOptions) complete(cmd *cobra.Command, args []string) error {
 
 // validate ensures that all required arguments and flag values are provided
 func (o *failOptions) validate() error {
-
 	if len(o.args) < 1 {
 		return fmt.Errorf("the extendeddaemonset name is required")
 	}
