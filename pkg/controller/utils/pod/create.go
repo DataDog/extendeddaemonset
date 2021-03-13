@@ -80,6 +80,7 @@ func overwriteResourcesFromEdsNode(template *corev1.PodTemplateSpec, edsNode *da
 		for id, container := range template.Spec.Containers {
 			if extraConfig.Name == container.Name {
 				template.Spec.Containers[id].Resources = extraConfig.Resources
+
 				break
 			}
 		}

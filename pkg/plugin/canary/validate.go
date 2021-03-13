@@ -61,6 +61,7 @@ func newCmdValidate(streams genericclioptions.IOStreams) *cobra.Command {
 			if err := o.validate(); err != nil {
 				return err
 			}
+
 			return o.run()
 		},
 	}

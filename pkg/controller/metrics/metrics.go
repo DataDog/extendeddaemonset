@@ -51,10 +51,12 @@ func AddMetrics(gvk schema.GroupVersionKind, mgr manager.Manager, h Handler, met
 			ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
 				res := listObj.DeepCopyObject()
 				localErr := restClient.Get().NamespaceIfScoped(ns, ns != "").Resource(mapping.Resource.Resource).VersionedParams(&opts, paramCodec).Do(context.Background()).Into(res)
+
 				return res, localErr
 			},
 			WatchFunc: func(opts metav1.ListOptions) (watch.Interface, error) {
 				opts.Watch = true
+
 				return restClient.Get().NamespaceIfScoped(ns, ns != "").Resource(mapping.Resource.Resource).VersionedParams(&opts, paramCodec).Watch(context.Background())
 			},
 		}

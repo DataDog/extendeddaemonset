@@ -241,6 +241,7 @@ func Test_newReplicaSetFromInstance(t *testing.T) {
 			got, err := newReplicaSetFromInstance(tt.daemonset)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("newReplicaSetFromInstance() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
 			if !apiequality.Semantic.DeepEqual(got, tt.want) {
@@ -555,6 +556,7 @@ func TestReconciler_createNewReplicaSet(t *testing.T) {
 			got, err := r.createNewReplicaSet(tt.args.logger, tt.args.daemonset)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Reconciler.createNewReplicaSet() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
@@ -731,7 +733,6 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 				Message:            "canary failed with ers: foo-1",
 			},
 		}
-
 	}
 
 	replicassetUpToDateWithFailedCondition := replicassetUpToDate.DeepCopy()
@@ -921,6 +922,7 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 			got, got1, err := r.updateInstanceWithCurrentRS(tt.args.logger, tt.now, tt.args.daemonset, tt.args.current, tt.args.upToDate, tt.args.podsCounter)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ReconcileExtendedDaemonSet.updateInstanceWithCurrentRS() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
 			assert.Equal(t, tt.want, got, "ReconcileExtendedDaemonSet.updateInstanceWithCurrentRS()")
@@ -1122,6 +1124,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 			got, err := r.Reconcile(context.TODO(), tt.args.request)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Reconciler.Reconcile() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {

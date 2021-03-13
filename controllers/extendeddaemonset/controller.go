@@ -140,7 +140,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 
 	// Remove all ReplicaSets if not used anymore
 	if err = r.cleanupReplicaSet(reqLogger, replicaSetList, currentRS, upToDateRS); err != nil {
-		return reconcile.Result{RequeueAfter: requeueAfter}, nil
+		return reconcile.Result{RequeueAfter: requeueAfter}, err
 	}
 
 	_, result, err := r.updateInstanceWithCurrentRS(reqLogger, now, instance, currentRS, upToDateRS, podsCounter)
@@ -240,12 +240,14 @@ func (r *Reconciler) updateInstanceWithCurrentRS(logger logr.Logger, now time.Ti
 			nbCanaryPod, err := intstrutil.GetValueFromIntOrPercent(daemonset.Spec.Strategy.Canary.Replicas, int(daemonset.Status.Desired), true)
 			if err != nil {
 				logger.Error(err, "unable to select Nodes for canary")
+
 				return newDaemonset, reconcile.Result{}, err
 			}
 
 			if nbCanaryPod != len(newDaemonset.Status.Canary.Nodes) {
 				if err = r.selectNodes(logger, &newDaemonset.Spec, upToDate, newDaemonset.Status.Canary); err != nil {
 					logger.Error(err, "unable to select Nodes for canary")
+
 					return newDaemonset, reconcile.Result{}, err
 				}
 			}
@@ -323,6 +325,7 @@ func (r *Reconciler) selectNodes(logger logr.Logger, daemonsetSpec *datadoghqv1a
 		for id = range currentNodes {
 			if node.Name == currentNodes[id] {
 				found = true
+
 				break
 			}
 		}
@@ -343,7 +346,6 @@ func (r *Reconciler) selectNodes(logger logr.Logger, daemonsetSpec *datadoghqv1a
 		// Look for the values of the labels set as NodeAntiAffinityKeys of the nodes already selected as canary
 		if len(daemonsetSpec.Strategy.Canary.NodeAntiAffinityKeys) != 0 {
 			for _, node := range nodeList.Items {
-
 				antiAffinityKeysValue := getAntiAffinityKeysValue(&node, daemonsetSpec)
 				if _, found := antiAffinityKeysValues[antiAffinityKeysValue]; !found {
 					antiAffinityKeysValues[antiAffinityKeysValue] = 0
@@ -352,6 +354,7 @@ func (r *Reconciler) selectNodes(logger logr.Logger, daemonsetSpec *datadoghqv1a
 				for _, currentNode := range currentNodes {
 					if node.Name == currentNode {
 						antiAffinityKeysValues[antiAffinityKeysValue]++
+
 						break
 					}
 				}
@@ -365,6 +368,7 @@ func (r *Reconciler) selectNodes(logger logr.Logger, daemonsetSpec *datadoghqv1a
 			for _, currentNode := range currentNodes {
 				if node.Name == currentNode {
 					alreadySelected = true
+
 					break
 				}
 			}
@@ -398,9 +402,9 @@ func (r *Reconciler) selectNodes(logger logr.Logger, daemonsetSpec *datadoghqv1a
 			// All nodes are found. We can exit now!
 			if len(currentNodes) == nbCanaryPod {
 				logger.V(1).Info("All nodes were found")
+
 				break
 			}
-
 		}
 	}
 
@@ -539,6 +543,7 @@ func (r *Reconciler) cleanupReplicaSet(logger logr.Logger, rsList *datadoghqv1al
 			podList, err := getPodListFromReplicaSet(r.client, obj)
 			if err != nil {
 				errsChan <- err
+
 				return
 			}
 			if podList == nil {
@@ -563,6 +568,7 @@ func (r *Reconciler) cleanupReplicaSet(logger logr.Logger, rsList *datadoghqv1al
 			errs = append(errs, err)
 		}
 	}
+
 	return utilserrors.NewAggregate(errs)
 }
 
@@ -581,6 +587,7 @@ func clearCanaryAnnotations(eds *datadoghqv1alpha1.ExtendedDaemonSet) bool {
 			updated = true
 		}
 	}
+
 	return updated
 }
 

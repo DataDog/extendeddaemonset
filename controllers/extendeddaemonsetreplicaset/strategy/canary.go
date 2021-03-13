@@ -71,16 +71,19 @@ func manageCanaryStatus(annotations map[string]string, params *Parameters, now t
 		if pod, ok := params.PodByNodeName[node]; ok {
 			if pod == nil {
 				podsToCreate = append(podsToCreate, node)
+
 				continue
 			}
 
 			if pod.DeletionTimestamp != nil {
 				needRequeue = true
+
 				continue
 			}
 
 			if !compareCurrentPodWithNewPod(params, pod, node) {
 				podsToDelete = append(podsToDelete, node)
+
 				continue
 			}
 
@@ -304,6 +307,7 @@ func ensureCanaryPodLabels(client client.Client, params *Parameters) error {
 				)
 				if err != nil {
 					params.Logger.Error(err, fmt.Sprintf("Couldn't add the canary label for pod '%s/%s', will retry later", pod.GetNamespace(), pod.GetName()))
+
 					return err
 				}
 			}

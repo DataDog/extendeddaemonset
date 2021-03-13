@@ -24,12 +24,14 @@ func GetContainerStatus(statuses []v1.ContainerStatus, name string) (v1.Containe
 			return statuses[i], true
 		}
 	}
+
 	return v1.ContainerStatus{}, false
 }
 
 // GetExistingContainerStatus extracts the status of container "name" from "statuses",
 func GetExistingContainerStatus(statuses []v1.ContainerStatus, name string) v1.ContainerStatus {
 	status, _ := GetContainerStatus(statuses, name)
+
 	return status
 }
 
@@ -37,6 +39,7 @@ func GetExistingContainerStatus(statuses []v1.ContainerStatus, name string) v1.C
 func IsPodScheduled(pod *v1.Pod) (string, bool) {
 	isScheduled := pod.Spec.NodeName != ""
 	nodeName := affinity.GetNodeNameFromAffinity(pod.Spec.Affinity)
+
 	return nodeName, isScheduled
 }
 
@@ -55,6 +58,7 @@ func IsPodAvailable(pod *v1.Pod, minReadySeconds int32, now metav1.Time) bool {
 	if minReadySeconds == 0 || !c.LastTransitionTime.IsZero() && c.LastTransitionTime.Add(minReadySecondsDuration).Before(now.Time) {
 		return true
 	}
+
 	return false
 }
 
@@ -66,6 +70,7 @@ func IsPodReady(pod *v1.Pod) bool {
 // IsPodReadyConditionTrue returns true if a pod is ready; false otherwise.
 func IsPodReadyConditionTrue(status v1.PodStatus) bool {
 	condition := GetPodReadyCondition(status)
+
 	return condition != nil && condition.Status == v1.ConditionTrue
 }
 
@@ -73,6 +78,7 @@ func IsPodReadyConditionTrue(status v1.PodStatus) bool {
 // Returns nil if the condition is not present.
 func GetPodReadyCondition(status v1.PodStatus) *v1.PodCondition {
 	_, condition := GetPodCondition(&status, v1.PodReady)
+
 	return condition
 }
 
@@ -101,6 +107,7 @@ func GetPodConditionFromList(conditions []v1.PodCondition, conditionType v1.PodC
 
 func containerStatusList(pod *v1.Pod) []v1.ContainerStatus {
 	containersStatus := append(pod.Status.ContainerStatuses, pod.Status.InitContainerStatuses...)
+
 	return append(containersStatus, pod.Status.EphemeralContainerStatuses...)
 }
 
@@ -228,6 +235,7 @@ func UpdatePodCondition(status *v1.PodStatus, condition *v1.PodCondition) bool {
 	if oldCondition == nil {
 		// We are adding new pod condition.
 		status.Conditions = append(status.Conditions, *condition)
+
 		return true
 	}
 	// We are updating an existing condition, so we need to check if it has changed.
@@ -258,6 +266,7 @@ func IsEvicted(status *v1.PodStatus) bool {
 // from the newer to the older
 func SortPodByCreationTime(pods []*v1.Pod) []*v1.Pod {
 	sort.Sort(podByCreationTimestamp(pods))
+
 	return pods
 }
 

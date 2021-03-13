@@ -221,6 +221,7 @@ func (r *Reconciler) applyStrategy(logger logr.Logger, daemonset *datadoghqv1alp
 		logger.Info("ignore this replicaset, since it's not the replicas active or canary")
 		strategyResult, err = strategy.ManageUnknown(r.client, strategyParams)
 	}
+
 	return strategyResult, err
 }
 
@@ -231,6 +232,7 @@ func (r *Reconciler) getPodAndNodeList(logger logr.Logger, daemonset *datadoghqv
 	nodeList, err = r.getNodeList(daemonset, replicaset)
 	if err != nil {
 		logger.Error(err, "unable to list associated pods")
+
 		return nodeList, podList, err
 	}
 
@@ -238,6 +240,7 @@ func (r *Reconciler) getPodAndNodeList(logger logr.Logger, daemonset *datadoghqv
 	podList, err = r.getPodList(daemonset)
 	if err != nil {
 		logger.Error(err, "unable to list associated pods")
+
 		return nodeList, podList, err
 	}
 
@@ -245,6 +248,7 @@ func (r *Reconciler) getPodAndNodeList(logger logr.Logger, daemonset *datadoghqv
 	oldPodList, err = r.getOldDaemonsetPodList(daemonset)
 	if err != nil {
 		logger.Error(err, "unable to list associated pods")
+
 		return nodeList, podList, err
 	}
 	podList.Items = append(podList.Items, oldPodList.Items...)
@@ -362,6 +366,7 @@ func (r *Reconciler) getNodeList(eds *datadoghqv1alpha1.ExtendedDaemonSet, repli
 			}
 			if selector.Matches(labels.Set(node.Labels)) {
 				edsNodeSelected = edsNode
+
 				break
 			}
 		}
@@ -413,6 +418,7 @@ func (r *Reconciler) getOldDaemonsetPodList(ds *datadoghqv1alpha1.ExtendedDaemon
 		for _, ref := range pod.OwnerReferences {
 			if ref.Kind == "DaemonSet" && ref.Name == oldDsName {
 				selected = true
+
 				break
 			}
 		}

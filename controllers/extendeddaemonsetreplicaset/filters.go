@@ -58,6 +58,7 @@ func FilterAndMapPodsByNode(logger logr.Logger, replicaset *datadoghqv1alpha1.Ex
 	for id, pod := range podList.Items {
 		if _, scheduled := podutils.IsPodScheduled(&pod); !scheduled {
 			unscheduledPods = append(unscheduledPods, &podList.Items[id])
+
 			continue
 		}
 		if _, ok := podsByNodeName[pod.Spec.NodeName]; ok {

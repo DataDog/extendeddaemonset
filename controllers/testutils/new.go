@@ -168,7 +168,6 @@ func NewDaemonset(ns, name, image string, options *NewDaemonsetOptions) *appsv1.
 			for key, val := range options.ExtraLabels {
 				newDaemonset.ObjectMeta.Labels[key] = val
 			}
-
 		}
 	}
 	return newDaemonset

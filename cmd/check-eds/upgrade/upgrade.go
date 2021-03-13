@@ -67,6 +67,7 @@ func NewCmdUpgrade(streams genericclioptions.IOStreams) *cobra.Command {
 			if err := o.Validate(); err != nil {
 				return err
 			}
+
 			return o.Run()
 		},
 	}
@@ -132,13 +133,16 @@ func (o *Options) Run() error {
 
 		if eds.Status.Canary != nil {
 			o.printOut("canary running")
+
 			return false, nil
 		}
 		if eds.Status.UpToDate < eds.Status.Current {
 			o.printOut("still upgrading nb pods: %d, nb updated pods: %d", eds.Status.Current, eds.Status.UpToDate)
+
 			return false, nil
 		}
 		o.printOut("upgrade is now finished")
+
 		return true, nil
 	}
 

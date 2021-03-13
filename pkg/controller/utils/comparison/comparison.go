@@ -7,6 +7,9 @@ package comparison
 
 import (
 	"bytes"
+
+	// #nosec
+	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -14,8 +17,6 @@ import (
 	"sort"
 	"strings"
 
-	// #nosec
-	"crypto/md5"
 	corev1 "k8s.io/api/core/v1"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"

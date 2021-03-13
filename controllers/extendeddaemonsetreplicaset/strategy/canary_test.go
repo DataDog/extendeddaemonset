@@ -108,6 +108,7 @@ func withDeletionTimestamp(pod *v1.Pod) *v1.Pod {
 
 func withHostIP(pod *v1.Pod, ip string) *v1.Pod {
 	pod.Status.HostIP = ip
+
 	return pod
 }
 

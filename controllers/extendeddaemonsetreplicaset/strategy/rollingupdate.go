@@ -46,6 +46,7 @@ func ManageDeployment(client runtimeclient.Client, params *Parameters) (*Result,
 	maxPodSchedulerFailure, err := intstrutil.GetValueFromIntOrPercent(params.Strategy.RollingUpdate.MaxPodSchedulerFailure, nbNodes, true)
 	if err != nil {
 		params.Logger.Error(err, "unable to retrieve maxPodSchedulerFailure from the strategy.RollingUpdate.MaxPodSchedulerFailure parameter")
+
 		return result, err
 	}
 
@@ -56,6 +57,7 @@ func ManageDeployment(client runtimeclient.Client, params *Parameters) (*Result,
 		} else {
 			if podutils.HasPodSchedulerIssue(pod) && int(nbIgnoredUnresponsiveNodes) < maxPodSchedulerFailure {
 				nbIgnoredUnresponsiveNodes++
+
 				continue
 			}
 
@@ -65,6 +67,7 @@ func ManageDeployment(client runtimeclient.Client, params *Parameters) (*Result,
 					allPodToDelete = append(allPodToDelete, node)
 				} else {
 					podsTerminating++
+
 					continue
 				}
 				if podutils.IsPodAvailable(pod, 0, metaNow) {
@@ -86,6 +89,7 @@ func ManageDeployment(client runtimeclient.Client, params *Parameters) (*Result,
 	maxUnavailable, err := intstrutil.GetValueFromIntOrPercent(params.Strategy.RollingUpdate.MaxUnavailable, nbNodes, true)
 	if err != nil {
 		params.Logger.Error(err, "unable to retrieve maxUnavailable pod from the strategy.RollingUpdate.MaxUnavailable parameter")
+
 		return result, err
 	}
 
@@ -93,6 +97,7 @@ func ManageDeployment(client runtimeclient.Client, params *Parameters) (*Result,
 	maxCreation, err := calculateMaxCreation(&params.Strategy.RollingUpdate, nbNodes, rollingUpdateStartTime, now)
 	if err != nil {
 		params.Logger.Error(err, "error during calculateMaxCreation execution")
+
 		return result, err
 	}
 	params.Logger.V(1).Info("Parameters", "nbNodes", nbNodes, "createdPods", createdPods, "allPods", allPods, "nbPodReady", readyPods, "availablePods", availablePods, "oldAvailablePods", oldAvailablePods, "maxPodsCreation", maxCreation, "maxUnavailable", maxUnavailable, "nbPodToCreate", len(allPodToCreate), "nbPodToDelete", len(allPodToDelete), "podsTerminating", podsTerminating)

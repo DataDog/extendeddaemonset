@@ -186,6 +186,7 @@ func customSetupHealthChecks(mgr manager.Manager) {
 		if goruntime.NumGoroutine() > maximumGoroutines {
 			return fmt.Errorf("too much goroutines: %d > limit: %d", goruntime.NumGoroutine(), maximumGoroutines)
 		}
+
 		return nil
 	})
 	if err != nil {

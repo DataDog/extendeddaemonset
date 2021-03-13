@@ -29,6 +29,7 @@ func ManageUnknown(client client.Client, params *Parameters) (*Result, error) {
 	maxPodSchedulerFailure, err := intstrutil.GetValueFromIntOrPercent(params.Strategy.RollingUpdate.MaxPodSchedulerFailure, len(params.PodByNodeName), true)
 	if err != nil {
 		params.Logger.Error(err, "unable to retrieve maxPodSchedulerFailure from the strategy.RollingUpdate.MaxPodSchedulerFailure parameter")
+
 		return result, err
 	}
 
@@ -38,6 +39,7 @@ func ManageUnknown(client client.Client, params *Parameters) (*Result, error) {
 			if compareCurrentPodWithNewPod(params, pod, node) {
 				if podutils.HasPodSchedulerIssue(pod) && int(nbIgnoredUnresponsiveNodes) < maxPodSchedulerFailure {
 					nbIgnoredUnresponsiveNodes++
+
 					continue
 				}
 

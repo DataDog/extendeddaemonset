@@ -44,6 +44,7 @@ func ReplaceNodeNameNodeAffinity(affinity *v1.Affinity, nodename string) *v1.Aff
 		affinity.NodeAffinity = &v1.NodeAffinity{
 			RequiredDuringSchedulingIgnoredDuringExecution: nodeSelector,
 		}
+
 		return affinity
 	}
 
@@ -51,6 +52,7 @@ func ReplaceNodeNameNodeAffinity(affinity *v1.Affinity, nodename string) *v1.Aff
 
 	if nodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution == nil {
 		nodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution = nodeSelector
+
 		return affinity
 	}
 

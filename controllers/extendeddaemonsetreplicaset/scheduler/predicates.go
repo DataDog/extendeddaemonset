@@ -26,11 +26,13 @@ func CheckNodeFitness(logger logr.Logger, pod *corev1.Pod, node *corev1.Node) bo
 	// Check if node.Labels match pod.Spec.NodeSelector.
 	if !checkNodeSelector(pod, node) {
 		logger.V(1).Info("CheckNodeFitness return false", "reason", "node selector missmatch")
+
 		return false
 	}
 
 	if !checkPodToleratesNodeTaints(pod, node) {
 		logger.V(1).Info("CheckNodeFitness return false", "reason", "node taints")
+
 		return false
 	}
 

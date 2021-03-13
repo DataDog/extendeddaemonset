@@ -23,6 +23,7 @@ func withGet(nsName types.NamespacedName, obj client.Object, desc string, condit
 		err := k8sClient.Get(context.Background(), nsName, obj)
 		if err != nil {
 			fmt.Fprintf(GinkgoWriter, "Failed to get %s [%s/%s]: %v", desc, nsName.Namespace, nsName.Name, err)
+
 			return false
 		}
 		return condition()

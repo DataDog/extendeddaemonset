@@ -168,6 +168,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_Reconcile(t *testing.T) {
 			got, err := r.Reconcile(context.TODO(), tt.args.request)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ReconcileExtendedDaemonSetReplicaSet.Reconcile() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
@@ -274,6 +275,7 @@ func Test_retrieveOwnerReference(t *testing.T) {
 			got, err := retrieveOwnerReference(tt.args.obj)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("retrieveOwnerReference() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
 			if got != tt.want {
@@ -361,6 +363,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_getPodList(t *testing.T) {
 			got, err := r.getPodList(tt.args.ds)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ReconcileExtendedDaemonSetReplicaSet.getPodList() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
 			if !apiequality.Semantic.DeepEqual(got, tt.want) {
@@ -437,6 +440,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_getNodeList(t *testing.T) {
 			got, err := r.getNodeList(eds, tt.args.replicaset)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ReconcileExtendedDaemonSetReplicaSet.getNodeList() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
 			if !apiequality.Semantic.DeepEqual(got, tt.want) {
@@ -523,6 +527,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_getDaemonsetOwner(t *testing.T) {
 			got, err := r.getDaemonsetOwner(tt.args.replicaset)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ReconcileExtendedDaemonSetReplicaSet.getDaemonsetOwner() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
 			if !apiequality.Semantic.DeepEqual(got, tt.want) {
