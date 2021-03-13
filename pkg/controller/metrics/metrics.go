@@ -28,7 +28,7 @@ func AddMetrics(gvk schema.GroupVersionKind, mgr manager.Manager, h Handler, met
 	serializerCodec := serializer.NewCodecFactory(mgr.GetScheme())
 	paramCodec := runtime.NewParameterCodec(mgr.GetScheme())
 
-	restClient, err := apiutil.RESTClientForGVK(gvk, mgr.GetConfig(), serializerCodec)
+	restClient, err := apiutil.RESTClientForGVK(gvk, false, mgr.GetConfig(), serializerCodec)
 	if err != nil {
 		return err
 	}

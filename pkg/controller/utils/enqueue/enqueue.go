@@ -28,23 +28,23 @@ type RequestForExtendedDaemonSetLabel struct {
 
 // Create implements EventHandler
 func (e *RequestForExtendedDaemonSetLabel) Create(evt event.CreateEvent, q workqueue.RateLimitingInterface) {
-	e.add(evt.Meta, q)
+	e.add(evt.Object, q)
 }
 
 // Update implements EventHandler
 func (e *RequestForExtendedDaemonSetLabel) Update(evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
-	e.add(evt.MetaOld, q)
-	e.add(evt.MetaNew, q)
+	e.add(evt.ObjectOld, q)
+	e.add(evt.ObjectNew, q)
 }
 
 // Delete implements EventHandler
 func (e *RequestForExtendedDaemonSetLabel) Delete(evt event.DeleteEvent, q workqueue.RateLimitingInterface) {
-	e.add(evt.Meta, q)
+	e.add(evt.Object, q)
 }
 
 // Generic implements EventHandler
 func (e *RequestForExtendedDaemonSetLabel) Generic(evt event.GenericEvent, q workqueue.RateLimitingInterface) {
-	e.add(evt.Meta, q)
+	e.add(evt.Object, q)
 }
 
 func (e RequestForExtendedDaemonSetLabel) add(meta metav1.Object, q workqueue.RateLimitingInterface) {
@@ -68,23 +68,23 @@ type RequestForExtendedDaemonSetReplicaSetLabel struct {
 
 // Create implements EventHandler
 func (e *RequestForExtendedDaemonSetReplicaSetLabel) Create(evt event.CreateEvent, q workqueue.RateLimitingInterface) {
-	e.add(evt.Meta, q)
+	e.add(evt.Object, q)
 }
 
 // Update implements EventHandler
 func (e *RequestForExtendedDaemonSetReplicaSetLabel) Update(evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
-	e.add(evt.MetaOld, q)
-	e.add(evt.MetaNew, q)
+	e.add(evt.ObjectOld, q)
+	e.add(evt.ObjectNew, q)
 }
 
 // Delete implements EventHandler
 func (e *RequestForExtendedDaemonSetReplicaSetLabel) Delete(evt event.DeleteEvent, q workqueue.RateLimitingInterface) {
-	e.add(evt.Meta, q)
+	e.add(evt.Object, q)
 }
 
 // Generic implements EventHandler
 func (e RequestForExtendedDaemonSetReplicaSetLabel) Generic(evt event.GenericEvent, q workqueue.RateLimitingInterface) {
-	e.add(evt.Meta, q)
+	e.add(evt.Object, q)
 }
 
 func (e *RequestForExtendedDaemonSetReplicaSetLabel) add(meta metav1.Object, q workqueue.RateLimitingInterface) {

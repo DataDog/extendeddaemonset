@@ -35,8 +35,8 @@ type ExtendedDaemonSetReplicaSetReconciler struct {
 // +kubebuilder:rbac:groups=datadoghq.com,resources=extendeddaemonsetreplicasets/status,verbs=get;update;patch
 
 // Reconcile loop for ExtendedDaemonSetReplicaSet
-func (r *ExtendedDaemonSetReplicaSetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	return r.internal.Reconcile(context.Background(), req)
+func (r *ExtendedDaemonSetReplicaSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	return r.internal.Reconcile(ctx, req)
 }
 
 // SetupWithManager creates a new ExtendedDaemonSetReplicaSet controller

@@ -27,12 +27,12 @@ import (
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
 var (
-	testLogger logr.Logger = logf.ZapLogger(true)
+	testLogger logr.Logger = logf.Log.WithName("controller-test")
 )
 
 func TestReconcileExtendedDaemonSetReplicaSet_Reconcile(t *testing.T) {

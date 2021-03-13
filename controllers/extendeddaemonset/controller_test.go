@@ -25,8 +25,9 @@ import (
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	test "github.com/DataDog/extendeddaemonset/api/v1alpha1/test"
@@ -35,7 +36,7 @@ import (
 )
 
 var (
-	testLogger logr.Logger = logf.ZapLogger(true)
+	testLogger logr.Logger = logf.Log.WithName("test")
 )
 
 func TestReconciler_selectNodes(t *testing.T) {
@@ -502,7 +503,7 @@ func TestReconciler_cleanupReplicaSet(t *testing.T) {
 func TestReconciler_createNewReplicaSet(t *testing.T) {
 	eventBroadcaster := record.NewBroadcaster()
 
-	logf.SetLogger(logf.ZapLogger(true))
+	logf.SetLogger(zap.New())
 	log := logf.Log.WithName("TestReconcileExtendedDaemonSet_createNewReplicaSet")
 
 	// Register operator types with the runtime scheme.
@@ -562,7 +563,7 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 	eventBroadcaster := record.NewBroadcaster()
 	now := time.Now()
 
-	logf.SetLogger(logf.ZapLogger(true))
+	logf.SetLogger(zap.New())
 	log := logf.Log.WithName("TestReconcileExtendedDaemonSet_updateStatusWithNewRS")
 
 	// Register operator types with the runtime scheme.

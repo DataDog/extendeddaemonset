@@ -11,7 +11,8 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	ctrltest "github.com/DataDog/extendeddaemonset/pkg/controller/test"
 	"github.com/DataDog/extendeddaemonset/pkg/controller/utils/pod"
@@ -19,7 +20,7 @@ import (
 
 func TestCheckNodeFitness(t *testing.T) {
 	now := time.Now()
-	logf.SetLogger(logf.ZapLogger(true))
+	logf.SetLogger(zap.New())
 	log := logf.Log.WithName("TestCheckNodeFitness")
 
 	nodeReadyOptions := &ctrltest.NewNodeOptions{

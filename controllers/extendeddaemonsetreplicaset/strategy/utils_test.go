@@ -13,13 +13,15 @@ import (
 	"github.com/DataDog/extendeddaemonset/api/v1alpha1/test"
 	commontest "github.com/DataDog/extendeddaemonset/pkg/controller/test"
 	"github.com/stretchr/testify/assert"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 func Test_compareWithExtendedDaemonsetSettingOverwrite(t *testing.T) {
@@ -199,7 +201,8 @@ func Test_failCanaryDeployment(t *testing.T) {
 }
 
 func Test_addPodLabel(t *testing.T) {
-	testLogger := logf.ZapLogger(true)
+	logf.SetLogger(zap.New())
+	testLogger := logf.Log.WithName("test")
 	key := "key1"
 	val := "val1"
 	podNoLabel := commontest.NewPod("foo", "pod1", "node1", nil)
@@ -272,7 +275,8 @@ func Test_addPodLabel(t *testing.T) {
 }
 
 func Test_deletePodLabel(t *testing.T) {
-	testLogger := logf.ZapLogger(true)
+	logf.SetLogger(zap.New())
+	testLogger := logf.Log.WithName("test")
 	key := "key1"
 	val := "val1"
 	podNoLabel := commontest.NewPod("foo", "pod1", "node1", nil)

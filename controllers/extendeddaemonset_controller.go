@@ -41,8 +41,8 @@ type ExtendedDaemonSetReconciler struct {
 // +kubebuilder:rbac:groups="",resources=nodes,verbs=get;list;watch
 
 // Reconcile loop for ExtendedDaemonSet
-func (r *ExtendedDaemonSetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	return r.internal.Reconcile(context.Background(), req)
+func (r *ExtendedDaemonSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	return r.internal.Reconcile(ctx, req)
 }
 
 // SetupWithManager creates a new ExtendedDaemonSet controller
