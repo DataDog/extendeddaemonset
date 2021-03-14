@@ -273,7 +273,7 @@ func newPod(now metav1.Time, ready bool, beforeSec int) *v1.Pod {
 			Conditions: []v1.PodCondition{
 				{
 					Type:               v1.PodReady,
-					LastTransitionTime: metav1.NewTime(now.Time.Add(-1 * time.Duration(beforeSec))),
+					LastTransitionTime: metav1.NewTime(now.Time.Add(time.Duration(-beforeSec) * time.Second)),
 					Status:             conditionStatus,
 				},
 			},
