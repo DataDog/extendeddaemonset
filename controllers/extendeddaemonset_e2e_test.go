@@ -21,7 +21,6 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -696,7 +695,7 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 	})
 })
 
-func withUpdate(obj runtime.Object, desc string) condFn {
+func withUpdate(obj client.Object, desc string) condFn {
 	return func() bool {
 		err := k8sClient.Update(context.Background(), obj)
 		if err != nil {
@@ -707,7 +706,7 @@ func withUpdate(obj runtime.Object, desc string) condFn {
 	}
 }
 
-func withList(listOptions []client.ListOption, obj runtime.Object, desc string, condition condFn) condFn {
+func withList(listOptions []client.ListOption, obj client.ObjectList, desc string, condition condFn) condFn {
 	return func() bool {
 		err := k8sClient.List(context.Background(), obj, listOptions...)
 		if err != nil {
