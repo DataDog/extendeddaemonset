@@ -42,7 +42,7 @@ func schema__api_v1alpha1_ExtendedDaemonSet(ref common.ReferenceCallback) common
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ExtendedDaemonSet is the Schema for the extendeddaemonsets API",
+				Description: "ExtendedDaemonSet is the Schema for the extendeddaemonsets API.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
@@ -89,7 +89,7 @@ func schema__api_v1alpha1_ExtendedDaemonSetReplicaSet(ref common.ReferenceCallba
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ExtendedDaemonSetReplicaSet is the Schema for the extendeddaemonsetreplicasets API",
+				Description: "ExtendedDaemonSetReplicaSet is the Schema for the extendeddaemonsetreplicasets API.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
@@ -297,7 +297,7 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpec(ref common.ReferenceCallback) co
 					},
 					"strategy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Daemonset deployment strategy",
+							Description: "Daemonset deployment strategy.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("./api/v1alpha1.ExtendedDaemonSetSpecStrategy"),
 						},
@@ -315,7 +315,7 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategy(ref common.ReferenceCall
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ExtendedDaemonSetSpecStrategy defines the deployment strategy of ExtendedDaemonSet",
+				Description: "ExtendedDaemonSetSpecStrategy defines the deployment strategy of ExtendedDaemonSet.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"rollingUpdate": {
@@ -332,7 +332,7 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategy(ref common.ReferenceCall
 					},
 					"reconcileFrequency": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ReconcileFrequency use to configure how often the ExtendedDeamonset will be fully reconcile, default is 10sec",
+							Description: "ReconcileFrequency use to configure how often the ExtendedDeamonset will be fully reconcile, default is 10sec.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
@@ -348,7 +348,7 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanary(ref common.Referen
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ExtendedDaemonSetSpecStrategyCanary defines the canary deployment strategy of ExtendedDaemonSet",
+				Description: "ExtendedDaemonSetSpecStrategyCanary defines the canary deployment strategy of ExtendedDaemonSet.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"replicas": {
@@ -397,7 +397,7 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanary(ref common.Referen
 					},
 					"noRestartsDuration": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NoRestartsDuration defines min duration since last restart to end the canary phase",
+							Description: "NoRestartsDuration defines min duration since last restart to end the canary phase.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
@@ -413,7 +413,7 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanaryAutoFail(ref common
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ExtendedDaemonSetSpecStrategyCanaryAutoFail defines the canary deployment AutoFail parameters of the ExtendedDaemonSet",
+				Description: "ExtendedDaemonSetSpecStrategyCanaryAutoFail defines the canary deployment AutoFail parameters of the ExtendedDaemonSet.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"enabled": {
@@ -424,14 +424,14 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanaryAutoFail(ref common
 					},
 					"maxRestarts": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MaxRestarts defines the number of tolerable (per pod) Canary pod restarts after which the Canary deployment is autofailed",
+							Description: "MaxRestarts defines the number of tolerable (per pod) Canary pod restarts after which the Canary deployment is autofailed.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"maxRestartsDuration": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MaxRestartsDuration defines the maximum duration of tolerable Canary pod restarts after which the Canary deployment is autofailed",
+							Description: "MaxRestartsDuration defines the maximum duration of tolerable Canary pod restarts after which the Canary deployment is autofailed.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
@@ -447,7 +447,7 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanaryAutoPause(ref commo
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ExtendedDaemonSetSpecStrategyCanaryAutoPause defines the canary deployment AutoPause parameters of the ExtendedDaemonSet",
+				Description: "ExtendedDaemonSetSpecStrategyCanaryAutoPause defines the canary deployment AutoPause parameters of the ExtendedDaemonSet.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"enabled": {
@@ -458,14 +458,14 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanaryAutoPause(ref commo
 					},
 					"maxRestarts": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MaxRestarts defines the number of tolerable (per pod) Canary pod restarts after which the Canary deployment is autopaused",
+							Description: "MaxRestarts defines the number of tolerable (per pod) Canary pod restarts after which the Canary deployment is autopaused.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"maxSlowStartDuration": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MaxSlowStartDuration defines the maximum slow start duration for a pod (stuck in Creating state) after which the Canary deployment is autopaused",
+							Description: "MaxSlowStartDuration defines the maximum slow start duration for a pod (stuck in Creating state) after which the. Canary deployment is autopaused",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
@@ -481,7 +481,7 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyRollingUpdate(ref common.
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ExtendedDaemonSetSpecStrategyRollingUpdate defines the rolling update deployment strategy of ExtendedDaemonSet",
+				Description: "ExtendedDaemonSetSpecStrategyRollingUpdate defines the rolling update deployment strategy of ExtendedDaemonSet.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"maxUnavailable": {
@@ -492,7 +492,7 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyRollingUpdate(ref common.
 					},
 					"maxPodSchedulerFailure": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MaxPodSchedulerFailure the maxinum number of not scheduled on its Node due to a scheduler failure: resource constraints. Value can be an absolute number (ex: 5) or a percentage of total number of DaemonSet pods at the start of the update (ex: 10%). Absolute",
+							Description: "MaxPodSchedulerFailure the maxinum number of not scheduled on its Node due to a scheduler failure: resource constraints. Value can be an absolute number (ex: 5) or a percentage of total number of DaemonSet pods at the start of the update (ex: 10%). Absolute.",
 							Ref:         ref("k8s.io/apimachinery/pkg/util/intstr.IntOrString"),
 						},
 					},
@@ -672,7 +672,7 @@ func schema__api_v1alpha1_ExtendedDaemonsetSetting(ref common.ReferenceCallback)
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ExtendedDaemonsetSetting is the Schema for the extendeddaemonsetsettings API",
+				Description: "ExtendedDaemonsetSetting is the Schema for the extendeddaemonsetsettings API.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
@@ -799,7 +799,7 @@ func schema__api_v1alpha1_ExtendedDaemonsetSettingStatus(ref common.ReferenceCal
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ExtendedDaemonsetSettingStatus defines the observed state of ExtendedDaemonsetSetting",
+				Description: "ExtendedDaemonsetSettingStatus defines the observed state of ExtendedDaemonsetSetting.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"status": {
