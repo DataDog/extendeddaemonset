@@ -3,6 +3,7 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-2019 Datadog, Inc.
 
+// Package version contains function to set and store controller version.
 package version
 
 import (
@@ -14,15 +15,15 @@ import (
 )
 
 var (
-	// Version binary version
+	// Version binary version.
 	Version = "0.0.0"
-	// BuildTime binary build time
+	// BuildTime binary build time.
 	BuildTime = ""
-	// Commit current git commit
+	// Commit current git commit.
 	Commit = ""
 )
 
-// PrintVersionWriter print versions information in to writer interface
+// PrintVersionWriter print versions information in to writer interface.
 func PrintVersionWriter(writer io.Writer) {
 	fmt.Fprintf(writer, "Version:\n")
 	for _, val := range printVersionSlice() {
@@ -30,7 +31,7 @@ func PrintVersionWriter(writer io.Writer) {
 	}
 }
 
-// PrintVersionLogs print versions information in logs
+// PrintVersionLogs print versions information in logs.
 func PrintVersionLogs(logger logr.Logger) {
 	for _, val := range printVersionSlice() {
 		logger.Info(val)
@@ -45,5 +46,6 @@ func printVersionSlice() []string {
 		fmt.Sprintf("Go Version: %s", runtime.Version()),
 		fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH),
 	}
+
 	return output
 }

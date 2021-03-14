@@ -132,7 +132,7 @@ func Test_pauseCanaryDeployment(t *testing.T) {
 		{
 			name: "add paused annotation without issue",
 			args: args{
-				client: fake.NewFakeClient(daemonset),
+				client: fake.NewClientBuilder().WithObjects(daemonset).Build(),
 				eds:    daemonset,
 				reason: reason,
 			},
@@ -140,7 +140,7 @@ func Test_pauseCanaryDeployment(t *testing.T) {
 		{
 			name: "add paused annotation when it is already paused",
 			args: args{
-				client: fake.NewFakeClient(daemonsetPaused),
+				client: fake.NewClientBuilder().WithObjects(daemonsetPaused).Build(),
 				eds:    daemonsetPaused,
 				reason: reason,
 			},
@@ -178,7 +178,7 @@ func Test_failCanaryDeployment(t *testing.T) {
 		{
 			name: "add dailed annotation without issue",
 			args: args{
-				client: fake.NewFakeClient(daemonset),
+				client: fake.NewClientBuilder().WithObjects(daemonset).Build(),
 				eds:    daemonset,
 				reason: reason,
 			},
@@ -186,7 +186,7 @@ func Test_failCanaryDeployment(t *testing.T) {
 		{
 			name: "add failed annotation when it is already paused",
 			args: args{
-				client: fake.NewFakeClient(daemonsetPaused),
+				client: fake.NewClientBuilder().WithObjects(daemonsetPaused).Build(),
 				eds:    daemonsetPaused,
 				reason: reason,
 			},
@@ -241,7 +241,7 @@ func Test_addPodLabel(t *testing.T) {
 		{
 			name: "add label",
 			args: args{
-				c:   fake.NewFakeClient(podNoLabel),
+				c:   fake.NewClientBuilder().WithObjects(podNoLabel).Build(),
 				pod: podNoLabel,
 				k:   key,
 				v:   val,
@@ -252,7 +252,7 @@ func Test_addPodLabel(t *testing.T) {
 		{
 			name: "label already present",
 			args: args{
-				c:   fake.NewFakeClient(podLabeled),
+				c:   fake.NewClientBuilder().WithObjects(podLabeled).Build(),
 				pod: podLabeled,
 				k:   key,
 				v:   val,
@@ -311,7 +311,7 @@ func Test_deletePodLabel(t *testing.T) {
 		{
 			name: "delete label",
 			args: args{
-				c:   fake.NewFakeClient(podLabeled),
+				c:   fake.NewClientBuilder().WithObjects(podLabeled).Build(),
 				pod: podLabeled,
 				k:   key,
 			},
@@ -321,7 +321,7 @@ func Test_deletePodLabel(t *testing.T) {
 		{
 			name: "label not present",
 			args: args{
-				c:   fake.NewFakeClient(podNoLabel),
+				c:   fake.NewClientBuilder().WithObjects(podNoLabel).Build(),
 				pod: podNoLabel,
 				k:   key,
 			},

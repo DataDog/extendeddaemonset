@@ -28,14 +28,14 @@ func GetContainerStatus(statuses []v1.ContainerStatus, name string) (v1.Containe
 	return v1.ContainerStatus{}, false
 }
 
-// GetExistingContainerStatus extracts the status of container "name" from "statuses",
+// GetExistingContainerStatus extracts the status of container "name" from "statuses".
 func GetExistingContainerStatus(statuses []v1.ContainerStatus, name string) v1.ContainerStatus {
 	status, _ := GetContainerStatus(statuses, name)
 
 	return status
 }
 
-// IsPodScheduled return true if it is already assigned to a Node
+// IsPodScheduled return true if it is already assigned to a Node.
 func IsPodScheduled(pod *v1.Pod) (string, bool) {
 	isScheduled := pod.Spec.NodeName != ""
 	nodeName := affinity.GetNodeNameFromAffinity(pod.Spec.Affinity)
@@ -88,6 +88,7 @@ func GetPodCondition(status *v1.PodStatus, conditionType v1.PodConditionType) (i
 	if status == nil {
 		return -1, nil
 	}
+
 	return GetPodConditionFromList(status.Conditions, conditionType)
 }
 
@@ -102,6 +103,7 @@ func GetPodConditionFromList(conditions []v1.PodCondition, conditionType v1.PodC
 			return i, &conditions[i]
 		}
 	}
+
 	return -1, nil
 }
 
@@ -112,7 +114,7 @@ func containerStatusList(pod *v1.Pod) []v1.ContainerStatus {
 }
 
 // HighestRestartCount checks if a pod in the Canary deployment is restarting
-// This returns the count and the "reason" for the pod with the most restarts
+// This returns the count and the "reason" for the pod with the most restarts.
 func HighestRestartCount(pod *v1.Pod) (int, datadoghqv1alpha1.ExtendedDaemonSetStatusReason) {
 	// track the highest number of restarts among pod containers
 	var (
@@ -129,10 +131,11 @@ func HighestRestartCount(pod *v1.Pod) (int, datadoghqv1alpha1.ExtendedDaemonSetS
 			}
 		}
 	}
+
 	return int(restartCount), reason
 }
 
-// MostRecentRestart returns the most recent restart time for a pod or the time
+// MostRecentRestart returns the most recent restart time for a pod or the time.
 func MostRecentRestart(pod *v1.Pod) (time.Time, datadoghqv1alpha1.ExtendedDaemonSetStatusReason) {
 	var (
 		restartTime time.Time
@@ -146,6 +149,7 @@ func MostRecentRestart(pod *v1.Pod) (time.Time, datadoghqv1alpha1.ExtendedDaemon
 			}
 		}
 	}
+
 	return restartTime, reason
 }
 
@@ -158,23 +162,25 @@ var cannotStartReasons = []string{
 	"PostStartHookError",
 }
 
-// IsCannotStartReason returns true for a reason that is considered an abnormal cannot start condition
+// IsCannotStartReason returns true for a reason that is considered an abnormal cannot start condition.
 func IsCannotStartReason(reason string) bool {
 	for _, cannot := range cannotStartReasons {
 		if cannot == reason {
 			return true
 		}
 	}
+
 	return false
 }
 
-// CannotStart returns true if the Pod is currently experiencing abnormal start condition
+// CannotStart returns true if the Pod is currently experiencing abnormal start condition.
 func CannotStart(pod *v1.Pod) (bool, datadoghqv1alpha1.ExtendedDaemonSetStatusReason) {
 	for _, s := range containerStatusList(pod) {
 		if s.State.Waiting != nil && IsCannotStartReason(s.State.Waiting.Reason) {
 			return true, convertReasonToEDSStatusReason(s.State.Waiting.Reason)
 		}
 	}
+
 	return false, datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown
 }
 
@@ -191,20 +197,22 @@ func convertReasonToEDSStatusReason(reason string) datadoghqv1alpha1.ExtendedDae
 		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCreateContainerError,
 		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonPreStartHookError,
 		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonPostStartHookError,
-		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonStartError:
+		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonStartError,
+		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown:
 		return t
 	default:
 		return datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown
 	}
 }
 
-// PendingCreate returns true if the Pod is pending create (may be an eventually resolving state)
+// PendingCreate returns true if the Pod is pending create (may be an eventually resolving state).
 func PendingCreate(pod *v1.Pod) bool {
 	for _, s := range containerStatusList(pod) {
 		if s.State.Waiting != nil && s.State.Waiting.Reason == "ContainerCreating" {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -254,16 +262,17 @@ func UpdatePodCondition(status *v1.PodStatus, condition *v1.PodCondition) bool {
 	return !isEqual
 }
 
-// IsEvicted returns whether the status corresponds to an evicted pod
+// IsEvicted returns whether the status corresponds to an evicted pod.
 func IsEvicted(status *v1.PodStatus) bool {
 	if status.Phase == v1.PodFailed && status.Reason == "Evicted" {
 		return true
 	}
+
 	return false
 }
 
 // SortPodByCreationTime return the pods sorted by creation time
-// from the newer to the older
+// from the newer to the older.
 func SortPodByCreationTime(pods []*v1.Pod) []*v1.Pod {
 	sort.Sort(podByCreationTimestamp(pods))
 
@@ -279,5 +288,6 @@ func (o podByCreationTimestamp) Less(i, j int) bool {
 	if o[i].CreationTimestamp.Equal(&o[j].CreationTimestamp) {
 		return o[i].Name > o[j].Name
 	}
+
 	return o[j].CreationTimestamp.Before(&o[i].CreationTimestamp)
 }

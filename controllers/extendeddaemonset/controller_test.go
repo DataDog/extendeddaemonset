@@ -114,7 +114,7 @@ func TestReconciler_selectNodes(t *testing.T) {
 			name: "enough nodes",
 			fields: fields{
 				scheme: s,
-				client: fake.NewFakeClient([]runtime.Object{node1, node2, node3}...),
+				client: fake.NewClientBuilder().WithObjects(node1, node2, node3).Build(),
 			},
 			args: args{
 				spec:       &extendeddaemonset1.Spec,
@@ -130,7 +130,7 @@ func TestReconciler_selectNodes(t *testing.T) {
 			name: "missing nodes",
 			fields: fields{
 				scheme: s,
-				client: fake.NewFakeClient([]runtime.Object{node1, node2}...),
+				client: fake.NewClientBuilder().WithObjects(node1, node2).Build(),
 			},
 			args: args{
 				spec:       &extendeddaemonset1.Spec,
@@ -146,7 +146,7 @@ func TestReconciler_selectNodes(t *testing.T) {
 			name: "enough nodes",
 			fields: fields{
 				scheme: s,
-				client: fake.NewFakeClient([]runtime.Object{node1, node2, node3}...),
+				client: fake.NewClientBuilder().WithObjects(node1, node2, node3).Build(),
 			},
 			args: args{
 				spec:       &extendeddaemonset1.Spec,
@@ -162,7 +162,7 @@ func TestReconciler_selectNodes(t *testing.T) {
 			name: "dedicated canary nodes",
 			fields: fields{
 				scheme: s,
-				client: fake.NewFakeClient([]runtime.Object{node1, node2, node3}...),
+				client: fake.NewClientBuilder().WithObjects(node1, node2, node3).Build(),
 			},
 			args: args{
 				spec:       &extendeddaemonset2.Spec,
@@ -463,7 +463,7 @@ func TestReconciler_cleanupReplicaSet(t *testing.T) {
 		{
 			name: "nothing to delete",
 			fields: fields{
-				client: fake.NewFakeClient(),
+				client: fake.NewClientBuilder().Build(),
 				scheme: s,
 			},
 			args: args{
@@ -476,7 +476,7 @@ func TestReconciler_cleanupReplicaSet(t *testing.T) {
 		{
 			name: "on RS to delete",
 			fields: fields{
-				client: fake.NewFakeClient(replicassetOld, replicassetUpToDate, replicassetCurrent),
+				client: fake.NewClientBuilder().WithObjects(replicassetOld, replicassetUpToDate, replicassetCurrent).Build(),
 				scheme: s,
 			},
 			args: args{
@@ -534,7 +534,7 @@ func TestReconciler_createNewReplicaSet(t *testing.T) {
 		{
 			name: "create new RS",
 			fields: fields{
-				client: fake.NewFakeClient(),
+				client: fake.NewClientBuilder().Build(),
 				scheme: s,
 			},
 			args: args{
@@ -772,7 +772,7 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 			now:  now,
 			name: "no replicaset == no update",
 			fields: fields{
-				client: fake.NewFakeClient(daemonset),
+				client: fake.NewClientBuilder().WithObjects(daemonset).Build(),
 				scheme: s,
 			},
 			args: args{
@@ -789,7 +789,7 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 			now:  now,
 			name: "current == upToDate; status empty => update",
 			fields: fields{
-				client: fake.NewFakeClient(daemonset, replicassetCurrent, replicassetUpToDate),
+				client: fake.NewClientBuilder().WithObjects(daemonset, replicassetCurrent, replicassetUpToDate).Build(),
 				scheme: s,
 			},
 			args: args{
@@ -810,7 +810,7 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 			now:  now,
 			name: "current != upToDate; canary active => update",
 			fields: fields{
-				client: fake.NewFakeClient(daemonset, replicassetCurrent, replicassetUpToDate),
+				client: fake.NewClientBuilder().WithObjects(daemonset, replicassetCurrent, replicassetUpToDate).Build(),
 				scheme: s,
 			},
 			args: args{
@@ -831,7 +831,7 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 			now:  now,
 			name: "current != upToDate; canary paused => update",
 			fields: fields{
-				client: fake.NewFakeClient(daemonset, replicassetCurrent, replicassetUpToDate),
+				client: fake.NewClientBuilder().WithObjects(daemonset, replicassetCurrent, replicassetUpToDate).Build(),
 				scheme: s,
 			},
 			args: args{
@@ -852,7 +852,7 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 			now:  now,
 			name: "current != upToDate; ers-condition-pause, canary paused => update",
 			fields: fields{
-				client: fake.NewFakeClient(daemonset, replicassetCurrent, replicassetUpToDate),
+				client: fake.NewClientBuilder().WithObjects(daemonset, replicassetCurrent, replicassetUpToDate).Build(),
 				scheme: s,
 			},
 			args: args{
@@ -873,7 +873,7 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 			now:  now,
 			name: "canary failed => update",
 			fields: fields{
-				client: fake.NewFakeClient(daemonsetWithCanaryFailedOldStatus, replicassetCurrent, replicassetUpToDate),
+				client: fake.NewClientBuilder().WithObjects(daemonsetWithCanaryFailedOldStatus, replicassetCurrent, replicassetUpToDate).Build(),
 				scheme: s,
 			},
 			args: args{
@@ -894,7 +894,7 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 			now:  now,
 			name: "canary failed, ers-condition-failed => update",
 			fields: fields{
-				client: fake.NewFakeClient(daemonsetWithCanaryFailedOldStatus, replicassetCurrent, replicassetUpToDate),
+				client: fake.NewClientBuilder().WithObjects(daemonsetWithCanaryFailedOldStatus, replicassetCurrent, replicassetUpToDate).Build(),
 				scheme: s,
 			},
 			args: args{
@@ -962,7 +962,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 		{
 			name: "ExtendedDaemonset not found",
 			fields: fields{
-				client:   fake.NewFakeClient(),
+				client:   fake.NewClientBuilder().WithObjects().Build(),
 				scheme:   s,
 				recorder: recorder,
 			},
@@ -975,7 +975,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 		{
 			name: "ExtendedDaemonset found, but not defaulted",
 			fields: fields{
-				client:   fake.NewFakeClient(),
+				client:   fake.NewClientBuilder().WithObjects().Build(),
 				scheme:   s,
 				recorder: recorder,
 			},
@@ -991,7 +991,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 		{
 			name: "ExtendedDaemonset found and defaulted => create the replicaset",
 			fields: fields{
-				client:   fake.NewFakeClient(),
+				client:   fake.NewClientBuilder().WithObjects().Build(),
 				scheme:   s,
 				recorder: recorder,
 			},
@@ -1026,7 +1026,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 		{
 			name: "ExtendedDaemonset found and defaulted, replicaset already exist",
 			fields: fields{
-				client:   fake.NewFakeClient(),
+				client:   fake.NewClientBuilder().Build(),
 				scheme:   s,
 				recorder: recorder,
 			},
@@ -1071,7 +1071,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 		{
 			name: "ExtendedDaemonset found and defaulted, replicaset already but not uptodate",
 			fields: fields{
-				client:   fake.NewFakeClient(),
+				client:   fake.NewClientBuilder().Build(),
 				scheme:   s,
 				recorder: recorder,
 			},

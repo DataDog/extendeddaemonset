@@ -16,27 +16,28 @@ import (
 	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
 )
 
-// NewClient returns new client instance
+// NewClient returns new client instance.
 func NewClient(clientConfig clientcmd.ClientConfig) (client.Client, error) {
 	restConfig, err := clientConfig.ClientConfig()
 	if err != nil {
-		return nil, fmt.Errorf("unable to get rest client config, err: %v", err)
+		return nil, fmt.Errorf("unable to get rest client config, err: %w", err)
 	}
 
-	// Create the mapper provider
+	// Create the mapper provider.
 	mapper, err := apiutil.NewDiscoveryRESTMapper(restConfig)
 	if err != nil {
-		return nil, fmt.Errorf("unable to to instantiate mapper, err: %v", err)
+		return nil, fmt.Errorf("unable to to instantiate mapper, err: %w", err)
 	}
 
 	if err = v1alpha1.AddToScheme(scheme.Scheme); err != nil {
-		return nil, fmt.Errorf("unable register ExtendedDaemonset apis, err: %v", err)
+		return nil, fmt.Errorf("unable register ExtendedDaemonset apis, err: %w", err)
 	}
 	// Create the Client for Read/Write operations.
 	var newClient client.Client
 	newClient, err = client.New(restConfig, client.Options{Scheme: scheme.Scheme, Mapper: mapper})
 	if err != nil {
-		return nil, fmt.Errorf("unable to instantiate client, err: %v", err)
+		return nil, fmt.Errorf("unable to instantiate client, err: %w", err)
 	}
+
 	return newClient, nil
 }

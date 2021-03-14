@@ -72,37 +72,37 @@ type ExtendedDaemonSetReplicaSetCondition struct {
 	Message string `json:"message,omitempty"`
 }
 
-// ExtendedDaemonSetReplicaSetConditionType type use to represent a ExtendedDaemonSetReplicaSet condition
+// ExtendedDaemonSetReplicaSetConditionType type use to represent a ExtendedDaemonSetReplicaSet condition.
 type ExtendedDaemonSetReplicaSetConditionType string
 
 const (
-	// ConditionTypeActive ExtendedDaemonSetReplicaSet is active
+	// ConditionTypeActive ExtendedDaemonSetReplicaSet is active.
 	ConditionTypeActive ExtendedDaemonSetReplicaSetConditionType = "Active"
-	// ConditionTypeCanary ExtendedDaemonSetReplicaSet is in canary mode
+	// ConditionTypeCanary ExtendedDaemonSetReplicaSet is in canary mode.
 	ConditionTypeCanary ExtendedDaemonSetReplicaSetConditionType = "Canary"
-	// ConditionTypeReconcileError the controller wasn't able to run properly the reconcile loop with this ExtendedDaemonSetReplicaSet
+	// ConditionTypeReconcileError the controller wasn't able to run properly the reconcile loop with this ExtendedDaemonSetReplicaSet.
 	ConditionTypeReconcileError ExtendedDaemonSetReplicaSetConditionType = "ReconcileError"
-	// ConditionTypeUnschedule some pods was not scheduled properly for this ExtendedDaemonSetReplicaSet
+	// ConditionTypeUnschedule some pods was not scheduled properly for this ExtendedDaemonSetReplicaSet.
 	ConditionTypeUnschedule ExtendedDaemonSetReplicaSetConditionType = "Unschedule"
-	// ConditionTypePodsCleanupDone Pod(s) cleanup condition
+	// ConditionTypePodsCleanupDone Pod(s) cleanup condition.
 	ConditionTypePodsCleanupDone ExtendedDaemonSetReplicaSetConditionType = "PodsCleanupDone"
-	// ConditionTypePodCreation Pod(s) creation condition
+	// ConditionTypePodCreation Pod(s) creation condition.
 	ConditionTypePodCreation ExtendedDaemonSetReplicaSetConditionType = "PodCreation"
-	// ConditionTypePodDeletion Pod(s) deletion condition
+	// ConditionTypePodDeletion Pod(s) deletion condition.
 	ConditionTypePodDeletion ExtendedDaemonSetReplicaSetConditionType = "PodDeletion"
-	// ConditionTypePodRestarting Pod(s) restarting condition
+	// ConditionTypePodRestarting Pod(s) restarting condition.
 	ConditionTypePodRestarting ExtendedDaemonSetReplicaSetConditionType = "PodRestarting"
-	// ConditionTypePodCannotStart Pod(s) cannot start condition
+	// ConditionTypePodCannotStart Pod(s) cannot start condition.
 	ConditionTypePodCannotStart ExtendedDaemonSetReplicaSetConditionType = "PodCannotStart"
-	// ConditionTypeLastFullSync last time the ExtendedDaemonSetReplicaSet sync when to the end of the reconcile function
+	// ConditionTypeLastFullSync last time the ExtendedDaemonSetReplicaSet sync when to the end of the reconcile function.
 	ConditionTypeLastFullSync ExtendedDaemonSetReplicaSetConditionType = "LastFullSync"
-	// ConditionTypeCanaryPaused ExtendedDaemonSetReplicaSet is in canary mode
+	// ConditionTypeCanaryPaused ExtendedDaemonSetReplicaSet is in canary mode.
 	ConditionTypeCanaryPaused ExtendedDaemonSetReplicaSetConditionType = "Canary-Paused"
-	// ConditionTypeCanaryFailed ExtendedDaemonSetReplicaSet is in canary mode
+	// ConditionTypeCanaryFailed ExtendedDaemonSetReplicaSet is in canary mode.
 	ConditionTypeCanaryFailed ExtendedDaemonSetReplicaSetConditionType = "Canary-Failed"
 )
 
-// ExtendedDaemonSetReplicaSet is the Schema for the extendeddaemonsetreplicasets API
+// ExtendedDaemonSetReplicaSet is the Schema for the extendeddaemonsetreplicasets API.
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="status",type="string",JSONPath=".status.status"

@@ -61,6 +61,7 @@ func TestConvertLabelSelector(t *testing.T) {
 			got, err := ConvertLabelSelector(reqLogger, &tt.input)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ConvertLabelSelector() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {

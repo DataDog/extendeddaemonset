@@ -27,7 +27,7 @@ var getExample = `
 	%[1]s get foo
 `
 
-// getOptions provides information required to manage Kanary
+// getOptions provides information required to manage canary.
 type getOptions struct {
 	configFlags *genericclioptions.ConfigFlags
 	args        []string
@@ -40,7 +40,7 @@ type getOptions struct {
 	userExtendedDaemonSetName string
 }
 
-// NewGetOptions provides an instance of GetOptions with default values
+// NewGetOptions provides an instance of GetOptions with default values.
 func newGetOptions(streams genericclioptions.IOStreams) *getOptions {
 	return &getOptions{
 		configFlags: genericclioptions.NewConfigFlags(false),
@@ -49,7 +49,7 @@ func newGetOptions(streams genericclioptions.IOStreams) *getOptions {
 	}
 }
 
-// NewCmdGet provides a cobra command wrapping GetOptions
+// NewCmdGet provides a cobra command wrapping GetOptions.
 func NewCmdGet(streams genericclioptions.IOStreams) *cobra.Command {
 	o := newGetOptions(streams)
 
@@ -75,7 +75,7 @@ func NewCmdGet(streams genericclioptions.IOStreams) *cobra.Command {
 	return cmd
 }
 
-// complete sets all information required for processing the command
+// complete sets all information required for processing the command.
 func (o *getOptions) complete(cmd *cobra.Command, args []string) error {
 	o.args = args
 	var err error
@@ -84,7 +84,7 @@ func (o *getOptions) complete(cmd *cobra.Command, args []string) error {
 	// Create the Client for Read/Write operations.
 	o.client, err = common.NewClient(clientConfig)
 	if err != nil {
-		return fmt.Errorf("unable to instantiate client, err: %v", err)
+		return fmt.Errorf("unable to instantiate client, err: %w", err)
 	}
 
 	o.userNamespace, _, err = clientConfig.Namespace()
@@ -107,7 +107,7 @@ func (o *getOptions) complete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// validate ensures that all required arguments and flag values are provided
+// validate ensures that all required arguments and flag values are provided.
 func (o *getOptions) validate() error {
 	if len(o.args) > 1 {
 		return fmt.Errorf("either one or no arguments are allowed")
@@ -116,14 +116,14 @@ func (o *getOptions) validate() error {
 	return nil
 }
 
-// run use to run the command
+// run use to run the command.
 func (o *getOptions) run() error {
 	edsList := &v1alpha1.ExtendedDaemonSetList{}
 
 	if o.userExtendedDaemonSetName == "" {
 		err := o.client.List(context.TODO(), edsList, &client.ListOptions{Namespace: o.userNamespace})
 		if err != nil {
-			return fmt.Errorf("unable to list ExtendedDaemonSet, err: %v", err)
+			return fmt.Errorf("unable to list ExtendedDaemonSet, err: %w", err)
 		}
 	} else {
 		eds := &v1alpha1.ExtendedDaemonSet{}

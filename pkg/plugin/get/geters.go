@@ -27,7 +27,7 @@ var getErsExample = `
 	%[1]s get-ers foo-dsfsfs
 `
 
-// getERSOptions provides information required to manage Kanary
+// getERSOptions provides information required to manage Canary.
 type getERSOptions struct {
 	configFlags *genericclioptions.ConfigFlags
 	args        []string
@@ -40,7 +40,7 @@ type getERSOptions struct {
 	userExtendedDaemonSetReplicaSetName string
 }
 
-// newGetERSOptions provides an instance of GetERSOptions with default values
+// newGetERSOptions provides an instance of GetERSOptions with default values.
 func newGetERSOptions(streams genericclioptions.IOStreams) *getERSOptions {
 	return &getERSOptions{
 		configFlags: genericclioptions.NewConfigFlags(false),
@@ -49,7 +49,7 @@ func newGetERSOptions(streams genericclioptions.IOStreams) *getERSOptions {
 	}
 }
 
-// NewCmdGetERS provides a cobra command wrapping GetERSOptions
+// NewCmdGetERS provides a cobra command wrapping GetERSOptions.
 func NewCmdGetERS(streams genericclioptions.IOStreams) *cobra.Command {
 	o := newGetERSOptions(streams)
 
@@ -75,7 +75,7 @@ func NewCmdGetERS(streams genericclioptions.IOStreams) *cobra.Command {
 	return cmd
 }
 
-// complete sets all information required for processing the command
+// complete sets all information required for processing the command.
 func (o *getERSOptions) complete(cmd *cobra.Command, args []string) error {
 	o.args = args
 	var err error
@@ -84,7 +84,7 @@ func (o *getERSOptions) complete(cmd *cobra.Command, args []string) error {
 	// Create the Client for Read/Write operations.
 	o.client, err = common.NewClient(clientConfig)
 	if err != nil {
-		return fmt.Errorf("unable to instantiate client, err: %v", err)
+		return fmt.Errorf("unable to instantiate client, err: %w", err)
 	}
 
 	o.userNamespace, _, err = clientConfig.Namespace()
@@ -107,7 +107,7 @@ func (o *getERSOptions) complete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// validate ensures that all required arguments and flag values are provided
+// validate ensures that all required arguments and flag values are provided.
 func (o *getERSOptions) validate() error {
 	if len(o.args) > 1 {
 		return fmt.Errorf("either one or no arguments are allowed")
@@ -116,14 +116,14 @@ func (o *getERSOptions) validate() error {
 	return nil
 }
 
-// run use to run the command
+// run use to run the command.
 func (o *getERSOptions) run() error {
 	ersList := &v1alpha1.ExtendedDaemonSetReplicaSetList{}
 
 	if o.userExtendedDaemonSetReplicaSetName == "" {
 		err := o.client.List(context.TODO(), ersList, &client.ListOptions{Namespace: o.userNamespace})
 		if err != nil {
-			return fmt.Errorf("unable to list ExtendedDaemonSetReplicaset, err: %v", err)
+			return fmt.Errorf("unable to list ExtendedDaemonSetReplicaset, err: %w", err)
 		}
 	} else {
 		ers := &v1alpha1.ExtendedDaemonSetReplicaSet{}
@@ -131,7 +131,7 @@ func (o *getERSOptions) run() error {
 		if err != nil && errors.IsNotFound(err) {
 			return fmt.Errorf("ExtendedDaemonSet %s/%s not found", o.userNamespace, o.userExtendedDaemonSetReplicaSetName)
 		} else if err != nil {
-			return fmt.Errorf("unable to get ExtendedDaemonSetReplicaset, err: %v", err)
+			return fmt.Errorf("unable to get ExtendedDaemonSetReplicaset, err: %w", err)
 		}
 		ersList.Items = append(ersList.Items, *ers)
 	}

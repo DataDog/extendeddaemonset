@@ -23,14 +23,14 @@ import (
 )
 
 // cleanCanaryLabelsThreshold is the duration since the last transition to a rolling update of a replicaset
-// during which we keep retrying cleaning up the canary labels that were added to the canary pods during the canary phase
+// during which we keep retrying cleaning up the canary labels that were added to the canary pods during the canary phase.
 const cleanCanaryLabelsThreshold = 5 * time.Minute
 
-// ManageDeployment used to manage ReplicaSet in rollingupdate state
+// ManageDeployment used to manage ReplicaSet in rollingupdate state.
 func ManageDeployment(client runtimeclient.Client, params *Parameters) (*Result, error) {
 	result := &Result{}
 
-	// remove canary node if define
+	// remove canary node if define.
 	for _, nodeName := range params.CanaryNodes {
 		delete(params.PodByNodeName, params.NodeByName[nodeName])
 	}
@@ -174,6 +174,7 @@ func getRollingUpdateStartTime(status *datadoghqv1alpha1.ExtendedDaemonSetReplic
 	if cond.Status == corev1.ConditionTrue {
 		return cond.LastTransitionTime.Time
 	}
+
 	return now
 }
 

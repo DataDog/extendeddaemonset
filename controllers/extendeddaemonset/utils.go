@@ -55,7 +55,7 @@ func IsCanaryDeploymentEnded(specCanary *datadoghqv1alpha1.ExtendedDaemonSetSpec
 	return true, pendingDuration
 }
 
-// IsCanaryDeploymentPaused checks if the Canary deployment has been paused
+// IsCanaryDeploymentPaused checks if the Canary deployment has been paused.
 func IsCanaryDeploymentPaused(dsAnnotations map[string]string, ers *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) (bool, datadoghqv1alpha1.ExtendedDaemonSetStatusReason) {
 	// check ERS status to detect if a Canary paused
 	if ers != nil && conditions.IsConditionTrue(&ers.Status, datadoghqv1alpha1.ConditionTypeCanaryPaused) {
@@ -70,31 +70,35 @@ func IsCanaryDeploymentPaused(dsAnnotations map[string]string, ers *datadoghqv1a
 		if reason, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey]; found {
 			return true, datadoghqv1alpha1.ExtendedDaemonSetStatusReason(reason)
 		}
+
 		return true, datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown
 	}
+
 	return false, ""
 }
 
-// IsCanaryDeploymentUnpaused checks if the Canary deployment has been manually unpaused
+// IsCanaryDeploymentUnpaused checks if the Canary deployment has been manually unpaused.
 func IsCanaryDeploymentUnpaused(dsAnnotations map[string]string) bool {
 	isUnpaused, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryUnpausedAnnotationKey]
 	if found {
 		return isUnpaused == datadoghqv1alpha1.ValueStringTrue
 	}
+
 	return false
 }
 
 // IsCanaryDeploymentValid used to know if the Canary deployment has been declared
 // valid even if its duration has not finished yet.
-// If the ExtendedDaemonSet has the corresponding annotation: return true
+// If the ExtendedDaemonSet has the corresponding annotation: return true.
 func IsCanaryDeploymentValid(dsAnnotations map[string]string, rsName string) bool {
 	if value, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryValidAnnotationKey]; found {
 		return value == rsName
 	}
+
 	return false
 }
 
-// IsCanaryDeploymentFailed checks if the Canary deployment has been failed
+// IsCanaryDeploymentFailed checks if the Canary deployment has been failed.
 func IsCanaryDeploymentFailed(dsAnnotations map[string]string, ers *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) bool {
 	// Check ERS status to detect if a Canary failed
 	if ers != nil && conditions.IsConditionTrue(&ers.Status, datadoghqv1alpha1.ConditionTypeCanaryFailed) {
@@ -105,6 +109,7 @@ func IsCanaryDeploymentFailed(dsAnnotations map[string]string, ers *datadoghqv1a
 	if value, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey]; found {
 		return value == datadoghqv1alpha1.ValueStringTrue
 	}
+
 	return false
 }
 
@@ -117,5 +122,6 @@ func getPodListFromReplicaSet(c client.Client, ds *datadoghqv1alpha1.ExtendedDae
 	if err := c.List(context.TODO(), podList, podListOptions...); err != nil {
 		return nil, err
 	}
+
 	return podList, nil
 }

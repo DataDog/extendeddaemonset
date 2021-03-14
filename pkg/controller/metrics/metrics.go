@@ -17,7 +17,7 @@ import (
 	"github.com/DataDog/extendeddaemonset/pkg/config"
 )
 
-// AddMetrics add given metricFamilies for type given in gvk
+// AddMetrics add given metricFamilies for type given in gvk.
 func AddMetrics(gvk schema.GroupVersionKind, mgr manager.Manager, h Handler, metricFamilies []ksmetric.FamilyGenerator) error {
 	mapping, err := mgr.GetRESTMapper().RESTMapping(gvk.GroupKind())
 	if err != nil {
@@ -70,7 +70,7 @@ func AddMetrics(gvk schema.GroupVersionKind, mgr manager.Manager, h Handler, met
 	return nil
 }
 
-// newMetricsStore return new metrics store
+// newMetricsStore return new metrics store.
 func newMetricsStore(generators []ksmetric.FamilyGenerator, expectedType interface{}, lw cache.ListerWatcher) *metricsstore.MetricsStore {
 	// Generate collector per namespace.
 	composedMetricGenFuncs := ksmetric.ComposeMetricGenFuncs(generators)

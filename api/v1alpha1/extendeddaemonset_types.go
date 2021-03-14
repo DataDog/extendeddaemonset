@@ -28,21 +28,21 @@ type ExtendedDaemonSetSpec struct {
 	// More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller#pod-template
 	Template corev1.PodTemplateSpec `json:"template"`
 
-	// Daemonset deployment strategy
+	// Daemonset deployment strategy.
 	Strategy ExtendedDaemonSetSpecStrategy `json:"strategy"`
 }
 
-// ExtendedDaemonSetSpecStrategy defines the deployment strategy of ExtendedDaemonSet
+// ExtendedDaemonSetSpecStrategy defines the deployment strategy of ExtendedDaemonSet.
 // +k8s:openapi-gen=true
 type ExtendedDaemonSetSpecStrategy struct {
 	RollingUpdate ExtendedDaemonSetSpecStrategyRollingUpdate `json:"rollingUpdate,omitempty"`
 	// Canary deployment configuration
 	Canary *ExtendedDaemonSetSpecStrategyCanary `json:"canary,omitempty"`
-	// ReconcileFrequency use to configure how often the ExtendedDeamonset will be fully reconcile, default is 10sec
+	// ReconcileFrequency use to configure how often the ExtendedDeamonset will be fully reconcile, default is 10sec.
 	ReconcileFrequency *metav1.Duration `json:"reconcileFrequency,omitempty"`
 }
 
-// ExtendedDaemonSetSpecStrategyRollingUpdate defines the rolling update deployment strategy of ExtendedDaemonSet
+// ExtendedDaemonSetSpecStrategyRollingUpdate defines the rolling update deployment strategy of ExtendedDaemonSet.
 // +k8s:openapi-gen=true
 type ExtendedDaemonSetSpecStrategyRollingUpdate struct {
 	// The maximum number of DaemonSet pods that can be unavailable during the
@@ -54,7 +54,7 @@ type ExtendedDaemonSetSpecStrategyRollingUpdate struct {
 	MaxUnavailable *intstr.IntOrString `json:"maxUnavailable,omitempty"`
 	// MaxPodSchedulerFailure the maxinum number of not scheduled on its Node due to a
 	// scheduler failure: resource constraints. Value can be an absolute number (ex: 5) or a percentage of total
-	// number of DaemonSet pods at the start of the update (ex: 10%). Absolute
+	// number of DaemonSet pods at the start of the update (ex: 10%). Absolute.
 	MaxPodSchedulerFailure *intstr.IntOrString `json:"maxPodSchedulerFailure,omitempty"`
 	// The maxium number of pods created in parallel.
 	// Default value is 250.
@@ -69,7 +69,7 @@ type ExtendedDaemonSetSpecStrategyRollingUpdate struct {
 	SlowStartAdditiveIncrease *intstr.IntOrString `json:"slowStartAdditiveIncrease,omitempty"`
 }
 
-// ExtendedDaemonSetSpecStrategyCanary defines the canary deployment strategy of ExtendedDaemonSet
+// ExtendedDaemonSetSpecStrategyCanary defines the canary deployment strategy of ExtendedDaemonSet.
 // +k8s:openapi-gen=true
 type ExtendedDaemonSetSpecStrategyCanary struct {
 	Replicas     *intstr.IntOrString   `json:"replicas,omitempty"`
@@ -79,84 +79,84 @@ type ExtendedDaemonSetSpecStrategyCanary struct {
 	NodeAntiAffinityKeys []string                                      `json:"nodeAntiAffinityKeys,omitempty"`
 	AutoPause            *ExtendedDaemonSetSpecStrategyCanaryAutoPause `json:"autoPause,omitempty"`
 	AutoFail             *ExtendedDaemonSetSpecStrategyCanaryAutoFail  `json:"autoFail,omitempty"`
-	// NoRestartsDuration defines min duration since last restart to end the canary phase
+	// NoRestartsDuration defines min duration since last restart to end the canary phase.
 	NoRestartsDuration *metav1.Duration `json:"noRestartsDuration,omitempty"`
 }
 
-// ExtendedDaemonSetSpecStrategyCanaryAutoPause defines the canary deployment AutoPause parameters of the ExtendedDaemonSet
+// ExtendedDaemonSetSpecStrategyCanaryAutoPause defines the canary deployment AutoPause parameters of the ExtendedDaemonSet.
 // +k8s:openapi-gen=true
 type ExtendedDaemonSetSpecStrategyCanaryAutoPause struct {
 	Enabled *bool `json:"enabled,omitempty"`
-	// MaxRestarts defines the number of tolerable (per pod) Canary pod restarts after which the Canary deployment is autopaused
+	// MaxRestarts defines the number of tolerable (per pod) Canary pod restarts after which the Canary deployment is autopaused.
 	MaxRestarts *int32 `json:"maxRestarts,omitempty"`
-	// MaxSlowStartDuration defines the maximum slow start duration for a pod (stuck in Creating state) after which the
+	// MaxSlowStartDuration defines the maximum slow start duration for a pod (stuck in Creating state) after which the.
 	// Canary deployment is autopaused
 	MaxSlowStartDuration *metav1.Duration `json:"maxSlowStartDuration,omitempty"`
 }
 
-// ExtendedDaemonSetSpecStrategyCanaryAutoFail defines the canary deployment AutoFail parameters of the ExtendedDaemonSet
+// ExtendedDaemonSetSpecStrategyCanaryAutoFail defines the canary deployment AutoFail parameters of the ExtendedDaemonSet.
 // +k8s:openapi-gen=true
 type ExtendedDaemonSetSpecStrategyCanaryAutoFail struct {
 	Enabled *bool `json:"enabled,omitempty"`
-	// MaxRestarts defines the number of tolerable (per pod) Canary pod restarts after which the Canary deployment is autofailed
+	// MaxRestarts defines the number of tolerable (per pod) Canary pod restarts after which the Canary deployment is autofailed.
 	MaxRestarts *int32 `json:"maxRestarts,omitempty"`
-	// MaxRestartsDuration defines the maximum duration of tolerable Canary pod restarts after which the Canary deployment is autofailed
+	// MaxRestartsDuration defines the maximum duration of tolerable Canary pod restarts after which the Canary deployment is autofailed.
 	MaxRestartsDuration *metav1.Duration `json:"maxRestartsDuration,omitempty"`
 }
 
-// ExtendedDaemonSetStatusState type representing the ExtendedDaemonSet state
+// ExtendedDaemonSetStatusState type representing the ExtendedDaemonSet state.
 type ExtendedDaemonSetStatusState string
 
 const (
-	// ExtendedDaemonSetStatusStateRunning the ExtendedDaemonSet is currently Running
+	// ExtendedDaemonSetStatusStateRunning the ExtendedDaemonSet is currently Running.
 	ExtendedDaemonSetStatusStateRunning ExtendedDaemonSetStatusState = "Running"
-	// ExtendedDaemonSetStatusStateCanary the ExtendedDaemonSet currently run a new version with a Canary deployment
+	// ExtendedDaemonSetStatusStateCanary the ExtendedDaemonSet currently run a new version with a Canary deployment.
 	ExtendedDaemonSetStatusStateCanary ExtendedDaemonSetStatusState = "Canary"
-	// ExtendedDaemonSetStatusStateCanaryPaused the Canary deployment of the ExtendedDaemonSet is paused
+	// ExtendedDaemonSetStatusStateCanaryPaused the Canary deployment of the ExtendedDaemonSet is paused.
 	ExtendedDaemonSetStatusStateCanaryPaused ExtendedDaemonSetStatusState = "Canary Paused"
-	// ExtendedDaemonSetStatusStateCanaryFailed the Canary deployment of the ExtendedDaemonSet is considered as Failing
+	// ExtendedDaemonSetStatusStateCanaryFailed the Canary deployment of the ExtendedDaemonSet is considered as Failing.
 	ExtendedDaemonSetStatusStateCanaryFailed ExtendedDaemonSetStatusState = "Canary Failed"
 )
 
-// ExtendedDaemonSetStatusReason type represents the reason for a ExtendedDaemonSet status state
+// ExtendedDaemonSetStatusReason type represents the reason for a ExtendedDaemonSet status state.
 type ExtendedDaemonSetStatusReason string
 
 const (
-	// ExtendedDaemonSetStatusReasonCLB represents CrashLoopBackOff as the reason for the ExtendedDaemonSet status state
+	// ExtendedDaemonSetStatusReasonCLB represents CrashLoopBackOff as the reason for the ExtendedDaemonSet status state.
 	ExtendedDaemonSetStatusReasonCLB ExtendedDaemonSetStatusReason = "CrashLoopBackOff"
-	// ExtendedDaemonSetStatusReasonOOM represents OOMKilled as the reason for the ExtendedDaemonSet status state
+	// ExtendedDaemonSetStatusReasonOOM represents OOMKilled as the reason for the ExtendedDaemonSet status state.
 	ExtendedDaemonSetStatusReasonOOM ExtendedDaemonSetStatusReason = "OOMKilled"
-	// ExtendedDaemonSetStatusRestartsTimeoutExceeded represents timeout on restarts as the reason for the ExtendedDaemonSet status
+	// ExtendedDaemonSetStatusRestartsTimeoutExceeded represents timeout on restarts as the reason for the ExtendedDaemonSet status.
 	ExtendedDaemonSetStatusRestartsTimeoutExceeded ExtendedDaemonSetStatusReason = "RestartsTimeoutExceeded"
-	// ExtendedDaemonSetStatusSlowStartTimeoutExceeded represents timeout on slow starts as the reason for the ExtendedDaemonSet status
+	// ExtendedDaemonSetStatusSlowStartTimeoutExceeded represents timeout on slow starts as the reason for the ExtendedDaemonSet status.
 	ExtendedDaemonSetStatusSlowStartTimeoutExceeded ExtendedDaemonSetStatusReason = "SlowStartTimeoutExceeded"
-	// ExtendedDaemonSetStatusReasonErrImagePull represent ErrImagePull as the reason for the ExtendedDaemonSet status state
+	// ExtendedDaemonSetStatusReasonErrImagePull represent ErrImagePull as the reason for the ExtendedDaemonSet status state.
 	ExtendedDaemonSetStatusReasonErrImagePull ExtendedDaemonSetStatusReason = "ErrImagePull"
-	// ExtendedDaemonSetStatusReasonImagePullBackOff represent ImagePullBackOff as the reason for the ExtendedDaemonSet status state
+	// ExtendedDaemonSetStatusReasonImagePullBackOff represent ImagePullBackOff as the reason for the ExtendedDaemonSet status state.
 	ExtendedDaemonSetStatusReasonImagePullBackOff ExtendedDaemonSetStatusReason = "ImagePullBackOff"
-	// ExtendedDaemonSetStatusReasonCreateContainerConfigError represent CreateContainerConfigError as the reason for the ExtendedDaemonSet status state
+	// ExtendedDaemonSetStatusReasonCreateContainerConfigError represent CreateContainerConfigError as the reason for the ExtendedDaemonSet status state.
 	ExtendedDaemonSetStatusReasonCreateContainerConfigError ExtendedDaemonSetStatusReason = "CreateContainerConfigError"
-	// ExtendedDaemonSetStatusReasonCreateContainerError represent CreateContainerError as the reason for the ExtendedDaemonSet status state
+	// ExtendedDaemonSetStatusReasonCreateContainerError represent CreateContainerError as the reason for the ExtendedDaemonSet status state.
 	ExtendedDaemonSetStatusReasonCreateContainerError ExtendedDaemonSetStatusReason = "CreateContainerError"
-	// ExtendedDaemonSetStatusReasonPreStartHookError represent PreStartHookError as the reason for the ExtendedDaemonSet status state
+	// ExtendedDaemonSetStatusReasonPreStartHookError represent PreStartHookError as the reason for the ExtendedDaemonSet status state.
 	ExtendedDaemonSetStatusReasonPreStartHookError ExtendedDaemonSetStatusReason = "PreStartHookError"
-	// ExtendedDaemonSetStatusReasonPostStartHookError represent PostStartHookError as the reason for the ExtendedDaemonSet status state
+	// ExtendedDaemonSetStatusReasonPostStartHookError represent PostStartHookError as the reason for the ExtendedDaemonSet status state.
 	ExtendedDaemonSetStatusReasonPostStartHookError ExtendedDaemonSetStatusReason = "PostStartHookError"
-	// ExtendedDaemonSetStatusReasonStartError represent StartError as the reason for the ExtendedDaemonSet status state
+	// ExtendedDaemonSetStatusReasonStartError represent StartError as the reason for the ExtendedDaemonSet status state.
 	ExtendedDaemonSetStatusReasonStartError ExtendedDaemonSetStatusReason = "StartError"
-	// ExtendedDaemonSetStatusReasonUnknown represents an Unknown reason for the status state
+	// ExtendedDaemonSetStatusReasonUnknown represents an Unknown reason for the status state.
 	ExtendedDaemonSetStatusReasonUnknown ExtendedDaemonSetStatusReason = "Unknown"
 )
 
-// ExtendedDaemonSetConditionType type use to represent a ExtendedDaemonSetR condition
+// ExtendedDaemonSetConditionType type use to represent a ExtendedDaemonSetR condition.
 type ExtendedDaemonSetConditionType string
 
 const (
-	// ConditionTypeEDSReconcileError the controller wasn't able to run properly the reconcile loop with this ExtendedDaemonSet
+	// ConditionTypeEDSReconcileError the controller wasn't able to run properly the reconcile loop with this ExtendedDaemonSet.
 	ConditionTypeEDSReconcileError ExtendedDaemonSetConditionType = "ReconcileError"
-	// ConditionTypeEDSCanaryPaused ExtendedDaemonSet is in canary mode
+	// ConditionTypeEDSCanaryPaused ExtendedDaemonSet is in canary mode.
 	ConditionTypeEDSCanaryPaused ExtendedDaemonSetConditionType = "Canary-Paused"
-	// ConditionTypeEDSCanaryFailed ExtendedDaemonSetis in canary mode
+	// ConditionTypeEDSCanaryFailed ExtendedDaemonSetis in canary mode.
 	ConditionTypeEDSCanaryFailed ExtendedDaemonSetConditionType = "Canary-Failed"
 )
 
@@ -212,7 +212,7 @@ type ExtendedDaemonSetStatusCanary struct {
 	Nodes []string `json:"nodes,omitempty"`
 }
 
-// ExtendedDaemonSet is the Schema for the extendeddaemonsets API
+// ExtendedDaemonSet is the Schema for the extendeddaemonsets API.
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="desired",type="integer",JSONPath=".status.desired"

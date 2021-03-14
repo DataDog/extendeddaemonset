@@ -11,7 +11,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// NewNode returns a fake, but ready, K8S node
+// NewNode returns a fake, but ready, K8S node.
 func NewNode(name string, labels map[string]string) *corev1.Node {
 	return &corev1.Node{
 		ObjectMeta: metav1.ObjectMeta{

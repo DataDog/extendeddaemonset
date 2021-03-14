@@ -103,6 +103,7 @@ func podWaitingStatus(reason, message string) v1.PodStatus {
 func withDeletionTimestamp(pod *v1.Pod) *v1.Pod {
 	ts := metav1.Now()
 	pod.DeletionTimestamp = &ts
+
 	return pod
 }
 

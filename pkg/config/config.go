@@ -3,6 +3,7 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-2019 Datadog, Inc.
 
+// Package config contains EDS controller configuration.
 package config
 
 import (
@@ -16,7 +17,7 @@ import (
 
 const (
 	// NodeAffinityMatchSupportEnvVar use to know if the scheduler support this feature:
-	// https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/#scheduled-by-default-scheduler-enabled-by-default-since-1-12
+	// https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/#scheduled-by-default-scheduler-enabled-by-default-since-1-12.
 	NodeAffinityMatchSupportEnvVar = "EDS_NODEAFFINITYMATCH_SUPPORT"
 
 	// WatchNamespaceEnvVar is the constant for env variable WATCH_NAMESPACE
@@ -25,7 +26,7 @@ const (
 	WatchNamespaceEnvVar = "WATCH_NAMESPACE"
 )
 
-// GetWatchNamespaces returns the Namespaces the operator should be watching for changes
+// GetWatchNamespaces returns the Namespaces the operator should be watching for changes.
 func GetWatchNamespaces() []string {
 	ns, found := os.LookupEnv(WatchNamespaceEnvVar)
 	if !found {
@@ -40,7 +41,7 @@ func GetWatchNamespaces() []string {
 	return []string{ns}
 }
 
-// ManagerOptionsWithNamespaces returns an updated Options with namespaces information
+// ManagerOptionsWithNamespaces returns an updated Options with namespaces information.
 func ManagerOptionsWithNamespaces(logger logr.Logger, opt ctrl.Options) ctrl.Options {
 	namespaces := GetWatchNamespaces()
 	switch {

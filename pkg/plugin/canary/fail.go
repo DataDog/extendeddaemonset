@@ -27,7 +27,7 @@ var failExample = `
     kubectl eds %[1]s foo
 `
 
-// failOptions provides information required to manage ExtendedDaemonSet
+// failOptions provides information required to manage ExtendedDaemonSet.
 type failOptions struct {
 	configFlags *genericclioptions.ConfigFlags
 	args        []string
@@ -41,7 +41,7 @@ type failOptions struct {
 	failStatus                bool
 }
 
-// newfailOptions provides an instance of GetOptions with default values
+// newfailOptions provides an instance of GetOptions with default values.
 func newfailOptions(streams genericclioptions.IOStreams, failStatus bool) *failOptions {
 	return &failOptions{
 		configFlags: genericclioptions.NewConfigFlags(false),
@@ -52,7 +52,7 @@ func newfailOptions(streams genericclioptions.IOStreams, failStatus bool) *failO
 	}
 }
 
-// newCmdFail provides a cobra command wrapping failOptions
+// newCmdFail provides a cobra command wrapping failOptions.
 func newCmdFail(streams genericclioptions.IOStreams) *cobra.Command {
 	o := newfailOptions(streams, cmdFail)
 
@@ -78,7 +78,7 @@ func newCmdFail(streams genericclioptions.IOStreams) *cobra.Command {
 	return cmd
 }
 
-// complete sets all information required for processing the command
+// complete sets all information required for processing the command.
 func (o *failOptions) complete(cmd *cobra.Command, args []string) error {
 	o.args = args
 	var err error
@@ -87,7 +87,7 @@ func (o *failOptions) complete(cmd *cobra.Command, args []string) error {
 	// Create the Client for Read/Write operations.
 	o.client, err = common.NewClient(clientConfig)
 	if err != nil {
-		return fmt.Errorf("unable to instantiate client, err: %v", err)
+		return fmt.Errorf("unable to instantiate client, err: %w", err)
 	}
 
 	o.userNamespace, _, err = clientConfig.Namespace()
@@ -110,7 +110,7 @@ func (o *failOptions) complete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// validate ensures that all required arguments and flag values are provided
+// validate ensures that all required arguments and flag values are provided.
 func (o *failOptions) validate() error {
 	if len(o.args) < 1 {
 		return fmt.Errorf("the extendeddaemonset name is required")
@@ -119,7 +119,7 @@ func (o *failOptions) validate() error {
 	return nil
 }
 
-// run use to run the command
+// run use to run the command.
 func (o *failOptions) run() error {
 	eds := &v1alpha1.ExtendedDaemonSet{}
 	err := o.client.Get(context.TODO(), client.ObjectKey{Namespace: o.userNamespace, Name: o.userExtendedDaemonSetName}, eds)
@@ -149,7 +149,7 @@ func (o *failOptions) run() error {
 	newEds.Annotations[v1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey] = fmt.Sprintf("%v", o.failStatus)
 	patch := client.MergeFrom(eds)
 	if err = o.client.Patch(context.TODO(), newEds, patch); err != nil {
-		return fmt.Errorf("unable to fail or reset ExtendedDaemonset deployment, err: %v", err)
+		return fmt.Errorf("unable to fail or reset ExtendedDaemonset deployment, err: %w", err)
 	}
 	action := "set to failed"
 	if !o.failStatus {

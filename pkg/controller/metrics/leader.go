@@ -23,7 +23,7 @@ var (
 	)
 )
 
-// SetLeader sets the edsLeader gauge
+// SetLeader sets the edsLeader gauge.
 func SetLeader(leaderValue bool) {
 	if isLeader != leaderValue {
 		edsLeader.Delete(prometheus.Labels{leaderLabel: strconv.FormatBool(isLeader)})

@@ -51,6 +51,7 @@ func createPods(logger logr.Logger, client client.Client, scheme *runtime.Scheme
 			errs = append(errs, err)
 		}
 	}
+
 	return errs
 }
 
@@ -79,5 +80,6 @@ func deletePods(logger logr.Logger, c client.Client, podByNodeName map[*strategy
 			errs = append(errs, err)
 		}
 	}
+
 	return errs
 }

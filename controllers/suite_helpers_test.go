@@ -26,6 +26,7 @@ func withGet(nsName types.NamespacedName, obj client.Object, desc string, condit
 
 			return false
 		}
+
 		return condition()
 	}
 }

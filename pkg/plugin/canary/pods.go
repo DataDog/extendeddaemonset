@@ -20,7 +20,7 @@ var podsExample = `
 	%[1]s canary pods foo
 `
 
-// podsOptions provides information required to manage ExtendedDaemonSet
+// podsOptions provides information required to manage ExtendedDaemonSet.
 type podsOptions struct {
 	client client.Client
 	genericclioptions.IOStreams
@@ -30,7 +30,7 @@ type podsOptions struct {
 	userExtendedDaemonSetName string
 }
 
-// newPodsOptions provides an instance of podsOptions with default values
+// newPodsOptions provides an instance of podsOptions with default values.
 func newPodsOptions(streams genericclioptions.IOStreams) *podsOptions {
 	return &podsOptions{
 		configFlags: genericclioptions.NewConfigFlags(false),
@@ -38,7 +38,7 @@ func newPodsOptions(streams genericclioptions.IOStreams) *podsOptions {
 	}
 }
 
-// newCmdPods provides a cobra command wrapping podsOptions
+// newCmdPods provides a cobra command wrapping podsOptions.
 func newCmdPods(streams genericclioptions.IOStreams) *cobra.Command {
 	o := newPodsOptions(streams)
 
@@ -64,7 +64,7 @@ func newCmdPods(streams genericclioptions.IOStreams) *cobra.Command {
 	return cmd
 }
 
-// complete sets all information required for processing the command
+// complete sets all information required for processing the command.
 func (o *podsOptions) complete(cmd *cobra.Command, args []string) error {
 	o.args = args
 	var err error
@@ -73,7 +73,7 @@ func (o *podsOptions) complete(cmd *cobra.Command, args []string) error {
 	// Create the Client for Read/Write operations.
 	o.client, err = common.NewClient(clientConfig)
 	if err != nil {
-		return fmt.Errorf("unable to instantiate client, err: %v", err)
+		return fmt.Errorf("unable to instantiate client, err: %w", err)
 	}
 
 	o.userNamespace, _, err = clientConfig.Namespace()
@@ -96,7 +96,7 @@ func (o *podsOptions) complete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// validate ensures that all required arguments and flag values are provided
+// validate ensures that all required arguments and flag values are provided.
 func (o *podsOptions) validate() error {
 	if len(o.args) < 1 {
 		return fmt.Errorf("the extendeddaemonset name is required")
@@ -105,7 +105,7 @@ func (o *podsOptions) validate() error {
 	return nil
 }
 
-// run runs the command
+// run runs the command.
 func (o *podsOptions) run() error {
 	return common.PrintCanaryPods(o.client, o.userNamespace, o.userExtendedDaemonSetName, o.Out)
 }

@@ -32,7 +32,7 @@ import (
 	"github.com/DataDog/extendeddaemonset/pkg/controller/utils"
 )
 
-// Reconciler is the internal reconciler for ExtendedDaemonSetReplicaSet
+// Reconciler is the internal reconciler for ExtendedDaemonSetReplicaSet.
 type Reconciler struct {
 	options  ReconcilerOptions
 	client   client.Client
@@ -41,12 +41,12 @@ type Reconciler struct {
 	recorder record.EventRecorder
 }
 
-// ReconcilerOptions provides options read from command line
+// ReconcilerOptions provides options read from command line.
 type ReconcilerOptions struct {
 	IsNodeAffinitySupported bool
 }
 
-// NewReconciler returns a reconciler for DatadogAgent
+// NewReconciler returns a reconciler for DatadogAgent.
 func NewReconciler(options ReconcilerOptions, client client.Client, scheme *runtime.Scheme, log logr.Logger, recorder record.EventRecorder) (*Reconciler, error) {
 	return &Reconciler{
 		options:  options,
@@ -58,7 +58,7 @@ func NewReconciler(options ReconcilerOptions, client client.Client, scheme *runt
 }
 
 // Reconcile reads that state of the cluster for a ExtendedDaemonSetReplicaSet object and makes changes based on the state read
-// and what is in the ExtendedDaemonSetReplicaSet.Spec
+// and what is in the ExtendedDaemonSetReplicaSet.Spec.
 func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	now := metav1.NewTime(time.Now())
 	rand := rand.Uint32()
@@ -87,6 +87,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		// It is better to only update a Resource Kind from its own controller, to avoid conccurent update.
 		conditions.UpdateErrorCondition(newStatus, now, err, message)
 		err = r.updateReplicaSet(replicaSetInstance, newStatus)
+
 		return reconcile.Result{RequeueAfter: time.Second}, err
 	}
 
@@ -161,6 +162,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 
 	reqLogger.V(1).Info("Updating ExtendedDaemonSetReplicaSet status")
 	err = r.updateReplicaSet(replicaSetInstance, newStatus)
+
 	return result, err
 }
 
@@ -269,6 +271,7 @@ func (r *Reconciler) retrievedReplicaSet(request reconcile.Request) (*datadoghqv
 		// Error reading the object - requeue the request.
 		return nil, true, err
 	}
+
 	return replicaSetInstance, false, nil
 }
 
@@ -277,6 +280,7 @@ func (r *Reconciler) updateReplicaSet(replicaset *datadoghqv1alpha1.ExtendedDaem
 	if !apiequality.Semantic.DeepEqual(&replicaset.Status, newStatus) {
 		newRS := replicaset.DeepCopy()
 		newRS.Status = *newStatus
+
 		return r.client.Status().Update(context.TODO(), newRS)
 	}
 
@@ -293,6 +297,7 @@ func (r *Reconciler) getDaemonsetOwner(replicaset *datadoghqv1alpha1.ExtendedDae
 	if err != nil {
 		return nil, err
 	}
+
 	return daemonsetInstance, nil
 }
 
@@ -311,6 +316,7 @@ func (r *Reconciler) getExtendedDaemonsetSettings(eds *datadoghqv1alpha1.Extende
 			outputList = append(outputList, &edsNodeList.Items[index])
 		}
 	}
+
 	return outputList, nil
 }
 
@@ -325,6 +331,7 @@ func (r *Reconciler) getPodList(ds *datadoghqv1alpha1.ExtendedDaemonSet) (*corev
 	if err := r.client.List(context.TODO(), podList, podListOptions...); err != nil {
 		return nil, err
 	}
+
 	return podList, nil
 }
 
@@ -372,6 +379,7 @@ func (r *Reconciler) getNodeList(eds *datadoghqv1alpha1.ExtendedDaemonSet, repli
 		}
 		nodeItemList.Items = append(nodeItemList.Items, strategy.NewNodeItem(&nodeList.Items[index], edsNodeSelected))
 	}
+
 	return nodeItemList, nil
 }
 
@@ -451,6 +459,7 @@ func retrieveReplicaSetStatus(daemonset *datadoghqv1alpha1.ExtendedDaemonSet, re
 		if daemonset.Status.Canary != nil && daemonset.Status.Canary.ReplicaSet == replicassetName {
 			return strategy.ReplicaSetStatusCanary
 		}
+
 		return strategy.ReplicaSetStatusUnknown
 	}
 }

@@ -98,12 +98,14 @@ func overwriteResourcesFromNode(template *corev1.PodTemplateSpec, edsNamespace, 
 		if val, ok := node.GetAnnotations()[ressourceAnnotationKey]; ok {
 			var newResources corev1.ResourceRequirements
 			if err := json.Unmarshal([]byte(val), &newResources); err != nil {
-				errWrap := fmt.Errorf("unable to decode %s annotation value, err: %v", ressourceAnnotationKey, err)
+				errWrap := fmt.Errorf("unable to decode %s annotation value, err: %w", ressourceAnnotationKey, err)
 				errs = append(errs, errWrap)
+
 				continue
 			}
 			template.Spec.Containers[id].Resources = newResources
 		}
 	}
+
 	return errors.NewAggregate(errs)
 }

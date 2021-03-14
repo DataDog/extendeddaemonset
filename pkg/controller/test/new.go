@@ -3,6 +3,7 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-2019 Datadog, Inc.
 
+// Package test contains test helpers.
 package test
 
 import (
@@ -12,7 +13,7 @@ import (
 	utilaffinity "github.com/DataDog/extendeddaemonset/pkg/controller/utils/affinity"
 )
 
-// NewNodeOptions store NewNode options
+// NewNodeOptions store NewNode options.
 type NewNodeOptions struct {
 	Annotations   map[string]string
 	Labels        map[string]string
@@ -21,7 +22,7 @@ type NewNodeOptions struct {
 	Unschedulable bool
 }
 
-// NewNode returns new node instance
+// NewNode returns new node instance.
 func NewNode(name string, opts *NewNodeOptions) *corev1.Node {
 	node := &corev1.Node{
 		TypeMeta: metav1.TypeMeta{
@@ -51,10 +52,11 @@ func NewNode(name string, opts *NewNodeOptions) *corev1.Node {
 		node.Status.Conditions = append(node.Status.Conditions, opts.Conditions...)
 		node.Spec.Taints = append(node.Spec.Taints, opts.Taints...)
 	}
+
 	return node
 }
 
-// NewPodOptions store NewPod options
+// NewPodOptions store NewPod options.
 type NewPodOptions struct {
 	CreationTimestamp metav1.Time
 	Annotations       map[string]string
@@ -67,7 +69,7 @@ type NewPodOptions struct {
 	Tolerations       []corev1.Toleration
 }
 
-// NewPod used to return new pod instance
+// NewPod used to return new pod instance.
 func NewPod(namespace, name, nodeName string, opts *NewPodOptions) *corev1.Pod {
 	pod := &corev1.Pod{
 		TypeMeta: metav1.TypeMeta{

@@ -23,7 +23,7 @@ import (
 	// +kubebuilder:scaffold:imports
 )
 
-// This test may take ~30s to run, check you go test timeout
+// This test may take ~30s to run, check you go test timeout.
 var _ = Describe("ExtendedDaemonSet Controller", func() {
 	const timeout = time.Second * 30
 	const interval = time.Second * 2

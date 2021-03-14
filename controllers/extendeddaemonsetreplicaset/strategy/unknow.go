@@ -15,7 +15,7 @@ import (
 	podutils "github.com/DataDog/extendeddaemonset/pkg/controller/utils/pod"
 )
 
-// ManageUnknown use to manage ReplicaSet with unknown status
+// ManageUnknown use to manage ReplicaSet with unknown status.
 func ManageUnknown(client client.Client, params *Parameters) (*Result, error) {
 	result := &Result{}
 	// remove canary node if define
@@ -67,5 +67,6 @@ func ManageUnknown(client client.Client, params *Parameters) (*Result, error) {
 		result.Result.Requeue = true
 	}
 	result.Result.RequeueAfter = time.Second
+
 	return result, nil
 }

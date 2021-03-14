@@ -3,6 +3,7 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-2019 Datadog, Inc.
 
+// Package enqueue contains Object enqueue helpers.
 package enqueue
 
 import (
@@ -25,23 +26,23 @@ var _ handler.EventHandler = &RequestForExtendedDaemonSetLabel{}
 // RequestForExtendedDaemonSetLabel enqueues Requests for the ExtendedDaemonSet corresponding to the label value.
 type RequestForExtendedDaemonSetLabel struct{}
 
-// Create implements EventHandler
+// Create implements EventHandler.
 func (e *RequestForExtendedDaemonSetLabel) Create(evt event.CreateEvent, q workqueue.RateLimitingInterface) {
 	e.add(evt.Object, q)
 }
 
-// Update implements EventHandler
+// Update implements EventHandler.
 func (e *RequestForExtendedDaemonSetLabel) Update(evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
 	e.add(evt.ObjectOld, q)
 	e.add(evt.ObjectNew, q)
 }
 
-// Delete implements EventHandler
+// Delete implements EventHandler.
 func (e *RequestForExtendedDaemonSetLabel) Delete(evt event.DeleteEvent, q workqueue.RateLimitingInterface) {
 	e.add(evt.Object, q)
 }
 
-// Generic implements EventHandler
+// Generic implements EventHandler.
 func (e *RequestForExtendedDaemonSetLabel) Generic(evt event.GenericEvent, q workqueue.RateLimitingInterface) {
 	e.add(evt.Object, q)
 }
@@ -64,23 +65,23 @@ var _ handler.EventHandler = &RequestForExtendedDaemonSetLabel{}
 // RequestForExtendedDaemonSetReplicaSetLabel enqueues Requests for the ExtendedDaemonSet corresponding to the label value.
 type RequestForExtendedDaemonSetReplicaSetLabel struct{}
 
-// Create implements EventHandler
+// Create implements EventHandler.
 func (e *RequestForExtendedDaemonSetReplicaSetLabel) Create(evt event.CreateEvent, q workqueue.RateLimitingInterface) {
 	e.add(evt.Object, q)
 }
 
-// Update implements EventHandler
+// Update implements EventHandler.
 func (e *RequestForExtendedDaemonSetReplicaSetLabel) Update(evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
 	e.add(evt.ObjectOld, q)
 	e.add(evt.ObjectNew, q)
 }
 
-// Delete implements EventHandler
+// Delete implements EventHandler.
 func (e *RequestForExtendedDaemonSetReplicaSetLabel) Delete(evt event.DeleteEvent, q workqueue.RateLimitingInterface) {
 	e.add(evt.Object, q)
 }
 
-// Generic implements EventHandler
+// Generic implements EventHandler.
 func (e RequestForExtendedDaemonSetReplicaSetLabel) Generic(evt event.GenericEvent, q workqueue.RateLimitingInterface) {
 	e.add(evt.Object, q)
 }
@@ -98,36 +99,34 @@ func (e *RequestForExtendedDaemonSetReplicaSetLabel) add(meta metav1.Object, q w
 	}
 }
 
-///////
-
 var _ handler.EventHandler = &RequestForExtendedDaemonSetStatus{}
 
 // RequestForExtendedDaemonSetStatus enqueues Requests for the ExtendedDaemonSet corresponding to the label value.
 type RequestForExtendedDaemonSetStatus struct{}
 
-// Create implements EventHandler
+// Create implements EventHandler.
 func (e *RequestForExtendedDaemonSetStatus) Create(evt event.CreateEvent, q workqueue.RateLimitingInterface) {
 	e.add(evt.Object, q)
 }
 
-// Update implements EventHandler
+// Update implements EventHandler.
 func (e *RequestForExtendedDaemonSetStatus) Update(evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
 	e.add(evt.ObjectOld, q)
 	e.add(evt.ObjectNew, q)
 }
 
-// Delete implements EventHandler
+// Delete implements EventHandler.
 func (e *RequestForExtendedDaemonSetStatus) Delete(evt event.DeleteEvent, q workqueue.RateLimitingInterface) {
 	e.add(evt.Object, q)
 }
 
-// Generic implements EventHandler
+// Generic implements EventHandler.
 func (e *RequestForExtendedDaemonSetStatus) Generic(evt event.GenericEvent, q workqueue.RateLimitingInterface) {
 	e.add(evt.Object, q)
 }
 
 func (e RequestForExtendedDaemonSetStatus) add(obj runtime.Object, q workqueue.RateLimitingInterface) {
-	// convert unstructured.Unstructured to a ExtendedDaemonSet
+	// convert unstructured.Unstructured to a ExtendedDaemonSet.
 	eds, ok := obj.(*v1alpha1.ExtendedDaemonSet)
 	if !ok {
 		return
@@ -144,7 +143,7 @@ func (e RequestForExtendedDaemonSetStatus) add(obj runtime.Object, q workqueue.R
 	}
 }
 
-// NewRequestForAllReplicaSetFromNodeEvent returns new instance of RequestForAllReplicaSetFromNodeEvent
+// NewRequestForAllReplicaSetFromNodeEvent returns new instance of RequestForAllReplicaSetFromNodeEvent.
 func NewRequestForAllReplicaSetFromNodeEvent(c client.Client) handler.EventHandler {
 	return &RequestForAllReplicaSetFromNodeEvent{
 		client: c,
@@ -158,22 +157,22 @@ type RequestForAllReplicaSetFromNodeEvent struct {
 	client client.Client
 }
 
-// Create implements EventHandler
+// Create implements EventHandler.
 func (e *RequestForAllReplicaSetFromNodeEvent) Create(evt event.CreateEvent, q workqueue.RateLimitingInterface) {
 	e.add(q)
 }
 
-// Update implements EventHandler
+// Update implements EventHandler.
 func (e *RequestForAllReplicaSetFromNodeEvent) Update(evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
 	// e.add(q)
 }
 
-// Delete implements EventHandler
+// Delete implements EventHandler.
 func (e *RequestForAllReplicaSetFromNodeEvent) Delete(evt event.DeleteEvent, q workqueue.RateLimitingInterface) {
 	e.add(q)
 }
 
-// Generic implements EventHandler
+// Generic implements EventHandler.
 func (e *RequestForAllReplicaSetFromNodeEvent) Generic(evt event.GenericEvent, q workqueue.RateLimitingInterface) {
 	// e.add(q)
 }

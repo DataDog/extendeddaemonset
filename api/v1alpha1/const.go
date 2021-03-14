@@ -6,13 +6,13 @@
 package v1alpha1
 
 const (
-	// ExtendedDaemonSetNameLabelKey label key use to link a ExtendedDaemonSetReplicaSet to a ExtendedDaemonSet
+	// ExtendedDaemonSetNameLabelKey label key use to link a ExtendedDaemonSetReplicaSet to a ExtendedDaemonSet.
 	ExtendedDaemonSetNameLabelKey = "extendeddaemonset.datadoghq.com/name"
-	// ExtendedDaemonSetReplicaSetNameLabelKey label key use to link a Pod to a ExtendedDaemonSetReplicaSet
+	// ExtendedDaemonSetReplicaSetNameLabelKey label key use to link a Pod to a ExtendedDaemonSetReplicaSet.
 	ExtendedDaemonSetReplicaSetNameLabelKey = "extendeddaemonsetreplicaset.datadoghq.com/name"
-	// ExtendedDaemonSetReplicaSetCanaryLabelKey label key used to identify canary Pods
+	// ExtendedDaemonSetReplicaSetCanaryLabelKey label key used to identify canary Pods.
 	ExtendedDaemonSetReplicaSetCanaryLabelKey = "extendeddaemonsetreplicaset.datadoghq.com/canary"
-	// ExtendedDaemonSetReplicaSetCanaryLabelValue label value used to identify canary Pods
+	// ExtendedDaemonSetReplicaSetCanaryLabelValue label value used to identify canary Pods.
 	ExtendedDaemonSetReplicaSetCanaryLabelValue = "true"
 	// MD5ExtendedDaemonSetAnnotationKey annotation key use on Pods in order to identify which PodTemplateSpec have been used to generate it.
 	MD5ExtendedDaemonSetAnnotationKey = "extendeddaemonset.datadoghq.com/templatehash"
@@ -32,13 +32,13 @@ const (
 	// should be taken into consideration during the initial rolling-update.
 	ExtendedDaemonSetOldDaemonsetAnnotationKey = "extendeddaemonset.datadoghq.com/old-daemonset"
 	// ExtendedDaemonSetRessourceNodeAnnotationKey annotation key used on Node to overwrite the resource allocated to a specific container linked to an ExtendedDaemonset
-	// The value format is: <eds-namespace>.<eds-name>.<container-name>
+	// The value format is: <eds-namespace>.<eds-name>.<container-name> .
 	ExtendedDaemonSetRessourceNodeAnnotationKey = "resources.extendeddaemonset.datadoghq.com/%s.%s.%s"
 	// MD5NodeExtendedDaemonSetAnnotationKey annotation key use on Pods in order to identify which Node Resources Overwride have been used to generate it.
 	MD5NodeExtendedDaemonSetAnnotationKey = "extendeddaemonset.datadoghq.com/nodehash"
 
-	// ValueStringTrue is the string value of bool `true`
+	// ValueStringTrue is the string value of bool `true`.
 	ValueStringTrue = "true"
-	// ValueStringFalse is the string value of bool `false`
+	// ValueStringFalse is the string value of bool `false`.
 	ValueStringFalse = "false"
 )

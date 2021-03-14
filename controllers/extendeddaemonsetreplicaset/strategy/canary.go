@@ -20,7 +20,7 @@ import (
 	podUtils "github.com/DataDog/extendeddaemonset/pkg/controller/utils/pod"
 )
 
-// ManageCanaryDeployment used to manage ReplicaSet in Canary state
+// ManageCanaryDeployment used to manage ReplicaSet in Canary state.
 func ManageCanaryDeployment(client client.Client, daemonset *v1alpha1.ExtendedDaemonSet, params *Parameters) (*Result, error) {
 	// Manage canary status
 	result := manageCanaryStatus(daemonset.GetAnnotations(), params, time.Now())
@@ -42,7 +42,7 @@ func ManageCanaryDeployment(client client.Client, daemonset *v1alpha1.ExtendedDa
 	return result, nil
 }
 
-// manageCanaryStatus manages ReplicaSet status in Canary state
+// manageCanaryStatus manages ReplicaSet status in Canary state.
 func manageCanaryStatus(annotations map[string]string, params *Parameters, now time.Time) *Result {
 	result := &Result{}
 	result.NewStatus = params.NewStatus.DeepCopy()
@@ -131,11 +131,12 @@ func manageCanaryStatus(annotations map[string]string, params *Parameters, now t
 	if needRequeue || !result.IsFailed && !result.IsPaused && result.NewStatus.Desired != result.NewStatus.Ready {
 		result.Result = requeuePromptly()
 	}
+
 	return result
 }
 
 // manageCanaryPodFailures checks if canary should be failed or paused due to restarts or other failures.
-// Note that pausing the canary will have no effect if it has been validated or failed
+// Note that pausing the canary will have no effect if it has been validated or failed.
 func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result, now time.Time) {
 	var (
 		canary               = params.Strategy.Canary
@@ -286,7 +287,7 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 	}
 }
 
-// ensureCanaryPodLabels ensures that canary label is set on canary pods
+// ensureCanaryPodLabels ensures that canary label is set on canary pods.
 func ensureCanaryPodLabels(client client.Client, params *Parameters) error {
 	for _, nodeName := range params.CanaryNodes {
 		node := params.NodeByName[nodeName]
@@ -313,6 +314,7 @@ func ensureCanaryPodLabels(client client.Client, params *Parameters) error {
 			}
 		}
 	}
+
 	return nil
 }
 

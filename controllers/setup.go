@@ -16,7 +16,7 @@ import (
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetsetting"
 )
 
-// SetupControllers start all controllers (also used by unit and e2e tests)
+// SetupControllers start all controllers (also used by unit and e2e tests).
 func SetupControllers(mgr manager.Manager, nodeAffinityMatchSupport bool) error {
 	if err := (&ExtendedDaemonSetReconciler{
 		Client:   mgr.GetClient(),

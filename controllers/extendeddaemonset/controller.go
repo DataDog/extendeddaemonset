@@ -35,7 +35,7 @@ import (
 	podutils "github.com/DataDog/extendeddaemonset/pkg/controller/utils/pod"
 )
 
-// Reconciler is the internal reconciler for ExtendedDaemonSet
+// Reconciler is the internal reconciler for ExtendedDaemonSet.
 type Reconciler struct {
 	options  ReconcilerOptions
 	client   client.Client
@@ -44,10 +44,10 @@ type Reconciler struct {
 	recorder record.EventRecorder
 }
 
-// ReconcilerOptions provides options read from command line
+// ReconcilerOptions provides options read from command line.
 type ReconcilerOptions struct{}
 
-// NewReconciler returns a reconciler for DatadogAgent
+// NewReconciler returns a reconciler for DatadogAgent.
 func NewReconciler(options ReconcilerOptions, client client.Client, scheme *runtime.Scheme, log logr.Logger, recorder record.EventRecorder) (*Reconciler, error) {
 	return &Reconciler{
 		options:  options,
@@ -145,6 +145,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 
 	_, result, err := r.updateInstanceWithCurrentRS(reqLogger, now, instance, currentRS, upToDateRS, podsCounter)
 	result = utils.MergeResult(result, reconcile.Result{RequeueAfter: requeueAfter})
+
 	return result, err
 }
 
@@ -166,29 +167,30 @@ func (r *Reconciler) createNewReplicaSet(logger logr.Logger, daemonset *datadogh
 		return reconcile.Result{}, err
 	}
 	r.recorder.Event(daemonset, corev1.EventTypeNormal, "Create ExtendedDaemonSetReplicaSet", fmt.Sprintf("%s/%s", newRS.Namespace, newRS.Name))
+
 	return reconcile.Result{Requeue: true}, nil
 }
 
-// selectCurrentReplicaSet returns the replicaset that should be current
+// selectCurrentReplicaSet returns the replicaset that should be current.
 func selectCurrentReplicaSet(daemonset *datadoghqv1alpha1.ExtendedDaemonSet, activeRS, upToDateRS *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, now time.Time) (*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, time.Duration) {
 	var requeueAfter time.Duration
 
-	// If active and latest ReplicaSets are the same, nothing to do
+	// If active and latest ReplicaSets are the same, nothing to do.
 	if activeRS == upToDateRS {
 		return activeRS, requeueAfter
 	}
 
-	// If activeRS is nil (this can occur when an ERS exists while the operator is re-deployed), then use the latest ReplicaSet
+	// If activeRS is nil (this can occur when an ERS exists while the operator is re-deployed), then use the latest ReplicaSet.
 	if activeRS == nil {
 		return upToDateRS, requeueAfter
 	}
 
-	// If there is no Canary phase, then use the latest ReplicaSet
+	// If there is no Canary phase, then use the latest ReplicaSet.
 	if daemonset.Spec.Strategy.Canary == nil {
 		return upToDateRS, requeueAfter
 	}
 
-	// If in Canary phase, then only update ReplicaSet if it has ended or been declared valid
+	// If in Canary phase, then only update ReplicaSet if it has ended or been declared valid.
 	var isEnded bool
 	dsAnnotations := daemonset.GetAnnotations()
 	isEnded, requeueAfter = IsCanaryDeploymentEnded(daemonset.Spec.Strategy.Canary, upToDateRS, now)
@@ -213,13 +215,12 @@ func (r *Reconciler) updateInstanceWithCurrentRS(logger logr.Logger, now time.Ti
 		newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateRunning
 		newDaemonset.Status.IgnoredUnresponsiveNodes = current.Status.IgnoredUnresponsiveNodes
 	}
-	metaNow := metav1.NewTime(now)
 
 	var updateDaemonsetSpec bool
 	var updateDaemonsetAnnotations bool
-	// If the deployment is in Canary phase, then update status (and spec as needed)
+	// If the deployment is in Canary phase, then update status (and spec as needed).
 	if daemonset.Spec.Strategy.Canary != nil {
-
+		metaNow := metav1.NewTime(now)
 		isCanaryPaused, pausedReason := IsCanaryDeploymentPaused(daemonset.GetAnnotations(), upToDate)
 		isCanaryFailed := IsCanaryDeploymentFailed(daemonset.GetAnnotations(), upToDate)
 		isCanaryActive := isCanaryActive(daemonset, current.GetName(), upToDate.GetName(), isCanaryFailed)
@@ -230,13 +231,13 @@ func (r *Reconciler) updateInstanceWithCurrentRS(logger logr.Logger, now time.Ti
 		manageCanaryStatus(&newDaemonset.Status, upToDate, isCanaryActive, isCanaryFailed, isCanaryPaused, pausedReason)
 
 		if isCanaryFailed {
-			// Restore active replicaset template. Note: this requires a full daemonset update
+			// Restore active replicaset template. Note: this requires a full daemonset update.
 			newDaemonset.Spec.Template = current.Spec.Template
 			updateDaemonsetSpec = true
 		}
 
 		if isCanaryActive {
-			// manager CanaryNode selection
+			// manager CanaryNode selection.
 			nbCanaryPod, err := intstrutil.GetValueFromIntOrPercent(daemonset.Spec.Strategy.Canary.Replicas, int(daemonset.Status.Desired), true)
 			if err != nil {
 				logger.Error(err, "unable to select Nodes for canary")
@@ -412,6 +413,7 @@ func (r *Reconciler) selectNodes(logger logr.Logger, daemonsetSpec *datadoghqv1a
 	if len(canaryStatus.Nodes) < nbCanaryPod {
 		return fmt.Errorf("unable to select enough node for canary, current: %d, wanted: %d", len(canaryStatus.Nodes), nbCanaryPod)
 	}
+
 	return nil
 }
 
@@ -445,6 +447,7 @@ func manageCanaryStatusConditions(status *datadoghqv1alpha1.ExtendedDaemonSetSta
 	} else {
 		conditions.UpdateExtendedDaemonSetStatusCondition(status, now, datadoghqv1alpha1.ConditionTypeEDSCanaryPaused, corev1.ConditionFalse, "", "", updateOptions)
 	}
+
 	return status
 }
 
@@ -490,6 +493,7 @@ func getAntiAffinityKeysValue(node *corev1.Node, daemonsetSpec *datadoghqv1alpha
 	for _, antiAffinityKey := range daemonsetSpec.Strategy.Canary.NodeAntiAffinityKeys {
 		values = append(values, node.Labels[antiAffinityKey])
 	}
+
 	return strings.Join(values, "$")
 }
 
@@ -515,6 +519,7 @@ func newReplicaSetFromInstance(daemonset *datadoghqv1alpha1.ExtendedDaemonSet) (
 
 	hash, err := comparison.SetMD5PodTemplateSpecAnnotation(rs, daemonset)
 	rs.Spec.TemplateGeneration = hash
+
 	return rs, err
 }
 
@@ -548,8 +553,7 @@ func (r *Reconciler) cleanupReplicaSet(logger logr.Logger, rsList *datadoghqv1al
 			}
 			if podList == nil {
 				errsChan <- fmt.Errorf("unable to get podList from: %s", obj.Name)
-			}
-			if len(podList.Items) == 0 {
+			} else if len(podList.Items) == 0 {
 				logger.Info("Delete replicaset", "replicaset_name", obj.Name)
 				err := r.client.Delete(context.TODO(), obj)
 				if err != nil {

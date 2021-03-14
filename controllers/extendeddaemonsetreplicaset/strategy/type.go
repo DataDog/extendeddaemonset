@@ -13,21 +13,21 @@ import (
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 )
 
-// ReplicaSetStatus repesent the status of a ReplicaSet
+// ReplicaSetStatus repesent the status of a ReplicaSet.
 type ReplicaSetStatus string
 
 const (
-	// ReplicaSetStatusActive the ReplicaSet is currently active
+	// ReplicaSetStatusActive the ReplicaSet is currently active.
 	ReplicaSetStatusActive ReplicaSetStatus = "active"
-	// ReplicaSetStatusCanary the ReplicaSet is currently in canary mode
+	// ReplicaSetStatusCanary the ReplicaSet is currently in canary mode.
 	ReplicaSetStatusCanary ReplicaSetStatus = "canary"
-	// ReplicaSetStatusCanaryFailed the ReplicaSet is currently in canary failed mode
+	// ReplicaSetStatusCanaryFailed the ReplicaSet is currently in canary failed mode.
 	ReplicaSetStatusCanaryFailed ReplicaSetStatus = "canary-failed"
-	// ReplicaSetStatusUnknown the controller is not able to define the ReplicaSet status
+	// ReplicaSetStatusUnknown the controller is not able to define the ReplicaSet status.
 	ReplicaSetStatusUnknown ReplicaSetStatus = "unknown"
 )
 
-// Parameters use to store all the parameter need to a strategy
+// Parameters use to store all the parameter need to a strategy.
 type Parameters struct {
 	MinPodUpdate int32
 	MaxPodUpdate int32
@@ -49,43 +49,43 @@ type Parameters struct {
 	Logger logr.Logger
 }
 
-// Result information returns by a strategy
+// Result information returns by a strategy.
 type Result struct {
-	// PodsToCreate list of NodeItem for Pods creation
+	// PodsToCreate list of NodeItem for Pods creation.
 	PodsToCreate []*NodeItem
-	// PodsToDelete list of NodeItem for Pods deletion
+	// PodsToDelete list of NodeItem for Pods deletion.
 	PodsToDelete []*NodeItem
 
 	UnscheduledNodesDueToResourcesConstraints []string
 
-	// IsPaused represents paused status of the deployment
+	// IsPaused represents paused status of the deployment.
 	IsPaused bool
-	// PausedReason provides the reason for the paused deployment
+	// PausedReason provides the reason for the paused deployment.
 	PausedReason datadoghqv1alpha1.ExtendedDaemonSetStatusReason
-	// IsUnpaused represents if the deployment was manually unpaused
+	// IsUnpaused represents if the deployment was manually unpaused.
 	IsUnpaused bool
 
-	// IsFailed represents failed state of the deployment
+	// IsFailed represents failed state of the deployment.
 	IsFailed bool
-	// FailedReason provides the reason for the failed deployment
+	// FailedReason provides the reason for the failed deployment.
 	FailedReason datadoghqv1alpha1.ExtendedDaemonSetStatusReason
 
 	NewStatus *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus
 	Result    reconcile.Result
 }
 
-// NodeList list of NodeItem
+// NodeList list of NodeItem.
 type NodeList struct {
 	Items []*NodeItem
 }
 
-// NodeItem used to store all informations needs to create or delete a pod
+// NodeItem used to store all informations needs to create or delete a pod.
 type NodeItem struct {
 	Node                     *corev1.Node
 	ExtendedDaemonsetSetting *datadoghqv1alpha1.ExtendedDaemonsetSetting
 }
 
-// NewNodeItem used to create new NodeItem instance
+// NewNodeItem used to create new NodeItem instance.
 func NewNodeItem(node *corev1.Node, edsNode *datadoghqv1alpha1.ExtendedDaemonsetSetting) *NodeItem {
 	return &NodeItem{
 		Node:                     node,

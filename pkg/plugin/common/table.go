@@ -11,7 +11,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
-// newPodsTable returns a table to print pods
+// newPodsTable returns a table to print pods.
 func newPodsTable(out io.Writer) *tablewriter.Table {
 	table := tablewriter.NewWriter(out)
 	table.SetHeader([]string{"Pod", "Ready", "Phase", "Reason", "Not ready containers", "Restarts", "Node", "Node Ready"})

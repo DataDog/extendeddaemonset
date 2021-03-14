@@ -15,6 +15,7 @@ func ConvertLabelSelector(logger logr.Logger, inSelector *metav1.LabelSelector) 
 			req, err := labels.NewRequirement(key, selection.In, []string{value})
 			if err != nil {
 				logger.Error(err, "NewRequirement")
+
 				return outSelector, err
 			}
 			outSelector = outSelector.Add(*req)
@@ -33,15 +34,18 @@ func ConvertLabelSelector(logger logr.Logger, inSelector *metav1.LabelSelector) 
 				op = selection.DoesNotExist
 			default:
 				logger.Info("Invalid Operator:", expr.Operator)
+
 				continue
 			}
 			req, err := labels.NewRequirement(expr.Key, op, expr.Values)
 			if err != nil {
 				logger.Error(err, "NewRequirement")
+
 				return outSelector, err
 			}
 			outSelector = outSelector.Add(*req)
 		}
 	}
+
 	return outSelector, nil
 }
