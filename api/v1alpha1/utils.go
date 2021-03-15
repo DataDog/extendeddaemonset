@@ -5,12 +5,12 @@
 
 package v1alpha1
 
-// NewInt32 returns pointer on a new int32 value instance
+// NewInt32 returns pointer on a new int32 value instance.
 func NewInt32(i int32) *int32 {
 	return &i
 }
 
-// NewBool returns pointer to a new bool value instance
+// NewBool returns pointer to a new bool value instance.
 func NewBool(b bool) *bool {
 	return &b
 }

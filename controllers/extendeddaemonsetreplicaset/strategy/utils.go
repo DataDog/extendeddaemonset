@@ -11,13 +11,10 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-
 	corev1 "k8s.io/api/core/v1"
-
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilserrors "k8s.io/apimachinery/pkg/util/errors"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
@@ -40,6 +37,7 @@ func compareCurrentPodWithNewPod(params *Parameters, pod *corev1.Pod, node *Node
 	if !compareNodeResourcesOverwriteMD5Hash(params.EDSName, params.Replicaset, pod, node) {
 		return false
 	}
+
 	return true
 }
 
@@ -48,6 +46,7 @@ func compareNodeResourcesOverwriteMD5Hash(edsName string, replicaset *datadoghqv
 	if val, ok := pod.Annotations[datadoghqv1alpha1.MD5NodeExtendedDaemonSetAnnotationKey]; !ok && nodeHash == "" || ok && val == nodeHash {
 		return true
 	}
+
 	return false
 }
 
@@ -69,6 +68,7 @@ func compareWithExtendedDaemonsetSettingOverwrite(pod *corev1.Pod, node *NodeIte
 						}
 						specCopy.Containers[id].Resources.Requests[key] = val
 					}
+
 					break
 				}
 			}
@@ -85,6 +85,7 @@ func compareSpecTemplateMD5Hash(hash string, pod *corev1.Pod) bool {
 	if val, ok := pod.Annotations[datadoghqv1alpha1.MD5ExtendedDaemonSetAnnotationKey]; ok && val == hash {
 		return true
 	}
+
 	return false
 }
 
@@ -98,6 +99,7 @@ func cleanupPods(client client.Client, logger logr.Logger, status *datadoghqv1al
 	if len(pods) != 0 {
 		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(status, now, datadoghqv1alpha1.ConditionTypePodsCleanupDone, conditionStatus, "", "", false, false)
 	}
+
 	return utilserrors.NewAggregate(errs)
 }
 
@@ -121,6 +123,7 @@ func deletePodSlice(client client.Client, logger logr.Logger, podsToDelete []*co
 		}(id)
 	}
 	wg.Wait()
+
 	return errs
 }
 
@@ -139,10 +142,11 @@ func manageUnscheduledPodNodes(pods []*corev1.Pod) []string {
 			output = append(output, nodeName)
 		}
 	}
+
 	return output
 }
 
-// annotateCanaryDeploymentWithReason annotates the Canary deployment with a reason
+// annotateCanaryDeploymentWithReason annotates the Canary deployment with a reason.
 func annotateCanaryDeploymentWithReason(c client.Client, eds *datadoghqv1alpha1.ExtendedDaemonSet, valueKey string, reasonKey string, reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason) error {
 	newEds := eds.DeepCopy()
 	if newEds.Annotations == nil {
@@ -158,10 +162,11 @@ func annotateCanaryDeploymentWithReason(c client.Client, eds *datadoghqv1alpha1.
 	patch := client.MergeFrom(newEds.DeepCopy())
 	newEds.Annotations[valueKey] = valueTrue
 	newEds.Annotations[reasonKey] = string(reason)
+
 	return c.Patch(context.TODO(), newEds, patch)
 }
 
-// pauseCanaryDeployment updates two annotations so that the Canary deployment is marked as paused, along with a reason
+// pauseCanaryDeployment updates two annotations so that the Canary deployment is marked as paused, along with a reason.
 func pauseCanaryDeployment(client client.Client, eds *datadoghqv1alpha1.ExtendedDaemonSet, reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason) error {
 	return annotateCanaryDeploymentWithReason(
 		client,
@@ -172,7 +177,7 @@ func pauseCanaryDeployment(client client.Client, eds *datadoghqv1alpha1.Extended
 	)
 }
 
-// failCanaryDeployment updates two annotations so that the Canary deployment is marked as failed, along with a reason
+// failCanaryDeployment updates two annotations so that the Canary deployment is marked as failed, along with a reason.
 func failCanaryDeployment(client client.Client, eds *datadoghqv1alpha1.ExtendedDaemonSet, reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason) error {
 	return annotateCanaryDeploymentWithReason(
 		client,
@@ -183,7 +188,7 @@ func failCanaryDeployment(client client.Client, eds *datadoghqv1alpha1.ExtendedD
 	)
 }
 
-// addPodLabel adds a given label to a pod, no-op if the pod is nil or if the label exists
+// addPodLabel adds a given label to a pod, no-op if the pod is nil or if the label exists.
 func addPodLabel(logger logr.Logger, c client.Client, pod *corev1.Pod, k, v string) error {
 	if pod == nil {
 		return nil
@@ -203,10 +208,11 @@ func addPodLabel(logger logr.Logger, c client.Client, pod *corev1.Pod, k, v stri
 	newPod.Labels[k] = v
 	data, err := patch.Data(newPod)
 	logger.V(1).Info("Add canary label patch", "data", string(data), "err", err, "pod.name", pod.Name)
+
 	return c.Patch(context.TODO(), newPod, patch)
 }
 
-// deletePodLabel deletes a given pod label, no-op if the pod is nil or if the label doesn't exists
+// deletePodLabel deletes a given pod label, no-op if the pod is nil or if the label doesn't exists.
 func deletePodLabel(logger logr.Logger, c client.Client, pod *corev1.Pod, k string) error {
 	if pod == nil {
 		return nil
@@ -224,5 +230,6 @@ func deletePodLabel(logger logr.Logger, c client.Client, pod *corev1.Pod, k stri
 	delete(newPod.Labels, k)
 	data, err := patch.Data(newPod)
 	logger.V(1).Info("Delete canary label patch", "data", string(data), "err", err, "pod.name", pod.Name)
+
 	return c.Patch(context.TODO(), newPod, patch)
 }

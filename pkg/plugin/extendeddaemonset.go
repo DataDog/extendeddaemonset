@@ -3,24 +3,25 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-2019 Datadog, Inc.
 
+// Package plugin contains kubectl plugin logic.
 package plugin
 
 import (
+	"github.com/spf13/cobra"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
+
 	"github.com/DataDog/extendeddaemonset/pkg/plugin/canary"
 	"github.com/DataDog/extendeddaemonset/pkg/plugin/get"
 	"github.com/DataDog/extendeddaemonset/pkg/plugin/pods"
-
-	"github.com/spf13/cobra"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-// ExtendedDaemonsetOptions provides information required to manage ExtendedDaemonset
+// ExtendedDaemonsetOptions provides information required to manage ExtendedDaemonset.
 type ExtendedDaemonsetOptions struct {
 	configFlags *genericclioptions.ConfigFlags
 	genericclioptions.IOStreams
 }
 
-// NewExtendedDaemonsetOptions provides an instance of ExtendedDaemonsetOptions with default values
+// NewExtendedDaemonsetOptions provides an instance of ExtendedDaemonsetOptions with default values.
 func NewExtendedDaemonsetOptions(streams genericclioptions.IOStreams) *ExtendedDaemonsetOptions {
 	return &ExtendedDaemonsetOptions{
 		configFlags: genericclioptions.NewConfigFlags(false),
@@ -29,7 +30,7 @@ func NewExtendedDaemonsetOptions(streams genericclioptions.IOStreams) *ExtendedD
 	}
 }
 
-// NewCmdExtendedDaemonset provides a cobra command wrapping ExtendedDaemonsetOptions
+// NewCmdExtendedDaemonset provides a cobra command wrapping ExtendedDaemonsetOptions.
 func NewCmdExtendedDaemonset(streams genericclioptions.IOStreams) *cobra.Command {
 	o := NewExtendedDaemonsetOptions(streams)
 
@@ -47,17 +48,17 @@ func NewCmdExtendedDaemonset(streams genericclioptions.IOStreams) *cobra.Command
 	return cmd
 }
 
-// Complete sets all information required for processing the command
+// Complete sets all information required for processing the command.
 func (o *ExtendedDaemonsetOptions) Complete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// Validate ensures that all required arguments and flag values are provided
+// Validate ensures that all required arguments and flag values are provided.
 func (o *ExtendedDaemonsetOptions) Validate() error {
 	return nil
 }
 
-// Run use to run the command
+// Run use to run the command.
 func (o *ExtendedDaemonsetOptions) Run() error {
 	return nil
 }

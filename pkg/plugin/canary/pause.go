@@ -9,13 +9,10 @@ import (
 	"context"
 	"fmt"
 
-	"k8s.io/apimachinery/pkg/api/errors"
-
 	"github.com/spf13/cobra"
-
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	"github.com/DataDog/extendeddaemonset/pkg/plugin/common"
@@ -26,14 +23,12 @@ const (
 	cmdUnpause = false
 )
 
-var (
-	pauseExample = `
+var pauseExample = `
 	# %[1]s a canary deployment
 	kubectl eds %[1]s foo
 `
-)
 
-// pauseOptions provides information required to manage ExtendedDaemonSet
+// pauseOptions provides information required to manage ExtendedDaemonSet.
 type pauseOptions struct {
 	configFlags *genericclioptions.ConfigFlags
 	args        []string
@@ -47,7 +42,7 @@ type pauseOptions struct {
 	pauseStatus               bool
 }
 
-// newPauseOptions provides an instance of GetOptions with default values
+// newPauseOptions provides an instance of GetOptions with default values.
 func newPauseOptions(streams genericclioptions.IOStreams, pauseStatus bool) *pauseOptions {
 	return &pauseOptions{
 		configFlags: genericclioptions.NewConfigFlags(false),
@@ -58,7 +53,7 @@ func newPauseOptions(streams genericclioptions.IOStreams, pauseStatus bool) *pau
 	}
 }
 
-// newCmdPause provides a cobra command wrapping pauseOptions
+// newCmdPause provides a cobra command wrapping pauseOptions.
 func newCmdPause(streams genericclioptions.IOStreams) *cobra.Command {
 	o := newPauseOptions(streams, cmdPause)
 
@@ -74,6 +69,7 @@ func newCmdPause(streams genericclioptions.IOStreams) *cobra.Command {
 			if err := o.validate(); err != nil {
 				return err
 			}
+
 			return o.run()
 		},
 	}
@@ -83,7 +79,7 @@ func newCmdPause(streams genericclioptions.IOStreams) *cobra.Command {
 	return cmd
 }
 
-// newCmdUnpause provides a cobra command wrapping pauseOptions
+// newCmdUnpause provides a cobra command wrapping pauseOptions.
 func newCmdUnpause(streams genericclioptions.IOStreams) *cobra.Command {
 	o := newPauseOptions(streams, cmdUnpause)
 
@@ -99,6 +95,7 @@ func newCmdUnpause(streams genericclioptions.IOStreams) *cobra.Command {
 			if err := o.validate(); err != nil {
 				return err
 			}
+
 			return o.run()
 		},
 	}
@@ -108,7 +105,7 @@ func newCmdUnpause(streams genericclioptions.IOStreams) *cobra.Command {
 	return cmd
 }
 
-// complete sets all information required for processing the command
+// complete sets all information required for processing the command.
 func (o *pauseOptions) complete(cmd *cobra.Command, args []string) error {
 	o.args = args
 	var err error
@@ -117,7 +114,7 @@ func (o *pauseOptions) complete(cmd *cobra.Command, args []string) error {
 	// Create the Client for Read/Write operations.
 	o.client, err = common.NewClient(clientConfig)
 	if err != nil {
-		return fmt.Errorf("unable to instantiate client, err: %v", err)
+		return fmt.Errorf("unable to instantiate client, err: %w", err)
 	}
 
 	o.userNamespace, _, err = clientConfig.Namespace()
@@ -140,9 +137,8 @@ func (o *pauseOptions) complete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// validate ensures that all required arguments and flag values are provided
+// validate ensures that all required arguments and flag values are provided.
 func (o *pauseOptions) validate() error {
-
 	if len(o.args) < 1 {
 		return fmt.Errorf("the extendeddaemonset name is required")
 	}
@@ -150,7 +146,7 @@ func (o *pauseOptions) validate() error {
 	return nil
 }
 
-// run use to run the command
+// run use to run the command.
 func (o *pauseOptions) run() error {
 	eds := &v1alpha1.ExtendedDaemonSet{}
 	err := o.client.Get(context.TODO(), client.ObjectKey{Namespace: o.userNamespace, Name: o.userExtendedDaemonSetName}, eds)
@@ -190,7 +186,7 @@ func (o *pauseOptions) run() error {
 
 	patch := client.MergeFrom(eds)
 	if err = o.client.Patch(context.TODO(), newEds, patch); err != nil {
-		return fmt.Errorf("unable to %s ExtendedDaemonset deployment, err: %v", fmt.Sprintf("%v", o.pauseStatus), err)
+		return fmt.Errorf("unable to %s ExtendedDaemonset deployment, err: %w", fmt.Sprintf("%v", o.pauseStatus), err)
 	}
 
 	fmt.Fprintf(o.Out, "ExtendedDaemonset '%s/%s' deployment paused set to %t\n", o.userNamespace, o.userExtendedDaemonSetName, o.pauseStatus)

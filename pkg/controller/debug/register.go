@@ -3,6 +3,7 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-2019 Datadog, Inc.
 
+// Package debug contains debuging helpers.
 package debug
 
 import (
@@ -10,7 +11,7 @@ import (
 	"net/http/pprof"
 )
 
-// Options used to provide configuration options
+// Options used to provide configuration options.
 type Options struct {
 	CmdLine bool
 	Profile bool
@@ -18,7 +19,7 @@ type Options struct {
 	Trace   bool
 }
 
-// DefaultOptions returns default options configuration
+// DefaultOptions returns default options configuration.
 func DefaultOptions() *Options {
 	return &Options{
 		CmdLine: true,
@@ -28,7 +29,7 @@ func DefaultOptions() *Options {
 	}
 }
 
-// RegisterEndpoint used to register the different debug endpoints
+// RegisterEndpoint used to register the different debug endpoints.
 func RegisterEndpoint(register func(string, http.Handler) error, options *Options) error {
 	err := register("/debug/pprof", http.HandlerFunc(pprof.Index))
 	if err != nil {

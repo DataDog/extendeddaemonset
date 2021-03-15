@@ -18,6 +18,7 @@ func getCanaryRS(eds *v1alpha1.ExtendedDaemonSet) string {
 	if eds.Status.Canary != nil {
 		return eds.Status.Canary.ReplicaSet
 	}
+
 	return "-"
 }
 

@@ -10,23 +10,21 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/tools/record"
-
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
-
+	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
-	"github.com/go-logr/logr"
 )
 
-// Reconciler is the internal reconciler for ExtendedDaemonSetReplicaSet
+// Reconciler is the internal reconciler for ExtendedDaemonSetReplicaSet.
 type Reconciler struct {
 	options  ReconcilerOptions
 	client   client.Client
@@ -35,11 +33,10 @@ type Reconciler struct {
 	recorder record.EventRecorder
 }
 
-// ReconcilerOptions provides options read from command line
-type ReconcilerOptions struct {
-}
+// ReconcilerOptions provides options read from command line.
+type ReconcilerOptions struct{}
 
-// NewReconciler returns a reconciler for DatadogAgent
+// NewReconciler returns a reconciler for DatadogAgent.
 func NewReconciler(options ReconcilerOptions, client client.Client, scheme *runtime.Scheme, log logr.Logger, recorder record.EventRecorder) (*Reconciler, error) {
 	return &Reconciler{
 		options:  options,
@@ -51,12 +48,7 @@ func NewReconciler(options ReconcilerOptions, client client.Client, scheme *runt
 }
 
 // Reconcile reads that state of the cluster for a ExtendedDaemonsetSetting object and makes changes based on the state read
-// and what is in the ExtendedDaemonsetSetting.Spec
-// TODO(user): Modify this Reconcile function to implement your Controller logic.  This example creates
-// a Pod as an example
-// Note:
-// The Controller will requeue the Request to be processed again if the returned error is non-nil or
-// Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
+// and what is in the ExtendedDaemonsetSetting.Spec.
 func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := r.log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Reconciling ExtendedDaemonsetSetting")
@@ -80,8 +72,9 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	if instance.Spec.Reference == nil || instance.Spec.Reference.Name == "" {
 		newStatus.Error = "missing reference"
 
-		newStatus.Error = fmt.Sprintf("missing reference in spec")
+		newStatus.Error = "missing reference in spec"
 		newStatus.Status = datadoghqv1alpha1.ExtendedDaemonsetSettingStatusError
+
 		return r.updateExtendedDaemonsetSetting(ctx, instance, newStatus)
 	}
 
@@ -146,5 +139,6 @@ func searchPossibleConflict(instance *datadoghqv1alpha1.ExtendedDaemonsetSetting
 		}
 		nodesAlreadySelected[node.Name] = ""
 	}
+
 	return "", nil
 }

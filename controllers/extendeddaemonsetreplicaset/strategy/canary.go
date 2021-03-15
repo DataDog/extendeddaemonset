@@ -11,7 +11,6 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -21,7 +20,7 @@ import (
 	podUtils "github.com/DataDog/extendeddaemonset/pkg/controller/utils/pod"
 )
 
-// ManageCanaryDeployment used to manage ReplicaSet in Canary state
+// ManageCanaryDeployment used to manage ReplicaSet in Canary state.
 func ManageCanaryDeployment(client client.Client, daemonset *v1alpha1.ExtendedDaemonSet, params *Parameters) (*Result, error) {
 	// Manage canary status
 	result := manageCanaryStatus(daemonset.GetAnnotations(), params, time.Now())
@@ -43,7 +42,7 @@ func ManageCanaryDeployment(client client.Client, daemonset *v1alpha1.ExtendedDa
 	return result, nil
 }
 
-// manageCanaryStatus manages ReplicaSet status in Canary state
+// manageCanaryStatus manages ReplicaSet status in Canary state.
 func manageCanaryStatus(annotations map[string]string, params *Parameters, now time.Time) *Result {
 	result := &Result{}
 	result.NewStatus = params.NewStatus.DeepCopy()
@@ -72,16 +71,19 @@ func manageCanaryStatus(annotations map[string]string, params *Parameters, now t
 		if pod, ok := params.PodByNodeName[node]; ok {
 			if pod == nil {
 				podsToCreate = append(podsToCreate, node)
+
 				continue
 			}
 
 			if pod.DeletionTimestamp != nil {
 				needRequeue = true
+
 				continue
 			}
 
 			if !compareCurrentPodWithNewPod(params, pod, node) {
 				podsToDelete = append(podsToDelete, node)
+
 				continue
 			}
 
@@ -129,11 +131,12 @@ func manageCanaryStatus(annotations map[string]string, params *Parameters, now t
 	if needRequeue || !result.IsFailed && !result.IsPaused && result.NewStatus.Desired != result.NewStatus.Ready {
 		result.Result = requeuePromptly()
 	}
+
 	return result
 }
 
 // manageCanaryPodFailures checks if canary should be failed or paused due to restarts or other failures.
-// Note that pausing the canary will have no effect if it has been validated or failed
+// Note that pausing the canary will have no effect if it has been validated or failed.
 func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result, now time.Time) {
 	var (
 		canary               = params.Strategy.Canary
@@ -284,7 +287,7 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 	}
 }
 
-// ensureCanaryPodLabels ensures that canary label is set on canary pods
+// ensureCanaryPodLabels ensures that canary label is set on canary pods.
 func ensureCanaryPodLabels(client client.Client, params *Parameters) error {
 	for _, nodeName := range params.CanaryNodes {
 		node := params.NodeByName[nodeName]
@@ -303,14 +306,15 @@ func ensureCanaryPodLabels(client client.Client, params *Parameters) error {
 					v1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelKey,
 					v1alpha1.ExtendedDaemonSetReplicaSetCanaryLabelValue,
 				)
-
 				if err != nil {
 					params.Logger.Error(err, fmt.Sprintf("Couldn't add the canary label for pod '%s/%s', will retry later", pod.GetNamespace(), pod.GetName()))
+
 					return err
 				}
 			}
 		}
 	}
+
 	return nil
 }
 

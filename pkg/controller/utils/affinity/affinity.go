@@ -3,6 +3,7 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-2019 Datadog, Inc.
 
+// Package affinity contains Pod affinity functions helper.
 package affinity
 
 import (
@@ -10,7 +11,7 @@ import (
 )
 
 const (
-	// NodeFieldSelectorKeyNodeName field path use to select the Node
+	// NodeFieldSelectorKeyNodeName field path use to select the Node.
 	NodeFieldSelectorKeyNodeName = "metadata.name"
 )
 
@@ -44,6 +45,7 @@ func ReplaceNodeNameNodeAffinity(affinity *v1.Affinity, nodename string) *v1.Aff
 		affinity.NodeAffinity = &v1.NodeAffinity{
 			RequiredDuringSchedulingIgnoredDuringExecution: nodeSelector,
 		}
+
 		return affinity
 	}
 
@@ -51,6 +53,7 @@ func ReplaceNodeNameNodeAffinity(affinity *v1.Affinity, nodename string) *v1.Aff
 
 	if nodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution == nil {
 		nodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution = nodeSelector
+
 		return affinity
 	}
 
@@ -80,7 +83,7 @@ func ReplaceNodeNameNodeAffinity(affinity *v1.Affinity, nodename string) *v1.Aff
 	return affinity
 }
 
-// GetNodeNameFromAffinity return the Node name from the pod affinity configuration
+// GetNodeNameFromAffinity return the Node name from the pod affinity configuration.
 func GetNodeNameFromAffinity(affinity *v1.Affinity) string {
 	if affinity == nil {
 		return ""
@@ -96,5 +99,6 @@ func GetNodeNameFromAffinity(affinity *v1.Affinity) string {
 			}
 		}
 	}
+
 	return ""
 }

@@ -42,7 +42,7 @@ func schema__api_v1alpha1_ExtendedDaemonSet(ref common.ReferenceCallback) common
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ExtendedDaemonSet is the Schema for the extendeddaemonsets API",
+				Description: "ExtendedDaemonSet is the Schema for the extendeddaemonsets API.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
@@ -61,17 +61,20 @@ func schema__api_v1alpha1_ExtendedDaemonSet(ref common.ReferenceCallback) common
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./api/v1alpha1.ExtendedDaemonSetSpec"),
+							Default: map[string]interface{}{},
+							Ref:     ref("./api/v1alpha1.ExtendedDaemonSetSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./api/v1alpha1.ExtendedDaemonSetStatus"),
+							Default: map[string]interface{}{},
+							Ref:     ref("./api/v1alpha1.ExtendedDaemonSetStatus"),
 						},
 					},
 				},
@@ -86,7 +89,7 @@ func schema__api_v1alpha1_ExtendedDaemonSetReplicaSet(ref common.ReferenceCallba
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ExtendedDaemonSetReplicaSet is the Schema for the extendeddaemonsetreplicasets API",
+				Description: "ExtendedDaemonSetReplicaSet is the Schema for the extendeddaemonsetreplicasets API.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
@@ -105,17 +108,20 @@ func schema__api_v1alpha1_ExtendedDaemonSetReplicaSet(ref common.ReferenceCallba
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./api/v1alpha1.ExtendedDaemonSetReplicaSetSpec"),
+							Default: map[string]interface{}{},
+							Ref:     ref("./api/v1alpha1.ExtendedDaemonSetReplicaSetSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./api/v1alpha1.ExtendedDaemonSetReplicaSetStatus"),
+							Default: map[string]interface{}{},
+							Ref:     ref("./api/v1alpha1.ExtendedDaemonSetReplicaSetStatus"),
 						},
 					},
 				},
@@ -142,6 +148,7 @@ func schema__api_v1alpha1_ExtendedDaemonSetReplicaSetSpec(ref common.ReferenceCa
 					"template": {
 						SchemaProps: spec.SchemaProps{
 							Description: "An object that describes the pod that will be created. The ExtendedDaemonSetReplicaSet will create exactly one copy of this pod on every node that matches the template's node selector (or on every node if no node selector is specified).",
+							Default:     map[string]interface{}{},
 							Ref:         ref("k8s.io/api/core/v1.PodTemplateSpec"),
 						},
 					},
@@ -170,12 +177,14 @@ func schema__api_v1alpha1_ExtendedDaemonSetReplicaSetSpecStrategy(ref common.Ref
 				Properties: map[string]spec.Schema{
 					"rollingUpdate": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./api/v1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate"),
+							Default: map[string]interface{}{},
+							Ref:     ref("./api/v1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate"),
 						},
 					},
 					"reconcileFrequency": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 				},
@@ -195,38 +204,44 @@ func schema__api_v1alpha1_ExtendedDaemonSetReplicaSetStatus(ref common.Reference
 				Properties: map[string]spec.Schema{
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
 						},
 					},
 					"desired": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 					"current": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 					"ready": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 					"available": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 					"ignoredUnresponsiveNodes": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 					"conditions": {
@@ -244,7 +259,8 @@ func schema__api_v1alpha1_ExtendedDaemonSetReplicaSetStatus(ref common.Reference
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
-										Ref: ref("./api/v1alpha1.ExtendedDaemonSetReplicaSetCondition"),
+										Default: map[string]interface{}{},
+										Ref:     ref("./api/v1alpha1.ExtendedDaemonSetReplicaSetCondition"),
 									},
 								},
 							},
@@ -275,12 +291,14 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpec(ref common.ReferenceCallback) co
 					"template": {
 						SchemaProps: spec.SchemaProps{
 							Description: "An object that describes the pod that will be created. The ExtendedDaemonSet will create exactly one copy of this pod on every node that matches the template's node selector (or on every node if no node selector is specified). More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller#pod-template",
+							Default:     map[string]interface{}{},
 							Ref:         ref("k8s.io/api/core/v1.PodTemplateSpec"),
 						},
 					},
 					"strategy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Daemonset deployment strategy",
+							Description: "Daemonset deployment strategy.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("./api/v1alpha1.ExtendedDaemonSetSpecStrategy"),
 						},
 					},
@@ -297,12 +315,13 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategy(ref common.ReferenceCall
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ExtendedDaemonSetSpecStrategy defines the deployment strategy of ExtendedDaemonSet",
+				Description: "ExtendedDaemonSetSpecStrategy defines the deployment strategy of ExtendedDaemonSet.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"rollingUpdate": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./api/v1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate"),
+							Default: map[string]interface{}{},
+							Ref:     ref("./api/v1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate"),
 						},
 					},
 					"canary": {
@@ -313,7 +332,7 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategy(ref common.ReferenceCall
 					},
 					"reconcileFrequency": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ReconcileFrequency use to configure how often the ExtendedDeamonset will be fully reconcile, default is 10sec",
+							Description: "ReconcileFrequency use to configure how often the ExtendedDeamonset will be fully reconcile, default is 10sec.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
@@ -329,7 +348,7 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanary(ref common.Referen
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ExtendedDaemonSetSpecStrategyCanary defines the canary deployment strategy of ExtendedDaemonSet",
+				Description: "ExtendedDaemonSetSpecStrategyCanary defines the canary deployment strategy of ExtendedDaemonSet.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"replicas": {
@@ -358,8 +377,9 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanary(ref common.Referen
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
-										Type:   []string{"string"},
-										Format: "",
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
 									},
 								},
 							},
@@ -377,7 +397,7 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanary(ref common.Referen
 					},
 					"noRestartsDuration": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NoRestartsDuration defines min duration since last restart to end the canary phase",
+							Description: "NoRestartsDuration defines min duration since last restart to end the canary phase.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
@@ -393,7 +413,7 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanaryAutoFail(ref common
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ExtendedDaemonSetSpecStrategyCanaryAutoFail defines the canary deployment AutoFail parameters of the ExtendedDaemonSet",
+				Description: "ExtendedDaemonSetSpecStrategyCanaryAutoFail defines the canary deployment AutoFail parameters of the ExtendedDaemonSet.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"enabled": {
@@ -404,14 +424,14 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanaryAutoFail(ref common
 					},
 					"maxRestarts": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MaxRestarts defines the number of tolerable (per pod) Canary pod restarts after which the Canary deployment is autofailed",
+							Description: "MaxRestarts defines the number of tolerable (per pod) Canary pod restarts after which the Canary deployment is autofailed.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"maxRestartsDuration": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MaxRestartsDuration defines the maximum duration of tolerable Canary pod restarts after which the Canary deployment is autofailed",
+							Description: "MaxRestartsDuration defines the maximum duration of tolerable Canary pod restarts after which the Canary deployment is autofailed.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
@@ -427,7 +447,7 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanaryAutoPause(ref commo
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ExtendedDaemonSetSpecStrategyCanaryAutoPause defines the canary deployment AutoPause parameters of the ExtendedDaemonSet",
+				Description: "ExtendedDaemonSetSpecStrategyCanaryAutoPause defines the canary deployment AutoPause parameters of the ExtendedDaemonSet.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"enabled": {
@@ -438,14 +458,14 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanaryAutoPause(ref commo
 					},
 					"maxRestarts": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MaxRestarts defines the number of tolerable (per pod) Canary pod restarts after which the Canary deployment is autopaused",
+							Description: "MaxRestarts defines the number of tolerable (per pod) Canary pod restarts after which the Canary deployment is autopaused.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"maxSlowStartDuration": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MaxSlowStartDuration defines the maximum slow start duration for a pod (stuck in Creating state) after which the Canary deployment is autopaused",
+							Description: "MaxSlowStartDuration defines the maximum slow start duration for a pod (stuck in Creating state) after which the. Canary deployment is autopaused",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
@@ -461,7 +481,7 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyRollingUpdate(ref common.
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ExtendedDaemonSetSpecStrategyRollingUpdate defines the rolling update deployment strategy of ExtendedDaemonSet",
+				Description: "ExtendedDaemonSetSpecStrategyRollingUpdate defines the rolling update deployment strategy of ExtendedDaemonSet.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"maxUnavailable": {
@@ -472,7 +492,7 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyRollingUpdate(ref common.
 					},
 					"maxPodSchedulerFailure": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MaxPodSchedulerFailure the maxinum number of not scheduled on its Node due to a scheduler failure: resource constraints. Value can be an absolute number (ex: 5) or a percentage of total number of DaemonSet pods at the start of the update (ex: 10%). Absolute",
+							Description: "MaxPodSchedulerFailure the maxinum number of not scheduled on its Node due to a scheduler failure: resource constraints. Value can be an absolute number (ex: 5) or a percentage of total number of DaemonSet pods at the start of the update (ex: 10%). Absolute.",
 							Ref:         ref("k8s.io/apimachinery/pkg/util/intstr.IntOrString"),
 						},
 					},
@@ -512,38 +532,44 @@ func schema__api_v1alpha1_ExtendedDaemonSetStatus(ref common.ReferenceCallback) 
 				Properties: map[string]spec.Schema{
 					"desired": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 					"current": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 					"ready": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 					"available": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 					"upToDate": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 					"ignoredUnresponsiveNodes": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 					"state": {
@@ -554,8 +580,9 @@ func schema__api_v1alpha1_ExtendedDaemonSetStatus(ref common.ReferenceCallback) 
 					},
 					"activeReplicaSet": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
 						},
 					},
 					"canary": {
@@ -585,7 +612,8 @@ func schema__api_v1alpha1_ExtendedDaemonSetStatus(ref common.ReferenceCallback) 
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
-										Ref: ref("./api/v1alpha1.ExtendedDaemonSetCondition"),
+										Default: map[string]interface{}{},
+										Ref:     ref("./api/v1alpha1.ExtendedDaemonSetCondition"),
 									},
 								},
 							},
@@ -609,8 +637,9 @@ func schema__api_v1alpha1_ExtendedDaemonSetStatusCanary(ref common.ReferenceCall
 				Properties: map[string]spec.Schema{
 					"replicaSet": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
 						},
 					},
 					"nodes": {
@@ -624,8 +653,9 @@ func schema__api_v1alpha1_ExtendedDaemonSetStatusCanary(ref common.ReferenceCall
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
-										Type:   []string{"string"},
-										Format: "",
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
 									},
 								},
 							},
@@ -642,7 +672,7 @@ func schema__api_v1alpha1_ExtendedDaemonsetSetting(ref common.ReferenceCallback)
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ExtendedDaemonsetSetting is the Schema for the extendeddaemonsetsettings API",
+				Description: "ExtendedDaemonsetSetting is the Schema for the extendeddaemonsetsettings API.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
@@ -661,17 +691,20 @@ func schema__api_v1alpha1_ExtendedDaemonsetSetting(ref common.ReferenceCallback)
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./api/v1alpha1.ExtendedDaemonsetSettingSpec"),
+							Default: map[string]interface{}{},
+							Ref:     ref("./api/v1alpha1.ExtendedDaemonsetSettingSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./api/v1alpha1.ExtendedDaemonsetSettingStatus"),
+							Default: map[string]interface{}{},
+							Ref:     ref("./api/v1alpha1.ExtendedDaemonsetSettingStatus"),
 						},
 					},
 				},
@@ -691,13 +724,15 @@ func schema__api_v1alpha1_ExtendedDaemonsetSettingContainerSpec(ref common.Refer
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
 						},
 					},
 					"resources": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("k8s.io/api/core/v1.ResourceRequirements"),
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/api/core/v1.ResourceRequirements"),
 						},
 					},
 				},
@@ -725,6 +760,7 @@ func schema__api_v1alpha1_ExtendedDaemonsetSettingSpec(ref common.ReferenceCallb
 					"nodeSelector": {
 						SchemaProps: spec.SchemaProps{
 							Description: "NodeSelector lists labels that must be present on nodes to trigger the usage of this resource.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
 						},
 					},
@@ -743,7 +779,8 @@ func schema__api_v1alpha1_ExtendedDaemonsetSettingSpec(ref common.ReferenceCallb
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
-										Ref: ref("./api/v1alpha1.ExtendedDaemonsetSettingContainerSpec"),
+										Default: map[string]interface{}{},
+										Ref:     ref("./api/v1alpha1.ExtendedDaemonsetSettingContainerSpec"),
 									},
 								},
 							},
@@ -762,13 +799,14 @@ func schema__api_v1alpha1_ExtendedDaemonsetSettingStatus(ref common.ReferenceCal
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ExtendedDaemonsetSettingStatus defines the observed state of ExtendedDaemonsetSetting",
+				Description: "ExtendedDaemonsetSettingStatus defines the observed state of ExtendedDaemonsetSetting.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
 						},
 					},
 					"error": {

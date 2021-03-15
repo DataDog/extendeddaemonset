@@ -9,11 +9,9 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
-
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
-
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/source"
@@ -23,7 +21,7 @@ import (
 	"github.com/DataDog/extendeddaemonset/pkg/controller/utils/enqueue"
 )
 
-// ExtendedDaemonSetReconciler reconciles a ExtendedDaemonSet object
+// ExtendedDaemonSetReconciler reconciles a ExtendedDaemonSet object.
 type ExtendedDaemonSetReconciler struct {
 	client.Client
 	Log      logr.Logger
@@ -40,12 +38,12 @@ type ExtendedDaemonSetReconciler struct {
 // +kubebuilder:rbac:groups="",resources=services,verbs=get;watch
 // +kubebuilder:rbac:groups="",resources=nodes,verbs=get;list;watch
 
-// Reconcile loop for ExtendedDaemonSet
-func (r *ExtendedDaemonSetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	return r.internal.Reconcile(context.Background(), req)
+// Reconcile loop for ExtendedDaemonSet.
+func (r *ExtendedDaemonSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	return r.internal.Reconcile(ctx, req)
 }
 
-// SetupWithManager creates a new ExtendedDaemonSet controller
+// SetupWithManager creates a new ExtendedDaemonSet controller.
 func (r *ExtendedDaemonSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	internal, err := extendeddaemonset.NewReconciler(r.Options, r.Client, r.Scheme, r.Log, r.Recorder)
 	if err != nil {

@@ -10,10 +10,8 @@ import (
 	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
-
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/errors"
-
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
@@ -82,6 +80,7 @@ func overwriteResourcesFromEdsNode(template *corev1.PodTemplateSpec, edsNode *da
 		for id, container := range template.Spec.Containers {
 			if extraConfig.Name == container.Name {
 				template.Spec.Containers[id].Resources = extraConfig.Resources
+
 				break
 			}
 		}
@@ -99,12 +98,14 @@ func overwriteResourcesFromNode(template *corev1.PodTemplateSpec, edsNamespace, 
 		if val, ok := node.GetAnnotations()[ressourceAnnotationKey]; ok {
 			var newResources corev1.ResourceRequirements
 			if err := json.Unmarshal([]byte(val), &newResources); err != nil {
-				errWrap := fmt.Errorf("unable to decode %s annotation value, err: %v", ressourceAnnotationKey, err)
+				errWrap := fmt.Errorf("unable to decode %s annotation value, err: %w", ressourceAnnotationKey, err)
 				errs = append(errs, errWrap)
+
 				continue
 			}
 			template.Spec.Containers[id].Resources = newResources
 		}
 	}
+
 	return errors.NewAggregate(errs)
 }

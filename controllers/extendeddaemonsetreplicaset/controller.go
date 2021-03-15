@@ -13,10 +13,8 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -24,7 +22,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	utilserrors "k8s.io/apimachinery/pkg/util/errors"
-
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -35,7 +32,7 @@ import (
 	"github.com/DataDog/extendeddaemonset/pkg/controller/utils"
 )
 
-// Reconciler is the internal reconciler for ExtendedDaemonSetReplicaSet
+// Reconciler is the internal reconciler for ExtendedDaemonSetReplicaSet.
 type Reconciler struct {
 	options  ReconcilerOptions
 	client   client.Client
@@ -44,12 +41,12 @@ type Reconciler struct {
 	recorder record.EventRecorder
 }
 
-// ReconcilerOptions provides options read from command line
+// ReconcilerOptions provides options read from command line.
 type ReconcilerOptions struct {
 	IsNodeAffinitySupported bool
 }
 
-// NewReconciler returns a reconciler for DatadogAgent
+// NewReconciler returns a reconciler for DatadogAgent.
 func NewReconciler(options ReconcilerOptions, client client.Client, scheme *runtime.Scheme, log logr.Logger, recorder record.EventRecorder) (*Reconciler, error) {
 	return &Reconciler{
 		options:  options,
@@ -61,7 +58,7 @@ func NewReconciler(options ReconcilerOptions, client client.Client, scheme *runt
 }
 
 // Reconcile reads that state of the cluster for a ExtendedDaemonSetReplicaSet object and makes changes based on the state read
-// and what is in the ExtendedDaemonSetReplicaSet.Spec
+// and what is in the ExtendedDaemonSetReplicaSet.Spec.
 func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	now := metav1.NewTime(time.Now())
 	rand := rand.Uint32()
@@ -90,6 +87,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		// It is better to only update a Resource Kind from its own controller, to avoid conccurent update.
 		conditions.UpdateErrorCondition(newStatus, now, err, message)
 		err = r.updateReplicaSet(replicaSetInstance, newStatus)
+
 		return reconcile.Result{RequeueAfter: time.Second}, err
 	}
 
@@ -164,6 +162,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 
 	reqLogger.V(1).Info("Updating ExtendedDaemonSetReplicaSet status")
 	err = r.updateReplicaSet(replicaSetInstance, newStatus)
+
 	return result, err
 }
 
@@ -224,6 +223,7 @@ func (r *Reconciler) applyStrategy(logger logr.Logger, daemonset *datadoghqv1alp
 		logger.Info("ignore this replicaset, since it's not the replicas active or canary")
 		strategyResult, err = strategy.ManageUnknown(r.client, strategyParams)
 	}
+
 	return strategyResult, err
 }
 
@@ -234,6 +234,7 @@ func (r *Reconciler) getPodAndNodeList(logger logr.Logger, daemonset *datadoghqv
 	nodeList, err = r.getNodeList(daemonset, replicaset)
 	if err != nil {
 		logger.Error(err, "unable to list associated pods")
+
 		return nodeList, podList, err
 	}
 
@@ -241,6 +242,7 @@ func (r *Reconciler) getPodAndNodeList(logger logr.Logger, daemonset *datadoghqv
 	podList, err = r.getPodList(daemonset)
 	if err != nil {
 		logger.Error(err, "unable to list associated pods")
+
 		return nodeList, podList, err
 	}
 
@@ -248,6 +250,7 @@ func (r *Reconciler) getPodAndNodeList(logger logr.Logger, daemonset *datadoghqv
 	oldPodList, err = r.getOldDaemonsetPodList(daemonset)
 	if err != nil {
 		logger.Error(err, "unable to list associated pods")
+
 		return nodeList, podList, err
 	}
 	podList.Items = append(podList.Items, oldPodList.Items...)
@@ -268,6 +271,7 @@ func (r *Reconciler) retrievedReplicaSet(request reconcile.Request) (*datadoghqv
 		// Error reading the object - requeue the request.
 		return nil, true, err
 	}
+
 	return replicaSetInstance, false, nil
 }
 
@@ -276,6 +280,7 @@ func (r *Reconciler) updateReplicaSet(replicaset *datadoghqv1alpha1.ExtendedDaem
 	if !apiequality.Semantic.DeepEqual(&replicaset.Status, newStatus) {
 		newRS := replicaset.DeepCopy()
 		newRS.Status = *newStatus
+
 		return r.client.Status().Update(context.TODO(), newRS)
 	}
 
@@ -292,6 +297,7 @@ func (r *Reconciler) getDaemonsetOwner(replicaset *datadoghqv1alpha1.ExtendedDae
 	if err != nil {
 		return nil, err
 	}
+
 	return daemonsetInstance, nil
 }
 
@@ -310,6 +316,7 @@ func (r *Reconciler) getExtendedDaemonsetSettings(eds *datadoghqv1alpha1.Extende
 			outputList = append(outputList, &edsNodeList.Items[index])
 		}
 	}
+
 	return outputList, nil
 }
 
@@ -324,6 +331,7 @@ func (r *Reconciler) getPodList(ds *datadoghqv1alpha1.ExtendedDaemonSet) (*corev
 	if err := r.client.List(context.TODO(), podList, podListOptions...); err != nil {
 		return nil, err
 	}
+
 	return podList, nil
 }
 
@@ -365,11 +373,13 @@ func (r *Reconciler) getNodeList(eds *datadoghqv1alpha1.ExtendedDaemonSet, repli
 			}
 			if selector.Matches(labels.Set(node.Labels)) {
 				edsNodeSelected = edsNode
+
 				break
 			}
 		}
 		nodeItemList.Items = append(nodeItemList.Items, strategy.NewNodeItem(&nodeList.Items[index], edsNodeSelected))
 	}
+
 	return nodeItemList, nil
 }
 
@@ -416,6 +426,7 @@ func (r *Reconciler) getOldDaemonsetPodList(ds *datadoghqv1alpha1.ExtendedDaemon
 		for _, ref := range pod.OwnerReferences {
 			if ref.Kind == "DaemonSet" && ref.Name == oldDsName {
 				selected = true
+
 				break
 			}
 		}
@@ -448,6 +459,7 @@ func retrieveReplicaSetStatus(daemonset *datadoghqv1alpha1.ExtendedDaemonSet, re
 		if daemonset.Status.Canary != nil && daemonset.Status.Canary.ReplicaSet == replicassetName {
 			return strategy.ReplicaSetStatusCanary
 		}
+
 		return strategy.ReplicaSetStatusUnknown
 	}
 }

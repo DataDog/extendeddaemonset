@@ -24,10 +24,10 @@ done
 # Update the `protocol` attribute of v1.ContainerPort to required as default is not yet supported
 # See: https://github.com/kubernetes/api/blob/master/core/v1/types.go#L2165
 # Until issue is fixed: https://github.com/kubernetes-sigs/controller-tools/issues/438 and integrated in operator-sdk
-$YQ m -i "$ROOT_DIR/$v1beta1/datadoghq.com_extendeddaemonsetreplicasets.yaml" "$ROOT_DIR/hack/patch-crd-protocol-kube1.18.yaml"
-$YQ m -i "$ROOT_DIR/$v1beta1/datadoghq.com_extendeddaemonsets.yaml" "$ROOT_DIR/hack/patch-crd-protocol-kube1.18.yaml"
-$YQ m -i "$ROOT_DIR/$v1/datadoghq.com_extendeddaemonsetreplicasets.yaml" "$ROOT_DIR/hack/patch-crd-protocol-kube1.18.yaml"
-$YQ m -i "$ROOT_DIR/$v1/datadoghq.com_extendeddaemonsets.yaml" "$ROOT_DIR/hack/patch-crd-protocol-kube1.18.yaml"
+$YQ m -i "$ROOT_DIR/$v1beta1/datadoghq.com_extendeddaemonsetreplicasets.yaml" "$ROOT_DIR/hack/patch-crd-v1beta1-protocol-kube1.18.yaml"
+$YQ m -i "$ROOT_DIR/$v1beta1/datadoghq.com_extendeddaemonsets.yaml" "$ROOT_DIR/hack/patch-crd-v1beta1-protocol-kube1.18.yaml"
+$YQ m -i "$ROOT_DIR/$v1/datadoghq.com_extendeddaemonsetreplicasets.yaml" "$ROOT_DIR/hack/patch-crd-v1-protocol-kube1.18.yaml"
+$YQ m -i "$ROOT_DIR/$v1/datadoghq.com_extendeddaemonsets.yaml" "$ROOT_DIR/hack/patch-crd-v1-protocol-kube1.18.yaml"
 
 # Update `metadata` attribute of v1.PodTemplateSpec to properly validate the
 # resource's metadata, since the automatically generated validation is

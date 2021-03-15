@@ -14,7 +14,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -24,7 +23,7 @@ import (
 	// +kubebuilder:scaffold:imports
 )
 
-// This test may take ~30s to run, check you go test timeout
+// This test may take ~30s to run, check you go test timeout.
 var _ = Describe("ExtendedDaemonSet Controller", func() {
 	const timeout = time.Second * 30
 	const interval = time.Second * 2

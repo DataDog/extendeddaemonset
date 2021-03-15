@@ -23,12 +23,12 @@ var (
 	log                     = ctrl.Log.WithName("ksmetrics")
 )
 
-// RegisterHandlerFunc register a function to be added to endpoint when its registered
+// RegisterHandlerFunc register a function to be added to endpoint when its registered.
 func RegisterHandlerFunc(h func(manager.Manager, Handler) error) {
 	metricsHandler = append(metricsHandler, h)
 }
 
-// RegisterEndpoint add custom metrics endpoint to existing HTTP Listener
+// RegisterEndpoint add custom metrics endpoint to existing HTTP Listener.
 func RegisterEndpoint(mgr ctrl.Manager, register func(string, http.Handler) error) error {
 	handler := &storesHandler{}
 	for _, metricsHandler := range metricsHandler {
@@ -36,6 +36,7 @@ func RegisterEndpoint(mgr ctrl.Manager, register func(string, http.Handler) erro
 			return err
 		}
 	}
+
 	return register("/ksmetrics", http.HandlerFunc(handler.serveKsmHTTP))
 }
 
@@ -67,6 +68,7 @@ func (h *storesHandler) serveKsmHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *storesHandler) RegisterStore(generators []ksmetric.FamilyGenerator, expectedType interface{}, lw cache.ListerWatcher) error {
 	store := newMetricsStore(generators, expectedType, lw)
 	h.stores = append(h.stores, store)
+
 	return nil
 }
 

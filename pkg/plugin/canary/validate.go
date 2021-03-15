@@ -9,26 +9,21 @@ import (
 	"context"
 	"fmt"
 
-	"k8s.io/apimachinery/pkg/api/errors"
-
 	"github.com/spf13/cobra"
-
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	"github.com/DataDog/extendeddaemonset/pkg/plugin/common"
 )
 
-var (
-	validateExample = `
+var validateExample = `
 	# validate a canary replicaset
 	%[1]s canary validate foo
 `
-)
 
-// validateOptions provides information required to manage ExtendedDaemonSet
+// validateOptions provides information required to manage ExtendedDaemonSet.
 type validateOptions struct {
 	configFlags *genericclioptions.ConfigFlags
 	args        []string
@@ -41,7 +36,7 @@ type validateOptions struct {
 	userExtendedDaemonSetName string
 }
 
-// newvalidateOptions provides an instance of GetOptions with default values
+// newvalidateOptions provides an instance of GetOptions with default values.
 func newValidateOptions(streams genericclioptions.IOStreams) *validateOptions {
 	return &validateOptions{
 		configFlags: genericclioptions.NewConfigFlags(false),
@@ -50,7 +45,7 @@ func newValidateOptions(streams genericclioptions.IOStreams) *validateOptions {
 	}
 }
 
-// newCmdValidate provides a cobra command wrapping validateOptions
+// newCmdValidate provides a cobra command wrapping validateOptions.
 func newCmdValidate(streams genericclioptions.IOStreams) *cobra.Command {
 	o := newValidateOptions(streams)
 
@@ -66,6 +61,7 @@ func newCmdValidate(streams genericclioptions.IOStreams) *cobra.Command {
 			if err := o.validate(); err != nil {
 				return err
 			}
+
 			return o.run()
 		},
 	}
@@ -75,7 +71,7 @@ func newCmdValidate(streams genericclioptions.IOStreams) *cobra.Command {
 	return cmd
 }
 
-// complete sets all information required for processing the command
+// complete sets all information required for processing the command.
 func (o *validateOptions) complete(cmd *cobra.Command, args []string) error {
 	o.args = args
 	var err error
@@ -84,7 +80,7 @@ func (o *validateOptions) complete(cmd *cobra.Command, args []string) error {
 	// Create the Client for Read/Write operations.
 	o.client, err = common.NewClient(clientConfig)
 	if err != nil {
-		return fmt.Errorf("unable to instantiate client, err: %v", err)
+		return fmt.Errorf("unable to instantiate client, err: %w", err)
 	}
 
 	o.userNamespace, _, err = clientConfig.Namespace()
@@ -107,9 +103,8 @@ func (o *validateOptions) complete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// validate ensures that all required arguments and flag values are provided
+// validate ensures that all required arguments and flag values are provided.
 func (o *validateOptions) validate() error {
-
 	if len(o.args) < 1 {
 		return fmt.Errorf("the extendeddaemonset name is required")
 	}
@@ -117,9 +112,8 @@ func (o *validateOptions) validate() error {
 	return nil
 }
 
-// run use to run the command
+// run use to run the command.
 func (o *validateOptions) run() error {
-
 	eds := &v1alpha1.ExtendedDaemonSet{}
 	err := o.client.Get(context.TODO(), client.ObjectKey{Namespace: o.userNamespace, Name: o.userExtendedDaemonSetName}, eds)
 	if err != nil && errors.IsNotFound(err) {
@@ -145,7 +139,7 @@ func (o *validateOptions) run() error {
 	newEds.Annotations[v1alpha1.ExtendedDaemonSetCanaryValidAnnotationKey] = rsName
 	patch := client.MergeFrom(eds)
 	if err = o.client.Patch(context.TODO(), newEds, patch); err != nil {
-		return fmt.Errorf("unable to validate the canary replicaset, err: %v", err)
+		return fmt.Errorf("unable to validate the canary replicaset, err: %w", err)
 	}
 
 	fmt.Fprintf(o.Out, "Canary replicaset '%s' was validated properly for extendeddaemonset %s/%s.\n", rsName, o.userNamespace, o.userExtendedDaemonSetName)

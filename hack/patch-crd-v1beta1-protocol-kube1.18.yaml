@@ -16,6 +16,14 @@ spec:
                               required:
                                 - containerPort
                                 - protocol
+                    ephemeralContainers:
+                      items:
+                        properties:
+                          ports:
+                            items:
+                              required:
+                                - containerPort
+                                - protocol
                     initContainers:
                       items:
                         properties:

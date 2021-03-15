@@ -3,17 +3,17 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-2019 Datadog, Inc.
 
+// Package conditions contains status conditions helpers.
 package conditions
 
 import (
 	corev1 "k8s.io/api/core/v1"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 )
 
-// NewExtendedDaemonSetCondition returns new ExtendedDaemonSetCondition instance
+// NewExtendedDaemonSetCondition returns new ExtendedDaemonSetCondition instance.
 func NewExtendedDaemonSetCondition(conditionType datadoghqv1alpha1.ExtendedDaemonSetConditionType, conditionStatus corev1.ConditionStatus, now metav1.Time, reason, message string, supportLastUpdate bool) datadoghqv1alpha1.ExtendedDaemonSetCondition {
 	return datadoghqv1alpha1.ExtendedDaemonSetCondition{
 		Type:               conditionType,
@@ -36,9 +36,8 @@ type UpdateConditionOptions struct {
 	SupportLastUpdate bool
 }
 
-// UpdateExtendedDaemonSetStatusCondition used to update a specific ExtendedDaemonSetConditionType
+// UpdateExtendedDaemonSetStatusCondition used to update a specific ExtendedDaemonSetConditionType.
 func UpdateExtendedDaemonSetStatusCondition(status *datadoghqv1alpha1.ExtendedDaemonSetStatus, now metav1.Time, t datadoghqv1alpha1.ExtendedDaemonSetConditionType, conditionStatus corev1.ConditionStatus, reason, desc string, options *UpdateConditionOptions) {
-
 	// manage options
 	var writeFalseIfNotExist, supportLastUpdate bool
 	if options != nil {
@@ -66,7 +65,7 @@ func UpdateExtendedDaemonSetStatusCondition(status *datadoghqv1alpha1.ExtendedDa
 	}
 }
 
-// UpdateErrorCondition used to update the ExtendedDaemonSet status error condition
+// UpdateErrorCondition used to update the ExtendedDaemonSet status error condition.
 func UpdateErrorCondition(status *datadoghqv1alpha1.ExtendedDaemonSetStatus, now metav1.Time, err error, desc string) {
 	options := UpdateConditionOptions{
 		IgnoreFalseConditionIfNotExist: false,
@@ -88,16 +87,18 @@ func getIndexForConditionType(status *datadoghqv1alpha1.ExtendedDaemonSetStatus,
 			return i
 		}
 	}
+
 	return -1
 }
 
 // GetExtendedDaemonSetStatusCondition return the condition struct corresponding to the ExtendedDaemonSetConditionType provided in argument.
-// return nil if not found
+// return nil if not found.
 func GetExtendedDaemonSetStatusCondition(status *datadoghqv1alpha1.ExtendedDaemonSetStatus, t datadoghqv1alpha1.ExtendedDaemonSetConditionType) *datadoghqv1alpha1.ExtendedDaemonSetCondition {
 	idCondition := getIndexForConditionType(status, t)
 	if idCondition == -1 {
 		return nil
 	}
+
 	return &status.Conditions[idCondition]
 }
 
@@ -107,13 +108,15 @@ func IsConditionTrue(status *datadoghqv1alpha1.ExtendedDaemonSetStatus, t datado
 	if cond != nil && cond.Status == corev1.ConditionTrue {
 		return true
 	}
+
 	return false
 }
 
-// BoolToCondition convert bool to corev1.ConditionStatus
+// BoolToCondition convert bool to corev1.ConditionStatus.
 func BoolToCondition(value bool) corev1.ConditionStatus {
 	if value {
 		return corev1.ConditionTrue
 	}
+
 	return corev1.ConditionFalse
 }

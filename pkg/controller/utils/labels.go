@@ -17,11 +17,9 @@ const (
 	resourceNamespacePromLabel = "namespace"
 )
 
-var (
-	invalidLabelCharRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
-)
+var invalidLabelCharRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
 
-// GetLabelsValues returns name and namespace as label values
+// GetLabelsValues returns name and namespace as label values.
 func GetLabelsValues(obj *metav1.ObjectMeta) ([]string, []string) {
 	return []string{
 		resourceNamespacePromLabel,
@@ -29,7 +27,7 @@ func GetLabelsValues(obj *metav1.ObjectMeta) ([]string, []string) {
 	}, []string{obj.GetNamespace(), obj.GetName()}
 }
 
-// BuildInfoLabels build the lists of label keys and values from the ObjectMeta Labels
+// BuildInfoLabels build the lists of label keys and values from the ObjectMeta Labels.
 func BuildInfoLabels(obj *metav1.ObjectMeta) ([]string, []string) {
 	labelKeys := []string{}
 	for key := range obj.Labels {

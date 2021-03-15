@@ -9,20 +9,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 
 	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
 )
 
 var (
-	testLogger          logr.Logger = logf.ZapLogger(true)
-	testCanaryNodeNames             = []string{"a", "b", "c"}
-	testCanaryNodes                 = map[string]*NodeItem{
+	testLogger          = logf.Log.WithName("test")
+	testCanaryNodeNames = []string{"a", "b", "c"}
+	testCanaryNodes     = map[string]*NodeItem{
 		"a": {
 			Node: &v1.Node{
 				ObjectMeta: metav1.ObjectMeta{
@@ -104,11 +103,13 @@ func podWaitingStatus(reason, message string) v1.PodStatus {
 func withDeletionTimestamp(pod *v1.Pod) *v1.Pod {
 	ts := metav1.Now()
 	pod.DeletionTimestamp = &ts
+
 	return pod
 }
 
 func withHostIP(pod *v1.Pod, ip string) *v1.Pod {
 	pod.Status.HostIP = ip
+
 	return pod
 }
 

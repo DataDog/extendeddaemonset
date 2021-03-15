@@ -5,12 +5,13 @@ BUILDINFOPKG=github.com/DataDog/extendeddaemonset/pkg/version
 GIT_TAG?=$(shell git tag -l --contains HEAD | tail -1)
 TAG_HASH=$(shell git tag | tail -1)_$(shell git rev-parse --short HEAD)
 VERSION?=$(if $(GIT_TAG),$(GIT_TAG),$(TAG_HASH))
+BUNDLE_VERSION?=$(VERSION:v%=%)
 GIT_COMMIT?=$(shell git rev-parse HEAD)
 DATE=$(shell date +%Y-%m-%d/%H:%M:%S )
 LDFLAGS=-w -s -X ${BUILDINFOPKG}.Commit=${GIT_COMMIT} -X ${BUILDINFOPKG}.Version=${VERSION} -X ${BUILDINFOPKG}.BuildTime=${DATE}
 
 # Default bundle image tag
-BUNDLE_IMG ?= controller-bundle:$(VERSION)
+BUNDLE_IMG ?= controller-bundle:$(BUNDLE_VERSION)
 # Options for 'bundle-build'
 ifneq ($(origin CHANNELS), undefined)
 BUNDLE_CHANNELS := --channels=$(CHANNELS)
@@ -142,7 +143,7 @@ endif
 bundle: manifests
 	./bin/operator-sdk generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
-	$(KUSTOMIZE) build config/manifests | ./bin/operator-sdk generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
+	$(KUSTOMIZE) build config/manifests | ./bin/operator-sdk generate bundle -q --overwrite --version $(BUNDLE_VERSION) $(BUNDLE_METADATA_OPTS)
 	./bin/operator-sdk bundle validate ./bundle
 
 # Build the bundle image.
@@ -191,7 +192,7 @@ check-eds: fmt vet lint
 	go build -ldflags '${LDFLAGS}' -o bin/check-eds ./cmd/check-eds/main.go
 
 bin/kubebuilder:
-	./hack/install-kubebuilder.sh 2.3.1
+	./hack/install-kubebuilder.sh 2.3.2
 
 bin/openapi-gen:
 	go build -o ./bin/openapi-gen k8s.io/kube-openapi/cmd/openapi-gen
@@ -200,10 +201,10 @@ bin/yq:
 	./hack/install-yq.sh 3.3.0
 
 bin/golangci-lint:
-	hack/golangci-lint.sh v1.18.0
+	hack/golangci-lint.sh v1.38.0
 
 bin/operator-sdk:
-	./hack/install-operator-sdk.sh v1.0.0
+	./hack/install-operator-sdk.sh v1.5.0
 
 bin/wwhrd:
 	./hack/install-wwhrd.sh 0.2.4

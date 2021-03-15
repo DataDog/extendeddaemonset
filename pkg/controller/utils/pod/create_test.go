@@ -9,12 +9,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	ctrltest "github.com/DataDog/extendeddaemonset/pkg/controller/test"
-	"github.com/google/go-cmp/cmp"
 )
 
 func Test_overwriteResourcesFromNode(t *testing.T) {
@@ -76,7 +76,8 @@ func Test_overwriteResourcesFromNode(t *testing.T) {
 				node: ctrltest.NewNode("node1", &ctrltest.NewNodeOptions{
 					Annotations: map[string]string{
 						fmt.Sprintf(datadoghqv1alpha1.ExtendedDaemonSetRessourceNodeAnnotationKey, "bar", "foo", "container1"): `{"Requests": {"cpu": "1.5"}}`,
-					}}),
+					},
+				}),
 			},
 			wantErr: false,
 			wantTemplate: &corev1.PodTemplateSpec{
@@ -109,7 +110,8 @@ func Test_overwriteResourcesFromNode(t *testing.T) {
 				node: ctrltest.NewNode("node1", &ctrltest.NewNodeOptions{
 					Annotations: map[string]string{
 						fmt.Sprintf(datadoghqv1alpha1.ExtendedDaemonSetRessourceNodeAnnotationKey, "bar", "foo", "container1"): `{"Requests": invalid {"cpu": "1.5"}}`,
-					}}),
+					},
+				}),
 			},
 			wantErr: true,
 		},

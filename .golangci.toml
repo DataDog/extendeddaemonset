@@ -18,6 +18,14 @@
 
   [linters-settings.misspell]
     locale = "US"
+  
+  [linters-settings.gci]
+    local-prefixes = "github.com/DataDog/extendeddaemonset"
+
+  [linters-settings.godot]
+    exclude = [
+      ' \+',
+    ]
 
 [linters]
   enable-all = true
@@ -31,6 +39,23 @@
     "gochecknoinits",
     "gochecknoglobals",
     "funlen",
+    "gocognit",
+    "cyclop",
+    "gomnd",
+    "wrapcheck",
+    "exhaustivestruct",
+    "forcetypeassert",
+    "goerr113",
+    "testpackage",
+    "wastedassign",
+    "thelper",
+    "paralleltest",
+    "nestif",
+    "exhaustive",
+    "interfacer",
+    "gci",
+    "wsl",
+    "godox",
   ]
 
 [issues]

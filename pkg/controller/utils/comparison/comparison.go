@@ -3,11 +3,14 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-2019 Datadog, Inc.
 
+// Package comparison contains object comparison functions.
 package comparison
 
 import (
 	"bytes"
-	"crypto/md5" // #nosec
+
+	// #nosec
+	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -30,15 +33,16 @@ func IsReplicaSetUpToDate(rs *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, dae
 	return ComparePodTemplateSpecMD5Hash(hash, rs)
 }
 
-// ComparePodTemplateSpecMD5Hash used to compare a md5 hash with the one setted in Deployment annotation
+// ComparePodTemplateSpecMD5Hash used to compare a md5 hash with the one setted in Deployment annotation.
 func ComparePodTemplateSpecMD5Hash(hash string, rs *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) bool {
 	if val, ok := rs.Annotations[string(datadoghqv1alpha1.MD5ExtendedDaemonSetAnnotationKey)]; ok && val == hash {
 		return true
 	}
+
 	return false
 }
 
-// GenerateMD5PodTemplateSpec used to generate the DeploymentSpec MD5 hash
+// GenerateMD5PodTemplateSpec used to generate the DeploymentSpec MD5 hash.
 func GenerateMD5PodTemplateSpec(tpl *corev1.PodTemplateSpec) (string, error) {
 	b, err := json.Marshal(tpl)
 	if err != nil {
@@ -50,19 +54,21 @@ func GenerateMD5PodTemplateSpec(tpl *corev1.PodTemplateSpec) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
-// SetMD5PodTemplateSpecAnnotation used to set the md5 annotation key/value from the ExtendedDaemonSetReplicaSet.Spec.Template
+// SetMD5PodTemplateSpecAnnotation used to set the md5 annotation key/value from the ExtendedDaemonSetReplicaSet.Spec.Template.
 func SetMD5PodTemplateSpecAnnotation(rs *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, daemonset *datadoghqv1alpha1.ExtendedDaemonSet) (string, error) {
 	md5Spec, err := GenerateMD5PodTemplateSpec(&daemonset.Spec.Template)
 	if err != nil {
-		return "", fmt.Errorf("unable to generates the JobSpec MD5, %v", err)
+		return "", fmt.Errorf("unable to generates the JobSpec MD5, %w", err)
 	}
 	if rs.Annotations == nil {
 		rs.SetAnnotations(map[string]string{})
 	}
 	rs.Annotations[string(datadoghqv1alpha1.MD5ExtendedDaemonSetAnnotationKey)] = md5Spec
+
 	return md5Spec, nil
 }
 
@@ -73,6 +79,7 @@ func StringsContains(a []string, x string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -98,5 +105,6 @@ func GenerateHashFromEDSResourceNodeAnnotation(edsNamespace, edsName string, nod
 	for _, val := range resourcesAnnotations {
 		_, _ = hash.Write([]byte(val))
 	}
+
 	return hex.EncodeToString(hash.Sum(nil))
 }

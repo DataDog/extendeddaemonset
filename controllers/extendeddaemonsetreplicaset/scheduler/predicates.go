@@ -3,18 +3,17 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-2019 Datadog, Inc.
 
+// Package scheduler contains helper function around Daemonset pod scheduling.
 package scheduler
 
 import (
 	"fmt"
 
+	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
-
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
-
-	"github.com/go-logr/logr"
 
 	podaffinity "github.com/DataDog/extendeddaemonset/pkg/controller/utils/affinity"
 )
@@ -28,11 +27,13 @@ func CheckNodeFitness(logger logr.Logger, pod *corev1.Pod, node *corev1.Node) bo
 	// Check if node.Labels match pod.Spec.NodeSelector.
 	if !checkNodeSelector(pod, node) {
 		logger.V(1).Info("CheckNodeFitness return false", "reason", "node selector missmatch")
+
 		return false
 	}
 
 	if !checkPodToleratesNodeTaints(pod, node) {
 		logger.V(1).Info("CheckNodeFitness return false", "reason", "node taints")
+
 		return false
 	}
 
@@ -49,8 +50,8 @@ func checkNodeSelector(pod *corev1.Pod, node *corev1.Node) bool {
 
 	// check node affinity
 	nodeAffinityMatches := true
-	affinity := pod.Spec.Affinity
-	if affinity != nil && affinity.NodeAffinity != nil {
+
+	if affinity := pod.Spec.Affinity; affinity != nil && affinity.NodeAffinity != nil {
 		nodeAffinity := affinity.NodeAffinity
 		if nodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution == nil {
 			return true
@@ -80,6 +81,7 @@ func nodeMatchesNodeSelectorTerms(node *corev1.Node, nodeSelectorTerms []corev1.
 	nodeFields := map[string]string{
 		podaffinity.NodeFieldSelectorKeyNodeName: node.Name,
 	}
+
 	return MatchNodeSelectorTerms(nodeSelectorTerms, labels.Set(node.Labels), fields.Set(nodeFields))
 }
 
@@ -112,6 +114,7 @@ func TolerationsTolerateTaint(tolerations []corev1.Toleration, taint *corev1.Tai
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -156,6 +159,7 @@ func NodeSelectorRequirementsAsSelector(nsm []corev1.NodeSelectorRequirement) (l
 	selector := labels.NewSelector()
 	for _, expr := range nsm {
 		var op selection.Operator
+
 		switch expr.Operator {
 		case corev1.NodeSelectorOpIn:
 			op = selection.In
@@ -178,6 +182,7 @@ func NodeSelectorRequirementsAsSelector(nsm []corev1.NodeSelectorRequirement) (l
 		}
 		selector = selector.Add(*r)
 	}
+
 	return selector, nil
 }
 

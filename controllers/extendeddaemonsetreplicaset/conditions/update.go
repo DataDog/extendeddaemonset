@@ -3,17 +3,17 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-2019 Datadog, Inc.
 
+// Package conditions contains ExtendedDaemonSetReplicaSet Conditions helper functions.
 package conditions
 
 import (
 	corev1 "k8s.io/api/core/v1"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 )
 
-// NewExtendedDaemonSetReplicaSetCondition returns new ExtendedDaemonSetReplicaSetCondition instance
+// NewExtendedDaemonSetReplicaSetCondition returns new ExtendedDaemonSetReplicaSetCondition instance.
 func NewExtendedDaemonSetReplicaSetCondition(conditionType datadoghqv1alpha1.ExtendedDaemonSetReplicaSetConditionType, conditionStatus corev1.ConditionStatus, now metav1.Time, reason, message string, supportLastUpdate bool) datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCondition {
 	return datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCondition{
 		Type:               conditionType,
@@ -25,7 +25,7 @@ func NewExtendedDaemonSetReplicaSetCondition(conditionType datadoghqv1alpha1.Ext
 	}
 }
 
-// UpdateExtendedDaemonSetReplicaSetStatusCondition used to update a specific ExtendedDaemonSetReplicaSetConditionType
+// UpdateExtendedDaemonSetReplicaSetStatusCondition used to update a specific ExtendedDaemonSetReplicaSetConditionType.
 func UpdateExtendedDaemonSetReplicaSetStatusCondition(status *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus, now metav1.Time, t datadoghqv1alpha1.ExtendedDaemonSetReplicaSetConditionType, conditionStatus corev1.ConditionStatus, reason, desc string, writeFalseIfNotExist, supportLastUpdate bool) {
 	idCondition := getIndexForConditionType(status, t)
 	if idCondition >= 0 {
@@ -47,7 +47,7 @@ func UpdateExtendedDaemonSetReplicaSetStatusCondition(status *datadoghqv1alpha1.
 	}
 }
 
-// UpdateErrorCondition used to update the ExtendedDaemonSetReplicaSet status error condition
+// UpdateErrorCondition used to update the ExtendedDaemonSetReplicaSet status error condition.
 func UpdateErrorCondition(status *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus, now metav1.Time, err error, desc string) {
 	if err != nil {
 		UpdateExtendedDaemonSetReplicaSetStatusCondition(status, now, datadoghqv1alpha1.ConditionTypeReconcileError, corev1.ConditionTrue, "", desc, false, true)
@@ -65,16 +65,18 @@ func getIndexForConditionType(status *datadoghqv1alpha1.ExtendedDaemonSetReplica
 			return i
 		}
 	}
+
 	return -1
 }
 
 // GetExtendedDaemonSetReplicaSetStatusCondition return the condition struct corresponding to the ExtendedDaemonSetReplicaSetConditionType provided in argument.
-// return nil if not found
+// return nil if not found.
 func GetExtendedDaemonSetReplicaSetStatusCondition(status *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus, t datadoghqv1alpha1.ExtendedDaemonSetReplicaSetConditionType) *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCondition {
 	idCondition := getIndexForConditionType(status, t)
 	if idCondition == -1 {
 		return nil
 	}
+
 	return &status.Conditions[idCondition]
 }
 
@@ -84,13 +86,15 @@ func IsConditionTrue(status *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus
 	if cond != nil && cond.Status == corev1.ConditionTrue {
 		return true
 	}
+
 	return false
 }
 
-// BoolToCondition convert bool to corev1.ConditionStatus
+// BoolToCondition convert bool to corev1.ConditionStatus.
 func BoolToCondition(value bool) corev1.ConditionStatus {
 	if value {
 		return corev1.ConditionTrue
 	}
+
 	return corev1.ConditionFalse
 }

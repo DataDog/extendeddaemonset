@@ -10,16 +10,16 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
-
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
 )
 
-// PrintCanaryPods prints the list of canary pods
+// PrintCanaryPods prints the list of canary pods.
 func PrintCanaryPods(c client.Client, ns, edsName string, out io.Writer) error {
 	eds := &v1alpha1.ExtendedDaemonSet{}
 	err := c.Get(context.TODO(), client.ObjectKey{Namespace: ns, Name: edsName}, eds)
@@ -39,10 +39,11 @@ func PrintCanaryPods(c client.Client, ns, edsName string, out io.Writer) error {
 	}
 
 	rsSelector := labels.NewSelector().Add(*req)
+
 	return printPods(c, rsSelector, out, false)
 }
 
-// PrintNotReadyPods prints the list of not ready pods
+// PrintNotReadyPods prints the list of not ready pods.
 func PrintNotReadyPods(c client.Client, ns, edsName string, out io.Writer) error {
 	eds := &v1alpha1.ExtendedDaemonSet{}
 	err := c.Get(context.TODO(), client.ObjectKey{Namespace: ns, Name: edsName}, eds)
@@ -58,6 +59,7 @@ func PrintNotReadyPods(c client.Client, ns, edsName string, out io.Writer) error
 	}
 
 	edsSelector := labels.NewSelector().Add(*req)
+
 	return printPods(c, edsSelector, out, true)
 }
 
@@ -79,5 +81,6 @@ func printPods(c client.Client, selector labels.Selector, out io.Writer, notRead
 	}
 
 	table.Render()
+
 	return nil
 }

@@ -3,9 +3,10 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-2019 Datadog, Inc.
 
+// Package limits contains function to calculate pod create/deletion limits.
 package limits
 
-// Parameters use to provide the parameters to the Calculation function
+// Parameters use to provide the parameters to the Calculation function.
 type Parameters struct {
 	NbNodes            int
 	NbPods             int
@@ -20,7 +21,7 @@ type Parameters struct {
 
 // CalculatePodToCreateAndDelete from the parameters return:
 // * nbCreation: the number of pods to create
-// * nbDeletion: the number of pods to delete
+// * nbDeletion: the number of pods to delete.
 func CalculatePodToCreateAndDelete(params Parameters) (nbCreation, nbDeletion int) {
 	nbCreation = params.NbNodes - params.NbPods
 	if nbCreation > params.MaxPodCreation {

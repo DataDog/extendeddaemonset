@@ -13,5 +13,6 @@ func (o edsNodeByCreationTimestampAndPhase) Less(i, j int) bool {
 	if o[i].CreationTimestamp.Equal(&o[j].CreationTimestamp) {
 		return o[i].Name > o[j].Name
 	}
+
 	return o[j].CreationTimestamp.Before(&o[i].CreationTimestamp)
 }

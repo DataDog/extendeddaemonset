@@ -11,12 +11,7 @@ import (
 	"testing"
 	"time"
 
-	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
-	"github.com/DataDog/extendeddaemonset/api/v1alpha1/test"
-	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/strategy"
-	ctrltest "github.com/DataDog/extendeddaemonset/pkg/controller/test"
 	"github.com/go-logr/logr"
-
 	corev1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -27,13 +22,16 @@ import (
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+
+	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
+	"github.com/DataDog/extendeddaemonset/api/v1alpha1/test"
+	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/strategy"
+	ctrltest "github.com/DataDog/extendeddaemonset/pkg/controller/test"
 )
 
-var (
-	testLogger logr.Logger = logf.ZapLogger(true)
-)
+var testLogger logr.Logger = logf.Log.WithName("controller-test")
 
 func TestReconcileExtendedDaemonSetReplicaSet_Reconcile(t *testing.T) {
 	eventBroadcaster := record.NewBroadcaster()
@@ -96,7 +94,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_Reconcile(t *testing.T) {
 		{
 			name: "ReplicaSet does not exist in client",
 			fields: fields{
-				client:   fake.NewFakeClient(),
+				client:   fake.NewClientBuilder().Build(),
 				scheme:   s,
 				recorder: recorder,
 			},
@@ -109,7 +107,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_Reconcile(t *testing.T) {
 		{
 			name: "ReplicaSet exist but not Daemonset, it should trigger an error",
 			fields: fields{
-				client:   fake.NewFakeClient(replicaset),
+				client:   fake.NewClientBuilder().WithObjects(replicaset).Build(),
 				scheme:   s,
 				recorder: recorder,
 			},
@@ -122,7 +120,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_Reconcile(t *testing.T) {
 		{
 			name: "ReplicaSet, Daemonset exists but not defaulted => should requeue in 1sec",
 			fields: fields{
-				client:   fake.NewFakeClient(daemonset, replicaset),
+				client:   fake.NewClientBuilder().WithObjects(daemonset, replicaset).Build(),
 				scheme:   s,
 				recorder: recorder,
 			},
@@ -135,7 +133,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_Reconcile(t *testing.T) {
 		{
 			name: "ReplicaSet, Daemonset exists, defaulted but without a status => should requeue in 1sec",
 			fields: fields{
-				client:   fake.NewFakeClient(datadoghqv1alpha1.DefaultExtendedDaemonSet(daemonset), replicaset),
+				client:   fake.NewClientBuilder().WithObjects(datadoghqv1alpha1.DefaultExtendedDaemonSet(daemonset), replicaset).Build(),
 				scheme:   s,
 				recorder: recorder,
 			},
@@ -148,7 +146,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_Reconcile(t *testing.T) {
 		{
 			name: "ReplicaSet, Daemonset exists, defaulted and with a status",
 			fields: fields{
-				client:   fake.NewFakeClient(datadoghqv1alpha1.DefaultExtendedDaemonSet(daemonsetWithStatus), replicaset),
+				client:   fake.NewClientBuilder().WithObjects(datadoghqv1alpha1.DefaultExtendedDaemonSet(daemonsetWithStatus), replicaset).Build(),
 				scheme:   s,
 				recorder: recorder,
 			},
@@ -170,6 +168,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_Reconcile(t *testing.T) {
 			got, err := r.Reconcile(context.TODO(), tt.args.request)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ReconcileExtendedDaemonSetReplicaSet.Reconcile() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
@@ -276,6 +275,7 @@ func Test_retrieveOwnerReference(t *testing.T) {
 			got, err := retrieveOwnerReference(tt.args.obj)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("retrieveOwnerReference() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
 			if got != tt.want {
@@ -320,7 +320,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_getPodList(t *testing.T) {
 		{
 			name: "no pods",
 			fields: fields{
-				client: fake.NewFakeClient(),
+				client: fake.NewClientBuilder().Build(),
 				scheme: s,
 			},
 			args: args{
@@ -337,7 +337,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_getPodList(t *testing.T) {
 		{
 			name: "two pods",
 			fields: fields{
-				client: fake.NewFakeClient(pod1, pod2),
+				client: fake.NewClientBuilder().WithObjects(pod1, pod2).Build(),
 				scheme: s,
 			},
 			args: args{
@@ -363,6 +363,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_getPodList(t *testing.T) {
 			got, err := r.getPodList(tt.args.ds)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ReconcileExtendedDaemonSetReplicaSet.getPodList() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
 			if !apiequality.Semantic.DeepEqual(got, tt.want) {
@@ -379,7 +380,8 @@ func TestReconcileExtendedDaemonSetReplicaSet_getNodeList(t *testing.T) {
 	s.AddKnownTypes(corev1.SchemeGroupVersion, &corev1.NodeList{})
 	eds := test.NewExtendedDaemonSet("bar", "foo", nil)
 	replicasset := test.NewExtendedDaemonSetReplicaSet("bar", "foo-1", &test.NewExtendedDaemonSetReplicaSetOptions{
-		Labels: map[string]string{"foo-key": "bar-value"}})
+		Labels: map[string]string{"foo-key": "bar-value"},
+	})
 
 	nodeOptions := &ctrltest.NewNodeOptions{
 		Conditions: []corev1.NodeCondition{
@@ -411,7 +413,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_getNodeList(t *testing.T) {
 		{
 			name: "no nodes",
 			fields: fields{
-				client: fake.NewFakeClient(node1, node2),
+				client: fake.NewClientBuilder().WithObjects(node1, node2).Build(),
 				scheme: s,
 			},
 			args: args{
@@ -438,6 +440,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_getNodeList(t *testing.T) {
 			got, err := r.getNodeList(eds, tt.args.replicaset)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ReconcileExtendedDaemonSetReplicaSet.getNodeList() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
 			if !apiequality.Semantic.DeepEqual(got, tt.want) {
@@ -448,15 +451,16 @@ func TestReconcileExtendedDaemonSetReplicaSet_getNodeList(t *testing.T) {
 }
 
 func TestReconcileExtendedDaemonSetReplicaSet_getDaemonsetOwner(t *testing.T) {
-
 	s := scheme.Scheme
 	s.AddKnownTypes(datadoghqv1alpha1.GroupVersion, &datadoghqv1alpha1.ExtendedDaemonSet{})
 
 	replicasset := test.NewExtendedDaemonSetReplicaSet("bar", "foo-1", &test.NewExtendedDaemonSetReplicaSetOptions{
-		Labels: map[string]string{"foo-key": "bar-value"}})
+		Labels: map[string]string{"foo-key": "bar-value"},
+	})
 	replicassetWithOwner := test.NewExtendedDaemonSetReplicaSet("bar", "foo-1", &test.NewExtendedDaemonSetReplicaSetOptions{
 		Labels:       map[string]string{"foo-key": "bar-value"},
-		OwnerRefName: "foo"},
+		OwnerRefName: "foo",
+	},
 	)
 	daemonset := test.NewExtendedDaemonSet("bar", "foo", &test.NewExtendedDaemonSetOptions{Labels: map[string]string{"foo-key": "bar-value"}})
 
@@ -478,7 +482,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_getDaemonsetOwner(t *testing.T) {
 		{
 			name: "owner not define, return errror",
 			fields: fields{
-				client: fake.NewFakeClient(),
+				client: fake.NewClientBuilder().Build(),
 				scheme: s,
 			},
 			args: args{
@@ -490,7 +494,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_getDaemonsetOwner(t *testing.T) {
 		{
 			name: "with owner define, but not exist, return errror",
 			fields: fields{
-				client: fake.NewFakeClient(),
+				client: fake.NewClientBuilder().Build(),
 				scheme: s,
 			},
 			args: args{
@@ -502,7 +506,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_getDaemonsetOwner(t *testing.T) {
 		{
 			name: "with owner define, but not exist, return errror",
 			fields: fields{
-				client: fake.NewFakeClient(daemonset),
+				client: fake.NewClientBuilder().WithObjects(daemonset).Build(),
 				scheme: s,
 			},
 			args: args{
@@ -523,6 +527,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_getDaemonsetOwner(t *testing.T) {
 			got, err := r.getDaemonsetOwner(tt.args.replicaset)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ReconcileExtendedDaemonSetReplicaSet.getDaemonsetOwner() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
 			if !apiequality.Semantic.DeepEqual(got, tt.want) {
@@ -538,7 +543,8 @@ func TestReconcileExtendedDaemonSetReplicaSet_updateReplicaSet(t *testing.T) {
 
 	replicasset := test.NewExtendedDaemonSetReplicaSet("bar", "foo-1", &test.NewExtendedDaemonSetReplicaSetOptions{
 		Labels:       map[string]string{"foo-key": "bar-value"},
-		OwnerRefName: "foo"},
+		OwnerRefName: "foo",
+	},
 	)
 
 	newStatus := replicasset.Status.DeepCopy()
@@ -562,7 +568,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_updateReplicaSet(t *testing.T) {
 		{
 			name: "error: replicaset doesn't exist",
 			fields: fields{
-				client: fake.NewFakeClient(),
+				client: fake.NewClientBuilder().Build(),
 				scheme: s,
 			},
 			args: args{
@@ -574,7 +580,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_updateReplicaSet(t *testing.T) {
 		{
 			name: "new status, update should work",
 			fields: fields{
-				client: fake.NewFakeClient(replicasset),
+				client: fake.NewClientBuilder().WithObjects(replicasset).Build(),
 				scheme: s,
 			},
 			args: args{
@@ -586,7 +592,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_updateReplicaSet(t *testing.T) {
 		{
 			name: "same status, we should not update the replicaset",
 			fields: fields{
-				client: fake.NewFakeClient(),
+				client: fake.NewClientBuilder().Build(),
 				scheme: s,
 			},
 			args: args{

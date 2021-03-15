@@ -13,6 +13,9 @@ import (
 	goruntime "runtime"
 	"strings"
 
+	"github.com/blang/semver"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	kversion "k8s.io/apimachinery/pkg/version"
@@ -29,10 +32,6 @@ import (
 	"github.com/DataDog/extendeddaemonset/pkg/controller/debug"
 	"github.com/DataDog/extendeddaemonset/pkg/controller/metrics"
 	"github.com/DataDog/extendeddaemonset/pkg/version"
-	"github.com/blang/semver"
-
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -123,7 +122,7 @@ func main() {
 }
 
 func customSetupEnvironment(mgr manager.Manager) {
-	//auto discover if Node affinity match is supported in the current cluster
+	// auto discover if Node affinity match is supported in the current cluster
 	if os.Getenv(config.NodeAffinityMatchSupportEnvVar) == "" {
 		discoveryClient := discovery.NewDiscoveryClientForConfigOrDie(mgr.GetConfig())
 		var err error
@@ -187,9 +186,9 @@ func customSetupHealthChecks(mgr manager.Manager) {
 		if goruntime.NumGoroutine() > maximumGoroutines {
 			return fmt.Errorf("too much goroutines: %d > limit: %d", goruntime.NumGoroutine(), maximumGoroutines)
 		}
+
 		return nil
 	})
-
 	if err != nil {
 		setupLog.Error(err, "Unable to start ")
 	}

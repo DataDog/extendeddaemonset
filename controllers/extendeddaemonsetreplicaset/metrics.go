@@ -6,12 +6,12 @@
 package extendeddaemonsetreplicaset
 
 import (
+	ksmetric "k8s.io/kube-state-metrics/pkg/metric"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
+
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	"github.com/DataDog/extendeddaemonset/pkg/controller/metrics"
 	"github.com/DataDog/extendeddaemonset/pkg/controller/utils"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
-
-	ksmetric "k8s.io/kube-state-metrics/pkg/metric"
 )
 
 const (
@@ -42,6 +42,7 @@ func generateMetricFamilies() []ksmetric.FamilyGenerator {
 				ers := obj.(*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&ers.ObjectMeta)
 				extraKeys, extraValues := utils.BuildInfoLabels(&ers.ObjectMeta)
+
 				return &ksmetric.Family{
 					Metrics: []*ksmetric.Metric{
 						{
@@ -60,6 +61,7 @@ func generateMetricFamilies() []ksmetric.FamilyGenerator {
 			GenerateFunc: func(obj interface{}) *ksmetric.Family {
 				ers := obj.(*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&ers.ObjectMeta)
+
 				return &ksmetric.Family{
 					Metrics: []*ksmetric.Metric{
 						{
@@ -78,6 +80,7 @@ func generateMetricFamilies() []ksmetric.FamilyGenerator {
 			GenerateFunc: func(obj interface{}) *ksmetric.Family {
 				ers := obj.(*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&ers.ObjectMeta)
+
 				return &ksmetric.Family{
 					Metrics: []*ksmetric.Metric{
 						{
@@ -96,6 +99,7 @@ func generateMetricFamilies() []ksmetric.FamilyGenerator {
 			GenerateFunc: func(obj interface{}) *ksmetric.Family {
 				ers := obj.(*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&ers.ObjectMeta)
+
 				return &ksmetric.Family{
 					Metrics: []*ksmetric.Metric{
 						{
@@ -114,6 +118,7 @@ func generateMetricFamilies() []ksmetric.FamilyGenerator {
 			GenerateFunc: func(obj interface{}) *ksmetric.Family {
 				ers := obj.(*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&ers.ObjectMeta)
+
 				return &ksmetric.Family{
 					Metrics: []*ksmetric.Metric{
 						{
@@ -132,6 +137,7 @@ func generateMetricFamilies() []ksmetric.FamilyGenerator {
 			GenerateFunc: func(obj interface{}) *ksmetric.Family {
 				ers := obj.(*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&ers.ObjectMeta)
+
 				return &ksmetric.Family{
 					Metrics: []*ksmetric.Metric{
 						{
@@ -150,6 +156,7 @@ func generateMetricFamilies() []ksmetric.FamilyGenerator {
 			GenerateFunc: func(obj interface{}) *ksmetric.Family {
 				ers := obj.(*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&ers.ObjectMeta)
+
 				return &ksmetric.Family{
 					Metrics: []*ksmetric.Metric{
 						{

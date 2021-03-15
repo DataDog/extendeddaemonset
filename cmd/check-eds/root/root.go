@@ -1,19 +1,20 @@
+// Package root contains root plugin command logic.
 package root
 
 import (
-	"github.com/DataDog/extendeddaemonset/cmd/check-eds/upgrade"
 	"github.com/spf13/cobra"
-
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+
+	"github.com/DataDog/extendeddaemonset/cmd/check-eds/upgrade"
 )
 
-// Options provides information required to manage Root
+// Options provides information required to manage Root.
 type Options struct {
 	configFlags *genericclioptions.ConfigFlags
 	genericclioptions.IOStreams
 }
 
-// NewRootOptions provides an instance of Options with default values
+// NewRootOptions provides an instance of Options with default values.
 func NewRootOptions(streams genericclioptions.IOStreams) *Options {
 	return &Options{
 		configFlags: genericclioptions.NewConfigFlags(false),
@@ -22,7 +23,7 @@ func NewRootOptions(streams genericclioptions.IOStreams) *Options {
 	}
 }
 
-// NewCmdRoot provides a cobra command wrapping Options
+// NewCmdRoot provides a cobra command wrapping Options.
 func NewCmdRoot(streams genericclioptions.IOStreams) *cobra.Command {
 	o := NewRootOptions(streams)
 
@@ -37,17 +38,17 @@ func NewCmdRoot(streams genericclioptions.IOStreams) *cobra.Command {
 	return cmd
 }
 
-// Complete sets all information required for processing the command
+// Complete sets all information required for processing the command.
 func (o *Options) Complete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// Root ensures that all required arguments and flag values are provided
+// Root ensures that all required arguments and flag values are provided.
 func (o *Options) Root() error {
 	return nil
 }
 
-// Run use to run the command
+// Run use to run the command.
 func (o *Options) Run() error {
 	return nil
 }

@@ -18,7 +18,7 @@ import (
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetsetting"
 )
 
-// ExtendedDaemonsetSettingReconciler reconciles a ExtendedDaemonsetSetting object
+// ExtendedDaemonsetSettingReconciler reconciles a ExtendedDaemonsetSetting object.
 type ExtendedDaemonsetSettingReconciler struct {
 	client.Client
 	Log      logr.Logger
@@ -31,12 +31,12 @@ type ExtendedDaemonsetSettingReconciler struct {
 // +kubebuilder:rbac:groups=datadoghq.com,resources=extendeddaemonsetsettings,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=datadoghq.com,resources=extendeddaemonsetsettings/status,verbs=get;update;patch
 
-// Reconcile loop for ExtendedDaemonsetSetting
-func (r *ExtendedDaemonsetSettingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	return r.internal.Reconcile(context.Background(), req)
+// Reconcile loop for ExtendedDaemonsetSetting.
+func (r *ExtendedDaemonsetSettingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	return r.internal.Reconcile(ctx, req)
 }
 
-// SetupWithManager creates a new ExtendedDaemonsetSetting controller
+// SetupWithManager creates a new ExtendedDaemonsetSetting controller.
 func (r *ExtendedDaemonsetSettingReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	internal, err := extendeddaemonsetsetting.NewReconciler(r.Options, r.Client, r.Scheme, r.Log, r.Recorder)
 	if err != nil {

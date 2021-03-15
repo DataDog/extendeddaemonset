@@ -31,7 +31,7 @@ spec:
   validation:
     openAPIV3Schema:
       description: ExtendedDaemonsetSetting is the Schema for the extendeddaemonsetsettings
-        API
+        API.
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -154,13 +154,13 @@ spec:
           type: object
         status:
           description: ExtendedDaemonsetSettingStatus defines the observed state of
-            ExtendedDaemonsetSetting
+            ExtendedDaemonsetSetting.
           properties:
             error:
               type: string
             status:
               description: ExtendedDaemonsetSettingStatusStatus defines the readable
-                status in ExtendedDaemonsetSettingStatus
+                status in ExtendedDaemonsetSettingStatus.
               type: string
           required:
           - status

@@ -8,16 +8,15 @@ package testutils
 import (
 	"time"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 )
 
-// NewExtendedDaemonsetOptions used to provide creation options to the NewExtendedDaemonset function
+// NewExtendedDaemonsetOptions used to provide creation options to the NewExtendedDaemonset function.
 type NewExtendedDaemonsetOptions struct {
 	ExtraLabels        map[string]string
 	ExtraAnnotations   map[string]string
@@ -26,7 +25,7 @@ type NewExtendedDaemonsetOptions struct {
 	ReconcileFrequency *metav1.Duration
 }
 
-// NewExtendedDaemonset returns new ExtendedDaemonSet instance
+// NewExtendedDaemonset returns new ExtendedDaemonSet instance.
 func NewExtendedDaemonset(ns, name, image string, options *NewExtendedDaemonsetOptions) *datadoghqv1alpha1.ExtendedDaemonSet {
 	newDaemonset := &datadoghqv1alpha1.ExtendedDaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -90,16 +89,17 @@ func NewExtendedDaemonset(ns, name, image string, options *NewExtendedDaemonsetO
 			newDaemonset.Spec.Strategy.ReconcileFrequency = options.ReconcileFrequency
 		}
 	}
+
 	return newDaemonset
 }
 
-// NewExtendedDaemonsetSettingOptions used to provide creation options to the NewExtendedDaemonsetSetting function
+// NewExtendedDaemonsetSettingOptions used to provide creation options to the NewExtendedDaemonsetSetting function.
 type NewExtendedDaemonsetSettingOptions struct {
 	Selector  map[string]string
 	Resources map[string]corev1.ResourceRequirements
 }
 
-// NewExtendedDaemonsetSetting returns new ExtendedDaemonsetSetting instance
+// NewExtendedDaemonsetSetting returns new ExtendedDaemonsetSetting instance.
 func NewExtendedDaemonsetSetting(ns, name, reference string, options *NewExtendedDaemonsetSettingOptions) *datadoghqv1alpha1.ExtendedDaemonsetSetting {
 	edsNode := &datadoghqv1alpha1.ExtendedDaemonsetSetting{}
 	edsNode.Name = name
@@ -119,15 +119,16 @@ func NewExtendedDaemonsetSetting(ns, name, reference string, options *NewExtende
 			edsNode.Spec.Containers = append(edsNode.Spec.Containers, datadoghqv1alpha1.ExtendedDaemonsetSettingContainerSpec{Name: key, Resources: val})
 		}
 	}
+
 	return edsNode
 }
 
-// NewDaemonsetOptions used to provide creation options to the NewdDaemonset function
+// NewDaemonsetOptions used to provide creation options to the NewdDaemonset function.
 type NewDaemonsetOptions struct {
 	ExtraLabels map[string]string
 }
 
-// NewDaemonset returns new ExtendedDaemonSet instance
+// NewDaemonset returns new ExtendedDaemonSet instance.
 func NewDaemonset(ns, name, image string, options *NewDaemonsetOptions) *appsv1.DaemonSet {
 	newDaemonset := &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -169,8 +170,8 @@ func NewDaemonset(ns, name, image string, options *NewDaemonsetOptions) *appsv1.
 			for key, val := range options.ExtraLabels {
 				newDaemonset.ObjectMeta.Labels[key] = val
 			}
-
 		}
 	}
+
 	return newDaemonset
 }

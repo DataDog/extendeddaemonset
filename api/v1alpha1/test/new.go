@@ -3,26 +3,24 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-2019 Datadog, Inc.
 
+// Package test contains unit-test helper functions.
 package test
 
 import (
 	"fmt"
 	"time"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 )
 
-var (
-	// apiVersion datadoghqv1alpha1 api version
-	apiVersion = fmt.Sprintf("%s/%s", datadoghqv1alpha1.GroupVersion.Group, datadoghqv1alpha1.GroupVersion.Version)
-)
+// apiVersion datadoghqv1alpha1 api version.
+var apiVersion = fmt.Sprintf("%s/%s", datadoghqv1alpha1.GroupVersion.Group, datadoghqv1alpha1.GroupVersion.Version)
 
-// NewExtendedDaemonSetOptions set of option for the ExtendedDaemonset creation
+// NewExtendedDaemonSetOptions set of option for the ExtendedDaemonset creation.
 type NewExtendedDaemonSetOptions struct {
 	CreationTime  *time.Time
 	Annotations   map[string]string
@@ -32,7 +30,7 @@ type NewExtendedDaemonSetOptions struct {
 	Status        *datadoghqv1alpha1.ExtendedDaemonSetStatus
 }
 
-// NewExtendedDaemonSet return new ExtendedDDaemonset instance for test purpose
+// NewExtendedDaemonSet return new ExtendedDDaemonset instance for test purpose.
 func NewExtendedDaemonSet(ns, name string, options *NewExtendedDaemonSetOptions) *datadoghqv1alpha1.ExtendedDaemonSet {
 	dd := &datadoghqv1alpha1.ExtendedDaemonSet{
 		TypeMeta: metav1.TypeMeta{
@@ -74,7 +72,7 @@ func NewExtendedDaemonSet(ns, name string, options *NewExtendedDaemonSetOptions)
 	return dd
 }
 
-// NewExtendedDaemonSetReplicaSetOptions set of option for the ExtendedDaemonsetReplicaSet creation
+// NewExtendedDaemonSetReplicaSetOptions set of option for the ExtendedDaemonsetReplicaSet creation.
 type NewExtendedDaemonSetReplicaSetOptions struct {
 	CreationTime *time.Time
 	Annotations  map[string]string
@@ -84,7 +82,7 @@ type NewExtendedDaemonSetReplicaSetOptions struct {
 	Status       *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus
 }
 
-// NewExtendedDaemonSetReplicaSet returns new ExtendedDaemonSetReplicaSet instance for testing purpose
+// NewExtendedDaemonSetReplicaSet returns new ExtendedDaemonSetReplicaSet instance for testing purpose.
 func NewExtendedDaemonSetReplicaSet(ns, name string, options *NewExtendedDaemonSetReplicaSetOptions) *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet {
 	dd := &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{
 		TypeMeta: metav1.TypeMeta{
@@ -131,14 +129,14 @@ func NewExtendedDaemonSetReplicaSet(ns, name string, options *NewExtendedDaemonS
 	return dd
 }
 
-// NewExtendedDaemonsetSettingOptions used to provide creation options to the NewExtendedDaemonsetSetting function
+// NewExtendedDaemonsetSettingOptions used to provide creation options to the NewExtendedDaemonsetSetting function.
 type NewExtendedDaemonsetSettingOptions struct {
 	CreationTime time.Time
 	Selector     map[string]string
 	Resources    map[string]corev1.ResourceRequirements
 }
 
-// NewExtendedDaemonsetSetting returns new ExtendedDaemonsetSetting instance
+// NewExtendedDaemonsetSetting returns new ExtendedDaemonsetSetting instance.
 func NewExtendedDaemonsetSetting(ns, name, reference string, options *NewExtendedDaemonsetSettingOptions) *datadoghqv1alpha1.ExtendedDaemonsetSetting {
 	edsNode := &datadoghqv1alpha1.ExtendedDaemonsetSetting{}
 	edsNode.Name = name
@@ -159,5 +157,6 @@ func NewExtendedDaemonsetSetting(ns, name, reference string, options *NewExtende
 			edsNode.Spec.Containers = append(edsNode.Spec.Containers, datadoghqv1alpha1.ExtendedDaemonsetSettingContainerSpec{Name: key, Resources: val})
 		}
 	}
+
 	return edsNode
 }

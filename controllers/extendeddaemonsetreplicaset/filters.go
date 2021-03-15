@@ -15,20 +15,17 @@ import (
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/scheduler"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/strategy"
-	"github.com/DataDog/extendeddaemonset/pkg/controller/utils/pod"
 	podutils "github.com/DataDog/extendeddaemonset/pkg/controller/utils/pod"
 )
 
-var (
-	ignoreEvictedPods = false
-)
+var ignoreEvictedPods = false
 
 func init() {
 	pflag.BoolVarP(&ignoreEvictedPods, "ignoreEvictedPods", "i", ignoreEvictedPods, "Enabling this will force new pods creation on nodes where pods are evicted")
 }
 
 // FilterAndMapPodsByNode used to map pods by associated node. It also return the list of pods that
-// should be deleted (not needed anymore), and pods that are not scheduled yet (created but not scheduled)
+// should be deleted (not needed anymore), and pods that are not scheduled yet (created but not scheduled).
 func FilterAndMapPodsByNode(logger logr.Logger, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet,
 	nodeList *strategy.NodeList, podList *corev1.PodList, ignoreNodes []string) (nodesByName map[string]*strategy.NodeItem, podByNode map[*strategy.NodeItem]*corev1.Pod,
 	podToDelete, unscheduledPods []*corev1.Pod) {
@@ -61,6 +58,7 @@ func FilterAndMapPodsByNode(logger logr.Logger, replicaset *datadoghqv1alpha1.Ex
 	for id, pod := range podList.Items {
 		if _, scheduled := podutils.IsPodScheduled(&pod); !scheduled {
 			unscheduledPods = append(unscheduledPods, &podList.Items[id])
+
 			continue
 		}
 		if _, ok := podsByNodeName[pod.Spec.NodeName]; ok {
@@ -112,7 +110,7 @@ func FilterAndMapPodsByNode(logger logr.Logger, replicaset *datadoghqv1alpha1.Ex
 }
 
 // FilterPodsByNode if several Pods are listed for the same Node select "best" Pod one, and add other pod to
-// the deletion pod slice
+// the deletion pod slice.
 func FilterPodsByNode(podsByNodeName map[string][]*corev1.Pod, nodesMap map[string]*strategy.NodeItem) (map[*strategy.NodeItem]*corev1.Pod, []*corev1.Pod) {
 	// filter pod node, remove duplicated
 	podByNodeName := map[*strategy.NodeItem]*corev1.Pod{}
@@ -133,9 +131,9 @@ func FilterPodsByNode(podsByNodeName map[string][]*corev1.Pod, nodesMap map[stri
 }
 
 // shouldIgnorePod returns true if the pod is in an unknown phase or was evicted
-// if ignoreEvictedPods is disabled, only the unknown phase will be considered
+// if ignoreEvictedPods is disabled, only the unknown phase will be considered.
 func shouldIgnorePod(status corev1.PodStatus) bool {
-	return status.Phase == corev1.PodUnknown || (ignoreEvictedPods && pod.IsEvicted(&status))
+	return status.Phase == corev1.PodUnknown || (ignoreEvictedPods && podutils.IsEvicted(&status))
 }
 
 type sortPodByNodeName []*corev1.Pod
@@ -156,5 +154,6 @@ func (o sortPodByNodeName) Less(i, j int) bool {
 	if o[i].CreationTimestamp.Equal(&o[j].CreationTimestamp) {
 		return o[i].Name < o[j].Name
 	}
+
 	return o[i].CreationTimestamp.Before(&o[j].CreationTimestamp)
 }

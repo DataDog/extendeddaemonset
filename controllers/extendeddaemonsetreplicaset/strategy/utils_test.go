@@ -9,9 +9,6 @@ import (
 	"context"
 	"testing"
 
-	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
-	"github.com/DataDog/extendeddaemonset/api/v1alpha1/test"
-	commontest "github.com/DataDog/extendeddaemonset/pkg/controller/test"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -19,7 +16,12 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+
+	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
+	"github.com/DataDog/extendeddaemonset/api/v1alpha1/test"
+	commontest "github.com/DataDog/extendeddaemonset/pkg/controller/test"
 )
 
 func Test_compareWithExtendedDaemonsetSettingOverwrite(t *testing.T) {
@@ -130,7 +132,7 @@ func Test_pauseCanaryDeployment(t *testing.T) {
 		{
 			name: "add paused annotation without issue",
 			args: args{
-				client: fake.NewFakeClient(daemonset),
+				client: fake.NewClientBuilder().WithObjects(daemonset).Build(),
 				eds:    daemonset,
 				reason: reason,
 			},
@@ -138,7 +140,7 @@ func Test_pauseCanaryDeployment(t *testing.T) {
 		{
 			name: "add paused annotation when it is already paused",
 			args: args{
-				client: fake.NewFakeClient(daemonsetPaused),
+				client: fake.NewClientBuilder().WithObjects(daemonsetPaused).Build(),
 				eds:    daemonsetPaused,
 				reason: reason,
 			},
@@ -176,7 +178,7 @@ func Test_failCanaryDeployment(t *testing.T) {
 		{
 			name: "add dailed annotation without issue",
 			args: args{
-				client: fake.NewFakeClient(daemonset),
+				client: fake.NewClientBuilder().WithObjects(daemonset).Build(),
 				eds:    daemonset,
 				reason: reason,
 			},
@@ -184,7 +186,7 @@ func Test_failCanaryDeployment(t *testing.T) {
 		{
 			name: "add failed annotation when it is already paused",
 			args: args{
-				client: fake.NewFakeClient(daemonsetPaused),
+				client: fake.NewClientBuilder().WithObjects(daemonsetPaused).Build(),
 				eds:    daemonsetPaused,
 				reason: reason,
 			},
@@ -199,7 +201,8 @@ func Test_failCanaryDeployment(t *testing.T) {
 }
 
 func Test_addPodLabel(t *testing.T) {
-	testLogger := logf.ZapLogger(true)
+	logf.SetLogger(zap.New())
+	testLogger := logf.Log.WithName("test")
 	key := "key1"
 	val := "val1"
 	podNoLabel := commontest.NewPod("foo", "pod1", "node1", nil)
@@ -238,7 +241,7 @@ func Test_addPodLabel(t *testing.T) {
 		{
 			name: "add label",
 			args: args{
-				c:   fake.NewFakeClient(podNoLabel),
+				c:   fake.NewClientBuilder().WithObjects(podNoLabel).Build(),
 				pod: podNoLabel,
 				k:   key,
 				v:   val,
@@ -249,7 +252,7 @@ func Test_addPodLabel(t *testing.T) {
 		{
 			name: "label already present",
 			args: args{
-				c:   fake.NewFakeClient(podLabeled),
+				c:   fake.NewClientBuilder().WithObjects(podLabeled).Build(),
 				pod: podLabeled,
 				k:   key,
 				v:   val,
@@ -272,7 +275,8 @@ func Test_addPodLabel(t *testing.T) {
 }
 
 func Test_deletePodLabel(t *testing.T) {
-	testLogger := logf.ZapLogger(true)
+	logf.SetLogger(zap.New())
+	testLogger := logf.Log.WithName("test")
 	key := "key1"
 	val := "val1"
 	podNoLabel := commontest.NewPod("foo", "pod1", "node1", nil)
@@ -307,7 +311,7 @@ func Test_deletePodLabel(t *testing.T) {
 		{
 			name: "delete label",
 			args: args{
-				c:   fake.NewFakeClient(podLabeled),
+				c:   fake.NewClientBuilder().WithObjects(podLabeled).Build(),
 				pod: podLabeled,
 				k:   key,
 			},
@@ -317,7 +321,7 @@ func Test_deletePodLabel(t *testing.T) {
 		{
 			name: "label not present",
 			args: args{
-				c:   fake.NewFakeClient(podNoLabel),
+				c:   fake.NewClientBuilder().WithObjects(podNoLabel).Build(),
 				pod: podNoLabel,
 				k:   key,
 			},

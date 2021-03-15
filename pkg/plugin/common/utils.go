@@ -15,12 +15,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// IntToString converts int32 into string
+// IntToString converts int32 into string.
 func IntToString(i int32) string {
 	return fmt.Sprintf("%d", i)
 }
 
-// isPodNotReady returns whether the pod is ready, returns the the reason if not ready
+// isPodNotReady returns whether the pod is ready, returns the the reason if not ready.
 func isPodNotReady(pod *corev1.Pod) (bool, string) {
 	if pod.Status.Phase != corev1.PodRunning {
 		return true, pod.Status.Reason
@@ -35,7 +35,7 @@ func isPodNotReady(pod *corev1.Pod) (bool, string) {
 	return false, ""
 }
 
-// containersInfo returns containers readiness and restart details
+// containersInfo returns containers readiness and restart details.
 func containersInfo(pod *corev1.Pod) (string, string, string) {
 	notreadyContainers := []string{}
 	containersCount := len(pod.Status.ContainerStatuses)
@@ -48,17 +48,19 @@ func containersInfo(pod *corev1.Pod) (string, string, string) {
 			notreadyContainers = append(notreadyContainers, ctr.Name)
 		}
 	}
+
 	return fmt.Sprintf("%d/%d", containersCount-notreadyCount, containersCount), strings.Join(notreadyContainers, ", "), IntToString(restartCount)
 }
 
-// getNodeReadiness returns whether a node is ready
+// getNodeReadiness returns whether a node is ready.
 func getNodeReadiness(c client.Client, nodename string) string {
-	var isNodeReady = func(node *corev1.Node) bool {
+	isNodeReady := func(node *corev1.Node) bool {
 		for _, cond := range node.Status.Conditions {
 			if cond.Type == corev1.NodeReady && cond.Status == corev1.ConditionTrue {
 				return true
 			}
 		}
+
 		return false
 	}
 

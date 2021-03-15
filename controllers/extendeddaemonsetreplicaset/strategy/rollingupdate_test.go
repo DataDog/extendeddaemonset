@@ -119,6 +119,7 @@ func TestCalculateMaxCreation(t *testing.T) {
 			got, err := calculateMaxCreation(tt.args.params, tt.args.nbNodes, tt.args.rsStartTime, tt.args.now)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("calculateMaxCreation() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
 			if got != tt.want {

@@ -26,7 +26,7 @@ const (
 )
 
 // IsDefaultedExtendedDaemonSet used to know if a ExtendedDaemonSet is already defaulted
-// returns true if yes, else no
+// returns true if yes, else no.
 func IsDefaultedExtendedDaemonSet(dd *ExtendedDaemonSet) bool {
 	if !IsDefaultedExtendedDaemonSetSpecStrategyRollingUpdate(&dd.Spec.Strategy.RollingUpdate) {
 		return false
@@ -52,7 +52,7 @@ func IsDefaultedExtendedDaemonSet(dd *ExtendedDaemonSet) bool {
 }
 
 // IsDefaultedExtendedDaemonSetSpecStrategyRollingUpdate used to know if a ExtendedDaemonSetSpecStrategyRollingUpdate is already defaulted
-// returns true if yes, else no
+// returns true if yes, else no.
 func IsDefaultedExtendedDaemonSetSpecStrategyRollingUpdate(rollingupdate *ExtendedDaemonSetSpecStrategyRollingUpdate) bool {
 	if rollingupdate.MaxUnavailable == nil {
 		return false
@@ -78,9 +78,8 @@ func IsDefaultedExtendedDaemonSetSpecStrategyRollingUpdate(rollingupdate *Extend
 }
 
 // IsDefaultedExtendedDaemonSetSpecStrategyCanary used to know if a ExtendedDaemonSetSpecStrategyCanary is already defaulted
-// returns true if yes, else no
+// returns true if yes, else no.
 func IsDefaultedExtendedDaemonSetSpecStrategyCanary(canary *ExtendedDaemonSetSpecStrategyCanary) bool {
-
 	if canary.Replicas == nil {
 		return false
 	}
@@ -97,6 +96,7 @@ func IsDefaultedExtendedDaemonSetSpecStrategyCanary(canary *ExtendedDaemonSetSpe
 	if canary.AutoFail == nil || canary.AutoFail.Enabled == nil || canary.AutoFail.MaxRestarts == nil {
 		return false
 	}
+
 	return true
 }
 
@@ -105,10 +105,11 @@ func IsDefaultedExtendedDaemonSetSpecStrategyCanary(canary *ExtendedDaemonSetSpe
 func DefaultExtendedDaemonSet(dd *ExtendedDaemonSet) *ExtendedDaemonSet {
 	defaultedDD := dd.DeepCopy()
 	DefaultExtendedDaemonSetSpec(&defaultedDD.Spec)
+
 	return defaultedDD
 }
 
-// DefaultExtendedDaemonSetSpec used to default an ExtendedDaemonSetSpec
+// DefaultExtendedDaemonSetSpec used to default an ExtendedDaemonSetSpec.
 func DefaultExtendedDaemonSetSpec(spec *ExtendedDaemonSetSpec) *ExtendedDaemonSetSpec {
 	// reset template name
 	spec.Template.Name = ""
@@ -126,7 +127,7 @@ func DefaultExtendedDaemonSetSpec(spec *ExtendedDaemonSetSpec) *ExtendedDaemonSe
 	return spec
 }
 
-// DefaultExtendedDaemonSetSpecStrategyCanary used to default an ExtendedDaemonSetSpecStrategyCanary
+// DefaultExtendedDaemonSetSpecStrategyCanary used to default an ExtendedDaemonSetSpecStrategyCanary.
 func DefaultExtendedDaemonSetSpecStrategyCanary(c *ExtendedDaemonSetSpecStrategyCanary) *ExtendedDaemonSetSpecStrategyCanary {
 	if c.Duration == nil {
 		c.Duration = &metav1.Duration{
@@ -161,7 +162,7 @@ func DefaultExtendedDaemonSetSpecStrategyCanary(c *ExtendedDaemonSetSpecStrategy
 	return c
 }
 
-// DefaultExtendedDaemonSetSpecStrategyCanaryAutoPause used to default an ExtendedDaemonSetSpecStrategyCanaryAutoPause
+// DefaultExtendedDaemonSetSpecStrategyCanaryAutoPause used to default an ExtendedDaemonSetSpecStrategyCanaryAutoPause.
 func DefaultExtendedDaemonSetSpecStrategyCanaryAutoPause(a *ExtendedDaemonSetSpecStrategyCanaryAutoPause) *ExtendedDaemonSetSpecStrategyCanaryAutoPause {
 	if a.Enabled == nil {
 		enabled := defaultCanaryAutoPauseEnabled
@@ -171,10 +172,11 @@ func DefaultExtendedDaemonSetSpecStrategyCanaryAutoPause(a *ExtendedDaemonSetSpe
 	if a.MaxRestarts == nil {
 		a.MaxRestarts = NewInt32(defaultCanaryAutoPauseMaxRestarts)
 	}
+
 	return a
 }
 
-// DefaultExtendedDaemonSetSpecStrategyCanaryAutoFail used to default an ExtendedDaemonSetSpecStrategyCanaryAutoFail
+// DefaultExtendedDaemonSetSpecStrategyCanaryAutoFail used to default an ExtendedDaemonSetSpecStrategyCanaryAutoFail.
 func DefaultExtendedDaemonSetSpecStrategyCanaryAutoFail(a *ExtendedDaemonSetSpecStrategyCanaryAutoFail) *ExtendedDaemonSetSpecStrategyCanaryAutoFail {
 	if a.Enabled == nil {
 		enabled := defaultCanaryAutoFailEnabled
@@ -188,7 +190,7 @@ func DefaultExtendedDaemonSetSpecStrategyCanaryAutoFail(a *ExtendedDaemonSetSpec
 	return a
 }
 
-// DefaultExtendedDaemonSetSpecStrategyRollingUpdate used to default an ExtendedDaemonSetSpecStrategyRollingUpdate
+// DefaultExtendedDaemonSetSpecStrategyRollingUpdate used to default an ExtendedDaemonSetSpecStrategyRollingUpdate.
 func DefaultExtendedDaemonSetSpecStrategyRollingUpdate(rollingupdate *ExtendedDaemonSetSpecStrategyRollingUpdate) *ExtendedDaemonSetSpecStrategyRollingUpdate {
 	rollingupdate.MaxUnavailable = intstr.ValueOrDefault(rollingupdate.MaxUnavailable, intstr.FromInt(1))
 
@@ -205,5 +207,6 @@ func DefaultExtendedDaemonSetSpecStrategyRollingUpdate(rollingupdate *ExtendedDa
 	}
 
 	rollingupdate.SlowStartAdditiveIncrease = intstr.ValueOrDefault(rollingupdate.SlowStartAdditiveIncrease, intstr.FromInt(1))
+
 	return rollingupdate
 }

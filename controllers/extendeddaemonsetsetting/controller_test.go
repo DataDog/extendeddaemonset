@@ -98,6 +98,7 @@ func Test_searchPossibleConflict(t *testing.T) {
 			got, err := searchPossibleConflict(tt.args.instance, tt.args.nodeList, tt.args.edsNodeList)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("searchPossibleConflict() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
 			if got != tt.want {

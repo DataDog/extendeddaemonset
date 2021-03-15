@@ -9,15 +9,16 @@ import (
 	"testing"
 	"time"
 
+	cmp "github.com/google/go-cmp/cmp"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	datadoghqv1alpha1test "github.com/DataDog/extendeddaemonset/api/v1alpha1/test"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/strategy"
 	ctrltest "github.com/DataDog/extendeddaemonset/pkg/controller/test"
-
-	cmp "github.com/google/go-cmp/cmp"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
 func TestFilterPodsByNode(t *testing.T) {
@@ -109,7 +110,7 @@ func TestFilterPodsByNode(t *testing.T) {
 func TestFilterAndMapPodsByNode(t *testing.T) {
 	ignoreEvictedPods = true
 	now := time.Now()
-	logf.SetLogger(logf.ZapLogger(true))
+	logf.SetLogger(zap.New())
 	log := logf.Log.WithName("TestFilterAndMapPodsByNode")
 
 	ns := "foo"

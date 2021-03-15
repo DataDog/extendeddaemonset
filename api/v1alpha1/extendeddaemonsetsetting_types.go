@@ -31,24 +31,24 @@ type ExtendedDaemonsetSettingContainerSpec struct {
 	Resources corev1.ResourceRequirements `json:"resources"`
 }
 
-// ExtendedDaemonsetSettingStatusStatus defines the readable status in ExtendedDaemonsetSettingStatus
+// ExtendedDaemonsetSettingStatusStatus defines the readable status in ExtendedDaemonsetSettingStatus.
 type ExtendedDaemonsetSettingStatusStatus string
 
 const (
-	// ExtendedDaemonsetSettingStatusValid status when ExtendedDaemonsetSetting is valide
+	// ExtendedDaemonsetSettingStatusValid status when ExtendedDaemonsetSetting is valide.
 	ExtendedDaemonsetSettingStatusValid ExtendedDaemonsetSettingStatusStatus = "valid"
-	// ExtendedDaemonsetSettingStatusError status when ExtendedDaemonsetSetting is in error state
+	// ExtendedDaemonsetSettingStatusError status when ExtendedDaemonsetSetting is in error state.
 	ExtendedDaemonsetSettingStatusError ExtendedDaemonsetSettingStatusStatus = "error"
 )
 
-// ExtendedDaemonsetSettingStatus defines the observed state of ExtendedDaemonsetSetting
+// ExtendedDaemonsetSettingStatus defines the observed state of ExtendedDaemonsetSetting.
 // +k8s:openapi-gen=true
 type ExtendedDaemonsetSettingStatus struct {
 	Status ExtendedDaemonsetSettingStatusStatus `json:"status"`
 	Error  string                               `json:"error,omitempty"`
 }
 
-// ExtendedDaemonsetSetting is the Schema for the extendeddaemonsetsettings API
+// ExtendedDaemonsetSetting is the Schema for the extendeddaemonsetsettings API.
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=extendeddaemonsetsettings,scope=Namespaced

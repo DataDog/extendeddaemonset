@@ -9,7 +9,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-// MergeResult use to merge two reconcile.Result struct
+// MergeResult use to merge two reconcile.Result struct.
 func MergeResult(r1, r2 reconcile.Result) reconcile.Result {
 	r := reconcile.Result{}
 	if r1.Requeue || r2.Requeue {

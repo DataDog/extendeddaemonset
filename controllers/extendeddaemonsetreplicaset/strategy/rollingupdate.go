@@ -11,7 +11,6 @@ import (
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	intstrutil "k8s.io/apimachinery/pkg/util/intstr"
 	runtimeclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -24,14 +23,14 @@ import (
 )
 
 // cleanCanaryLabelsThreshold is the duration since the last transition to a rolling update of a replicaset
-// during which we keep retrying cleaning up the canary labels that were added to the canary pods during the canary phase
+// during which we keep retrying cleaning up the canary labels that were added to the canary pods during the canary phase.
 const cleanCanaryLabelsThreshold = 5 * time.Minute
 
-// ManageDeployment used to manage ReplicaSet in rollingupdate state
+// ManageDeployment used to manage ReplicaSet in rollingupdate state.
 func ManageDeployment(client runtimeclient.Client, params *Parameters) (*Result, error) {
 	result := &Result{}
 
-	// remove canary node if define
+	// remove canary node if define.
 	for _, nodeName := range params.CanaryNodes {
 		delete(params.PodByNodeName, params.NodeByName[nodeName])
 	}
@@ -47,6 +46,7 @@ func ManageDeployment(client runtimeclient.Client, params *Parameters) (*Result,
 	maxPodSchedulerFailure, err := intstrutil.GetValueFromIntOrPercent(params.Strategy.RollingUpdate.MaxPodSchedulerFailure, nbNodes, true)
 	if err != nil {
 		params.Logger.Error(err, "unable to retrieve maxPodSchedulerFailure from the strategy.RollingUpdate.MaxPodSchedulerFailure parameter")
+
 		return result, err
 	}
 
@@ -57,6 +57,7 @@ func ManageDeployment(client runtimeclient.Client, params *Parameters) (*Result,
 		} else {
 			if podutils.HasPodSchedulerIssue(pod) && int(nbIgnoredUnresponsiveNodes) < maxPodSchedulerFailure {
 				nbIgnoredUnresponsiveNodes++
+
 				continue
 			}
 
@@ -66,6 +67,7 @@ func ManageDeployment(client runtimeclient.Client, params *Parameters) (*Result,
 					allPodToDelete = append(allPodToDelete, node)
 				} else {
 					podsTerminating++
+
 					continue
 				}
 				if podutils.IsPodAvailable(pod, 0, metaNow) {
@@ -87,6 +89,7 @@ func ManageDeployment(client runtimeclient.Client, params *Parameters) (*Result,
 	maxUnavailable, err := intstrutil.GetValueFromIntOrPercent(params.Strategy.RollingUpdate.MaxUnavailable, nbNodes, true)
 	if err != nil {
 		params.Logger.Error(err, "unable to retrieve maxUnavailable pod from the strategy.RollingUpdate.MaxUnavailable parameter")
+
 		return result, err
 	}
 
@@ -94,6 +97,7 @@ func ManageDeployment(client runtimeclient.Client, params *Parameters) (*Result,
 	maxCreation, err := calculateMaxCreation(&params.Strategy.RollingUpdate, nbNodes, rollingUpdateStartTime, now)
 	if err != nil {
 		params.Logger.Error(err, "error during calculateMaxCreation execution")
+
 		return result, err
 	}
 	params.Logger.V(1).Info("Parameters", "nbNodes", nbNodes, "createdPods", createdPods, "allPods", allPods, "nbPodReady", readyPods, "availablePods", availablePods, "oldAvailablePods", oldAvailablePods, "maxPodsCreation", maxCreation, "maxUnavailable", maxUnavailable, "nbPodToCreate", len(allPodToCreate), "nbPodToDelete", len(allPodToDelete), "podsTerminating", podsTerminating)
@@ -170,6 +174,7 @@ func getRollingUpdateStartTime(status *datadoghqv1alpha1.ExtendedDaemonSetReplic
 	if cond.Status == corev1.ConditionTrue {
 		return cond.LastTransitionTime.Time
 	}
+
 	return now
 }
 

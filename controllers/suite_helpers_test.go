@@ -10,21 +10,23 @@ import (
 	"fmt"
 
 	. "github.com/onsi/ginkgo"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 )
 
 type condFn func() bool
 
-func withGet(nsName types.NamespacedName, obj runtime.Object, desc string, condition condFn) condFn {
+func withGet(nsName types.NamespacedName, obj client.Object, desc string, condition condFn) condFn {
 	return func() bool {
 		err := k8sClient.Get(context.Background(), nsName, obj)
 		if err != nil {
 			fmt.Fprintf(GinkgoWriter, "Failed to get %s [%s/%s]: %v", desc, nsName.Namespace, nsName.Name, err)
+
 			return false
 		}
+
 		return condition()
 	}
 }

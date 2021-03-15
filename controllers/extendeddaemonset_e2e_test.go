@@ -17,16 +17,13 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/types"
-
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	edsconditions "github.com/DataDog/extendeddaemonset/controllers/extendeddaemonset/conditions"
@@ -246,11 +243,9 @@ var _ = Describe("ExtendedDaemonSet e2e updates and recovery", func() {
 			}), longTimeout, interval).Should(BeTrue(), "All EDS pods should be destroyed")
 		})
 	})
-
 })
 
 var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition", func() {
-
 	var (
 		name string
 		key  types.NamespacedName
@@ -328,7 +323,6 @@ var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition", func() {
 	})
 
 	pauseOnCannotStart := func(configureEDS func(eds *datadoghqv1alpha1.ExtendedDaemonSet), expectedReasons ...string) {
-
 		Eventually(updateEDS(k8sClient, key, configureEDS), timeout, interval).Should(
 			BeTrue(),
 			func() string { return "Unable to update the EDS" },
@@ -386,7 +380,6 @@ var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition", func() {
 	}
 
 	Context("When pod has image pull error", func() {
-
 		It("Should promptly auto-pause canary", func() {
 			pauseOnCannotStart(func(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
 				eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("gcr.io/missing")
@@ -398,7 +391,6 @@ var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition", func() {
 	})
 
 	Context("When pod has container config error", func() {
-
 		It("Should promptly auto-pause canary", func() {
 			pauseOnCannotStart(func(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
 				eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("gcr.io/google-containers/alpine-with-bash:1.0")
@@ -423,7 +415,6 @@ var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition", func() {
 	})
 
 	Context("When pod has missing volume", func() {
-
 		It("Should promptly auto-pause canary", func() {
 			pauseOnCannotStart(func(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
 				eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("gcr.io/google-containers/alpine-with-bash:1.0")
@@ -580,7 +571,6 @@ var _ = Describe("ExtendedDaemonSet e2e successful canary deployment update", fu
 			}), timeout*2, interval).Should(BeTrue(), "All EDS pods should be destroyed")
 		})
 	})
-
 })
 
 // This test may take ~30s to run, check your go test timeout
@@ -705,7 +695,7 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 	})
 })
 
-func withUpdate(obj runtime.Object, desc string) condFn {
+func withUpdate(obj client.Object, desc string) condFn {
 	return func() bool {
 		err := k8sClient.Update(context.Background(), obj)
 		if err != nil {
@@ -716,7 +706,7 @@ func withUpdate(obj runtime.Object, desc string) condFn {
 	}
 }
 
-func withList(listOptions []client.ListOption, obj runtime.Object, desc string, condition condFn) condFn {
+func withList(listOptions []client.ListOption, obj client.ObjectList, desc string, condition condFn) condFn {
 	return func() bool {
 		err := k8sClient.List(context.Background(), obj, listOptions...)
 		if err != nil {
