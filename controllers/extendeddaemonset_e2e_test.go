@@ -706,17 +706,6 @@ func withUpdate(obj client.Object, desc string) condFn {
 	}
 }
 
-func withList(listOptions []client.ListOption, obj client.ObjectList, desc string, condition condFn) condFn {
-	return func() bool {
-		err := k8sClient.List(context.Background(), obj, listOptions...)
-		if err != nil {
-			fmt.Fprintf(GinkgoWriter, "Failed to list %s: %v", desc, err)
-			return false
-		}
-		return condition()
-	}
-}
-
 func clearCanaryAnnotations(eds *datadoghqv1alpha1.ExtendedDaemonSet) bool {
 	keysToDelete := []string{
 		datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey,

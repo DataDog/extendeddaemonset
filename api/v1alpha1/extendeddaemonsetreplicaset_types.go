@@ -78,6 +78,10 @@ type ExtendedDaemonSetReplicaSetConditionType string
 const (
 	// ConditionTypeActive ExtendedDaemonSetReplicaSet is active.
 	ConditionTypeActive ExtendedDaemonSetReplicaSetConditionType = "Active"
+	// ConditionTypeRollingUpdatePaused ExtendedDaemonSetReplicaSet is active but the rolling update is paused.
+	ConditionTypeRollingUpdatePaused ExtendedDaemonSetReplicaSetConditionType = "RollingUpdatePaused"
+	// ConditionTypeRolloutFrozen ExtendedDaemonSetReplicaSet is active but the rollout is frozen.
+	ConditionTypeRolloutFrozen ExtendedDaemonSetReplicaSetConditionType = "RolloutFrozen"
 	// ConditionTypeCanary ExtendedDaemonSetReplicaSet is in canary mode.
 	ConditionTypeCanary ExtendedDaemonSetReplicaSetConditionType = "Canary"
 	// ConditionTypeReconcileError the controller wasn't able to run properly the reconcile loop with this ExtendedDaemonSetReplicaSet.

@@ -11,7 +11,9 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"github.com/DataDog/extendeddaemonset/pkg/plugin/canary"
+	"github.com/DataDog/extendeddaemonset/pkg/plugin/freeze"
 	"github.com/DataDog/extendeddaemonset/pkg/plugin/get"
+	"github.com/DataDog/extendeddaemonset/pkg/plugin/pause"
 	"github.com/DataDog/extendeddaemonset/pkg/plugin/pods"
 )
 
@@ -42,6 +44,10 @@ func NewCmdExtendedDaemonset(streams genericclioptions.IOStreams) *cobra.Command
 	cmd.AddCommand(get.NewCmdGet(streams))
 	cmd.AddCommand(get.NewCmdGetERS(streams))
 	cmd.AddCommand(pods.NewCmdPods(streams))
+	cmd.AddCommand(pause.NewCmdPause(streams))
+	cmd.AddCommand(pause.NewCmdUnpause(streams))
+	cmd.AddCommand(freeze.NewCmdFreeze(streams))
+	cmd.AddCommand(freeze.NewCmdUnfreeze(streams))
 
 	o.configFlags.AddFlags(cmd.Flags())
 

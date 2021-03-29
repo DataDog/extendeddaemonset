@@ -1248,25 +1248,25 @@ func Test_isCanaryActive(t *testing.T) {
 	}
 }
 
-func Test_manageCanaryStatus(t *testing.T) {
+func Test_manageStatus(t *testing.T) {
 	ns := "bar"
 	edsName := "foo"
 	ersName := fmt.Sprintf("%s-dsdvdv", edsName)
 
 	blankStatus := datadoghqv1alpha1.ExtendedDaemonSetStatus{}
 
-	statusFailed := datadoghqv1alpha1.ExtendedDaemonSetStatus{
+	statusCanaryFailed := datadoghqv1alpha1.ExtendedDaemonSetStatus{
 		State: datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryFailed,
 	}
 
-	statusActive := datadoghqv1alpha1.ExtendedDaemonSetStatus{
+	statusCanaryActive := datadoghqv1alpha1.ExtendedDaemonSetStatus{
 		State: datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanary,
 		Canary: &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{
 			ReplicaSet: ersName,
 		},
 	}
 
-	statusPaused := datadoghqv1alpha1.ExtendedDaemonSetStatus{
+	statusCanaryPaused := datadoghqv1alpha1.ExtendedDaemonSetStatus{
 		State:  datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryPaused,
 		Reason: datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM,
 		Canary: &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{
@@ -1274,8 +1274,16 @@ func Test_manageCanaryStatus(t *testing.T) {
 		},
 	}
 
-	statusRunning := datadoghqv1alpha1.ExtendedDaemonSetStatus{
+	statusEDSRunning := datadoghqv1alpha1.ExtendedDaemonSetStatus{
 		State: datadoghqv1alpha1.ExtendedDaemonSetStatusStateRunning,
+	}
+
+	statusEDSPaused := datadoghqv1alpha1.ExtendedDaemonSetStatus{
+		State: datadoghqv1alpha1.ExtendedDaemonSetStatusStateRollingUpdatePaused,
+	}
+
+	statusEDSFrozen := datadoghqv1alpha1.ExtendedDaemonSetStatus{
+		State: datadoghqv1alpha1.ExtendedDaemonSetStatusStateRolloutFrozen,
 	}
 
 	type args struct {
@@ -1285,6 +1293,7 @@ func Test_manageCanaryStatus(t *testing.T) {
 		isCanaryFailed bool
 		isCanaryPaused bool
 		pausedReason   datadoghqv1alpha1.ExtendedDaemonSetStatusReason
+		daemonset      *datadoghqv1alpha1.ExtendedDaemonSet
 	}
 	tests := []struct {
 		name string
@@ -1298,7 +1307,7 @@ func Test_manageCanaryStatus(t *testing.T) {
 				upToDate:       test.NewExtendedDaemonSetReplicaSet(ns, ersName, nil),
 				isCanaryFailed: true,
 			},
-			want: &statusFailed,
+			want: &statusCanaryFailed,
 		},
 		{
 			name: "CanaryActive",
@@ -1307,7 +1316,7 @@ func Test_manageCanaryStatus(t *testing.T) {
 				upToDate:       test.NewExtendedDaemonSetReplicaSet(ns, ersName, nil),
 				isCanaryActive: true,
 			},
-			want: &statusActive,
+			want: &statusCanaryActive,
 		},
 		{
 			name: "CanaryPause",
@@ -1318,22 +1327,61 @@ func Test_manageCanaryStatus(t *testing.T) {
 				isCanaryActive: true,
 				pausedReason:   datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM,
 			},
-			want: &statusPaused,
+			want: &statusCanaryPaused,
 		},
 		{
-			name: "No canary",
+			name: "No canary, EDS running",
 			args: args{
 				status:         blankStatus.DeepCopy(),
 				upToDate:       test.NewExtendedDaemonSetReplicaSet(ns, ersName, nil),
 				isCanaryPaused: false,
 				isCanaryActive: false,
+				daemonset:      test.NewExtendedDaemonSet("bar", "foo", nil),
 			},
-			want: &statusRunning,
+			want: &statusEDSRunning,
+		},
+		{
+			name: "No canary, EDS paused",
+			args: args{
+				status:         blankStatus.DeepCopy(),
+				upToDate:       test.NewExtendedDaemonSetReplicaSet(ns, ersName, nil),
+				isCanaryPaused: false,
+				isCanaryActive: false,
+				daemonset:      test.NewExtendedDaemonSet("bar", "foo", &test.NewExtendedDaemonSetOptions{Annotations: map[string]string{datadoghqv1alpha1.ExtendedDaemonSetRollingUpdatePausedAnnotationKey: "true"}}),
+			},
+			want: &statusEDSPaused,
+		},
+		{
+			name: "No canary, EDS frozen",
+			args: args{
+				status:         blankStatus.DeepCopy(),
+				upToDate:       test.NewExtendedDaemonSetReplicaSet(ns, ersName, nil),
+				isCanaryPaused: false,
+				isCanaryActive: false,
+				daemonset:      test.NewExtendedDaemonSet("bar", "foo", &test.NewExtendedDaemonSetOptions{Annotations: map[string]string{datadoghqv1alpha1.ExtendedDaemonSetRolloutFrozenAnnotationKey: "true"}}),
+			},
+			want: &statusEDSFrozen,
+		},
+		{
+			// A frozen state includes the the paused state
+			// The EDS must be considered frozen in this case
+			name: "No canary, EDS frozen and paused at the same time",
+			args: args{
+				status:         blankStatus.DeepCopy(),
+				upToDate:       test.NewExtendedDaemonSetReplicaSet(ns, ersName, nil),
+				isCanaryPaused: false,
+				isCanaryActive: false,
+				daemonset: test.NewExtendedDaemonSet("bar", "foo", &test.NewExtendedDaemonSetOptions{Annotations: map[string]string{
+					datadoghqv1alpha1.ExtendedDaemonSetRolloutFrozenAnnotationKey:       "true",
+					datadoghqv1alpha1.ExtendedDaemonSetRollingUpdatePausedAnnotationKey: "true",
+				}}),
+			},
+			want: &statusEDSFrozen,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := manageCanaryStatus(tt.args.status, tt.args.upToDate, tt.args.isCanaryActive, tt.args.isCanaryFailed, tt.args.isCanaryPaused, tt.args.pausedReason)
+			got := manageStatus(tt.args.status, tt.args.upToDate, tt.args.isCanaryActive, tt.args.isCanaryFailed, tt.args.isCanaryPaused, tt.args.pausedReason, tt.args.daemonset)
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("manageCanaryStatus() mismatch (-want +got):\n%s", diff)
 			}

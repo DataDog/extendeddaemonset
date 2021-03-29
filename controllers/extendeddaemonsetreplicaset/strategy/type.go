@@ -58,6 +58,8 @@ type Result struct {
 
 	UnscheduledNodesDueToResourcesConstraints []string
 
+	// IsFrozen represents frozen status of the deployment.
+	IsFrozen bool
 	// IsPaused represents paused status of the deployment.
 	IsPaused bool
 	// PausedReason provides the reason for the paused deployment.

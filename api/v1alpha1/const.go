@@ -36,6 +36,10 @@ const (
 	ExtendedDaemonSetRessourceNodeAnnotationKey = "resources.extendeddaemonset.datadoghq.com/%s.%s.%s"
 	// MD5NodeExtendedDaemonSetAnnotationKey annotation key use on Pods in order to identify which Node Resources Overwride have been used to generate it.
 	MD5NodeExtendedDaemonSetAnnotationKey = "extendeddaemonset.datadoghq.com/nodehash"
+	// ExtendedDaemonSetRollingUpdatePausedAnnotationKey annotation key used on ExtendedDaemonset in order to detect if a rolling update is paused.
+	ExtendedDaemonSetRollingUpdatePausedAnnotationKey = "extendeddaemonset.datadoghq.com/rolling-update-paused"
+	// ExtendedDaemonSetRolloutFrozenAnnotationKey annotation key used on ExtendedDaemonset in order to detect if a rollout is frozen.
+	ExtendedDaemonSetRolloutFrozenAnnotationKey = "extendeddaemonset.datadoghq.com/rollout-frozen"
 
 	// ValueStringTrue is the string value of bool `true`.
 	ValueStringTrue = "true"

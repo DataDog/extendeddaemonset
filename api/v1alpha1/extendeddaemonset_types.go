@@ -110,6 +110,10 @@ type ExtendedDaemonSetStatusState string
 const (
 	// ExtendedDaemonSetStatusStateRunning the ExtendedDaemonSet is currently Running.
 	ExtendedDaemonSetStatusStateRunning ExtendedDaemonSetStatusState = "Running"
+	// ExtendedDaemonSetStatusStateRollingUpdatePaused the ExtendedDaemonSet rolling update is paused.
+	ExtendedDaemonSetStatusStateRollingUpdatePaused ExtendedDaemonSetStatusState = "RollingUpdate Paused"
+	// ExtendedDaemonSetStatusStateRolloutFrozen the ExtendedDaemonSet rollout is frozen.
+	ExtendedDaemonSetStatusStateRolloutFrozen ExtendedDaemonSetStatusState = "Rollout frozen"
 	// ExtendedDaemonSetStatusStateCanary the ExtendedDaemonSet currently run a new version with a Canary deployment.
 	ExtendedDaemonSetStatusStateCanary ExtendedDaemonSetStatusState = "Canary"
 	// ExtendedDaemonSetStatusStateCanaryPaused the Canary deployment of the ExtendedDaemonSet is paused.
