@@ -123,7 +123,15 @@ func ManageDeployment(client runtimeclient.Client, daemonset *datadoghqv1alpha1.
 	nbPodToCreate, nbPodToDelete := limits.CalculatePodToCreateAndDelete(limitParams)
 	nbPodToDeleteWithConstraint := utils.MinInt(nbPodToDelete, len(allPodToDelete))
 	nbPodToCreateWithConstraint := utils.MinInt(nbPodToCreate, len(allPodToCreate))
-	params.Logger.V(1).Info("Pods actions with limits", "nbPodToDelete", nbPodToDelete, "nbPodToCreate", nbPodToCreate, "nbPodToDeleteWithConstraint", nbPodToDeleteWithConstraint, "nbPodToCreateWithConstraint", nbPodToCreateWithConstraint)
+	params.Logger.V(1).Info(
+		"Pods actions with limits",
+		"nbPodToDelete", nbPodToDelete,
+		"nbPodToCreate", nbPodToCreate,
+		"nbPodToDeleteWithConstraint", nbPodToDeleteWithConstraint,
+		"nbPodToCreateWithConstraint", nbPodToCreateWithConstraint,
+		"isRolloutFrozen", result.IsFrozen,
+		"isRollingUpdatePaused", result.IsPaused,
+	)
 
 	// When paused, we only stop deleting pods.
 	// The goal is to pause rolling out the new replicaset but also to continue creating pods
