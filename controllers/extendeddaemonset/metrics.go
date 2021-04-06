@@ -27,6 +27,8 @@ const (
 	extendeddaemonsetStatusCanaryNumberOfNodes      = "eds_status_canary_node_number"
 	extendeddaemonsetStatusCanaryPaused             = "eds_status_canary_paused"
 	extendeddaemonsetStatusCanaryFailed             = "eds_status_canary_failed"
+	extendeddaemonsetStatusRollingUpdatePaused      = "eds_status_rolling_update_paused"
+	extendeddaemonsetStatusRolloutFrozen            = "eds_status_rollout_frozen"
 	extendeddaemonsetLabels                         = "eds_labels"
 )
 
@@ -289,6 +291,54 @@ func generateMetricFamilies() []ksmetric.FamilyGenerator {
 				val := float64(0)
 				if eds.Status.Canary != nil {
 					val = float64(len(eds.Status.Canary.Nodes))
+				}
+
+				return &ksmetric.Family{
+					Metrics: []*ksmetric.Metric{
+						{
+							Value:       val,
+							LabelKeys:   labelKeys,
+							LabelValues: labelValues,
+						},
+					},
+				}
+			},
+		},
+		{
+			Name: extendeddaemonsetStatusRollingUpdatePaused,
+			Type: ksmetric.Gauge,
+			Help: "The paused state of a rolling update, 1 if paused, 0 otherwise",
+			GenerateFunc: func(obj interface{}) *ksmetric.Family {
+				eds := obj.(*datadoghqv1alpha1.ExtendedDaemonSet)
+				labelKeys, labelValues := utils.GetLabelsValues(&eds.ObjectMeta)
+				val := float64(0)
+
+				if eds.Status.State == datadoghqv1alpha1.ExtendedDaemonSetStatusStateRollingUpdatePaused {
+					val = 1
+				}
+
+				return &ksmetric.Family{
+					Metrics: []*ksmetric.Metric{
+						{
+							Value:       val,
+							LabelKeys:   labelKeys,
+							LabelValues: labelValues,
+						},
+					},
+				}
+			},
+		},
+		{
+			Name: extendeddaemonsetStatusRolloutFrozen,
+			Type: ksmetric.Gauge,
+			Help: "The frozen state of a rollout, 1 if frozen, 0 otherwise",
+			GenerateFunc: func(obj interface{}) *ksmetric.Family {
+				eds := obj.(*datadoghqv1alpha1.ExtendedDaemonSet)
+				labelKeys, labelValues := utils.GetLabelsValues(&eds.ObjectMeta)
+				val := float64(0)
+
+				if eds.Status.State == datadoghqv1alpha1.ExtendedDaemonSetStatusStateRolloutFrozen {
+					val = 1
 				}
 
 				return &ksmetric.Family{

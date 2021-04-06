@@ -17,6 +17,16 @@ import (
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/conditions"
 )
 
+// IsRollingUpdatePaused checks if a rolling update has been paused.
+func IsRollingUpdatePaused(dsAnnotations map[string]string) bool {
+	return dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetRollingUpdatePausedAnnotationKey] == datadoghqv1alpha1.ValueStringTrue
+}
+
+// IsRolloutFrozen checks if a rollout has been freezed.
+func IsRolloutFrozen(dsAnnotations map[string]string) bool {
+	return dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetRolloutFrozenAnnotationKey] == datadoghqv1alpha1.ValueStringTrue
+}
+
 // IsCanaryDeploymentEnded used to know if the Canary duration has finished.
 // If the duration is completed: return true
 // If the duration is not completed: return false and the remaining duration.

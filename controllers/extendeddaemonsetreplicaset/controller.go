@@ -204,9 +204,8 @@ func (r *Reconciler) applyStrategy(logger logr.Logger, daemonset *datadoghqv1alp
 	switch strategy.ReplicaSetStatus(strategyParams.ReplicaSetStatus) {
 	case strategy.ReplicaSetStatusActive:
 		logger.Info("manage deployment")
-		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(strategyParams.NewStatus, now, datadoghqv1alpha1.ConditionTypeActive, corev1.ConditionTrue, "", "", false, false)
 		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(strategyParams.NewStatus, now, datadoghqv1alpha1.ConditionTypeCanary, corev1.ConditionFalse, "", "", false, false)
-		strategyResult, err = strategy.ManageDeployment(r.client, strategyParams)
+		strategyResult, err = strategy.ManageDeployment(r.client, daemonset, strategyParams)
 	case strategy.ReplicaSetStatusCanary:
 		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(strategyParams.NewStatus, now, datadoghqv1alpha1.ConditionTypeCanary, corev1.ConditionTrue, "", "", false, false)
 		conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(strategyParams.NewStatus, now, datadoghqv1alpha1.ConditionTypeActive, corev1.ConditionFalse, "", "", false, false)

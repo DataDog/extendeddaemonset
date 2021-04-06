@@ -31,6 +31,19 @@ func withGet(nsName types.NamespacedName, obj client.Object, desc string, condit
 	}
 }
 
+func withList(listOptions []client.ListOption, obj client.ObjectList, desc string, condition condFn) condFn {
+	return func() bool {
+		err := k8sClient.List(context.Background(), obj, listOptions...)
+		if err != nil {
+			fmt.Fprintf(GinkgoWriter, "Failed to list %s: %v", desc, err)
+
+			return false
+		}
+
+		return condition()
+	}
+}
+
 func withEDS(nsName types.NamespacedName, eds *datadoghqv1alpha1.ExtendedDaemonSet, condition condFn) condFn {
 	return withGet(nsName, eds, "EDS", condition)
 }

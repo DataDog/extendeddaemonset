@@ -203,6 +203,18 @@ func selectCurrentReplicaSet(daemonset *datadoghqv1alpha1.ExtendedDaemonSet, act
 	return activeRS, requeueAfter
 }
 
+func nonCanaryState(dsAnnotations map[string]string) datadoghqv1alpha1.ExtendedDaemonSetStatusState {
+	if IsRolloutFrozen(dsAnnotations) {
+		return datadoghqv1alpha1.ExtendedDaemonSetStatusStateRolloutFrozen
+	}
+
+	if IsRollingUpdatePaused(dsAnnotations) {
+		return datadoghqv1alpha1.ExtendedDaemonSetStatusStateRollingUpdatePaused
+	}
+
+	return datadoghqv1alpha1.ExtendedDaemonSetStatusStateRunning
+}
+
 func (r *Reconciler) updateInstanceWithCurrentRS(logger logr.Logger, now time.Time, daemonset *datadoghqv1alpha1.ExtendedDaemonSet, current, upToDate *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, podsCounter podsCounterType) (*datadoghqv1alpha1.ExtendedDaemonSet, reconcile.Result, error) {
 	newDaemonset := daemonset.DeepCopy()
 	newDaemonset.Status.Current = podsCounter.Current
@@ -212,7 +224,7 @@ func (r *Reconciler) updateInstanceWithCurrentRS(logger logr.Logger, now time.Ti
 		newDaemonset.Status.Desired = current.Status.Desired
 		newDaemonset.Status.UpToDate = current.Status.Available
 		newDaemonset.Status.Available = current.Status.Available
-		newDaemonset.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateRunning
+		newDaemonset.Status.State = nonCanaryState(daemonset.GetAnnotations())
 		newDaemonset.Status.IgnoredUnresponsiveNodes = current.Status.IgnoredUnresponsiveNodes
 	}
 
@@ -228,7 +240,7 @@ func (r *Reconciler) updateInstanceWithCurrentRS(logger logr.Logger, now time.Ti
 
 		manageCanaryStatusConditions(&newDaemonset.Status, metaNow, isCanaryFailed, isCanaryPaused, pausedReason, upToDate.GetName())
 
-		manageCanaryStatus(&newDaemonset.Status, upToDate, isCanaryActive, isCanaryFailed, isCanaryPaused, pausedReason)
+		manageStatus(&newDaemonset.Status, upToDate, isCanaryActive, isCanaryFailed, isCanaryPaused, pausedReason, daemonset)
 
 		if isCanaryFailed {
 			// Restore active replicaset template. Note: this requires a full daemonset update.
@@ -451,7 +463,7 @@ func manageCanaryStatusConditions(status *datadoghqv1alpha1.ExtendedDaemonSetSta
 	return status
 }
 
-func manageCanaryStatus(status *datadoghqv1alpha1.ExtendedDaemonSetStatus, upToDate *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, isCanaryActive bool, isCanaryFailed bool, isCanaryPaused bool, pausedReason datadoghqv1alpha1.ExtendedDaemonSetStatusReason) *datadoghqv1alpha1.ExtendedDaemonSetStatus {
+func manageStatus(status *datadoghqv1alpha1.ExtendedDaemonSetStatus, upToDate *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, isCanaryActive bool, isCanaryFailed bool, isCanaryPaused bool, pausedReason datadoghqv1alpha1.ExtendedDaemonSetStatusReason, daemonset *datadoghqv1alpha1.ExtendedDaemonSet) *datadoghqv1alpha1.ExtendedDaemonSetStatus {
 	switch {
 	case isCanaryFailed:
 		// Canary deployment is no longer needed because it was marked as failed
@@ -481,7 +493,7 @@ func manageCanaryStatus(status *datadoghqv1alpha1.ExtendedDaemonSetStatus, upToD
 	default:
 		// Canary deployment is no longer needed because it completed without issue
 		status.Canary = nil
-		status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateRunning
+		status.State = nonCanaryState(daemonset.GetAnnotations())
 		status.Reason = ""
 	}
 

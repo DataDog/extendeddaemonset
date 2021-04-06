@@ -16,6 +16,7 @@ import (
 	runtimeclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
+	eds "github.com/DataDog/extendeddaemonset/controllers/extendeddaemonset"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/conditions"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/strategy/limits"
 	"github.com/DataDog/extendeddaemonset/pkg/controller/utils"
@@ -27,15 +28,22 @@ import (
 const cleanCanaryLabelsThreshold = 5 * time.Minute
 
 // ManageDeployment used to manage ReplicaSet in rollingupdate state.
-func ManageDeployment(client runtimeclient.Client, params *Parameters) (*Result, error) {
-	result := &Result{}
+func ManageDeployment(client runtimeclient.Client, daemonset *datadoghqv1alpha1.ExtendedDaemonSet, params *Parameters) (*Result, error) {
+	now := time.Now()
+	metaNow := metav1.NewTime(now)
+	result := &Result{
+		IsPaused: eds.IsRollingUpdatePaused(daemonset.GetAnnotations()),
+		IsFrozen: eds.IsRolloutFrozen(daemonset.GetAnnotations()),
+	}
+	conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(params.NewStatus, metaNow, datadoghqv1alpha1.ConditionTypeRollingUpdatePaused, conditions.BoolToCondition(result.IsPaused), "", "", false, false)
+	conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(params.NewStatus, metaNow, datadoghqv1alpha1.ConditionTypeRolloutFrozen, conditions.BoolToCondition(result.IsFrozen), "", "", false, false)
+	conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(params.NewStatus, metaNow, datadoghqv1alpha1.ConditionTypeActive, conditions.BoolToCondition(!result.IsPaused && !result.IsFrozen), "", "", false, false)
 
-	// remove canary node if define.
+	// Remove canary nodes if defined.
 	for _, nodeName := range params.CanaryNodes {
 		delete(params.PodByNodeName, params.NodeByName[nodeName])
 	}
-	now := time.Now()
-	metaNow := metav1.NewTime(now)
+
 	var desiredPods, availablePods, readyPods, createdPods, allPods, oldAvailablePods, podsTerminating, nbIgnoredUnresponsiveNodes int32
 
 	allPodToCreate := []*NodeItem{}
@@ -115,10 +123,27 @@ func ManageDeployment(client runtimeclient.Client, params *Parameters) (*Result,
 	nbPodToCreate, nbPodToDelete := limits.CalculatePodToCreateAndDelete(limitParams)
 	nbPodToDeleteWithConstraint := utils.MinInt(nbPodToDelete, len(allPodToDelete))
 	nbPodToCreateWithConstraint := utils.MinInt(nbPodToCreate, len(allPodToCreate))
-	params.Logger.V(1).Info("Pods actions with limits", "nbPodToDelete", nbPodToDelete, "nbPodToCreate", nbPodToCreate, "nbPodToDeleteWithConstraint", nbPodToDeleteWithConstraint, "nbPodToCreateWithConstraint", nbPodToCreateWithConstraint)
+	params.Logger.V(1).Info(
+		"Pods actions with limits",
+		"nbPodToDelete", nbPodToDelete,
+		"nbPodToCreate", nbPodToCreate,
+		"nbPodToDeleteWithConstraint", nbPodToDeleteWithConstraint,
+		"nbPodToCreateWithConstraint", nbPodToCreateWithConstraint,
+		"isRolloutFrozen", result.IsFrozen,
+		"isRollingUpdatePaused", result.IsPaused,
+	)
 
-	result.PodsToDelete = allPodToDelete[:nbPodToDeleteWithConstraint]
-	result.PodsToCreate = allPodToCreate[:nbPodToCreateWithConstraint]
+	// When paused, we only stop deleting pods.
+	// The goal is to pause rolling out the new replicaset but also to continue creating pods
+	// if new nodes join in the meantime.
+	// When frozen, we stop both the deletion and the creation of new pods.
+	if !result.IsPaused && !result.IsFrozen {
+		result.PodsToDelete = allPodToDelete[:nbPodToDeleteWithConstraint]
+	}
+	if !result.IsFrozen {
+		result.PodsToCreate = allPodToCreate[:nbPodToCreateWithConstraint]
+	}
+
 	{
 		result.NewStatus = params.NewStatus.DeepCopy()
 		result.NewStatus.Status = string(ReplicaSetStatusActive)
