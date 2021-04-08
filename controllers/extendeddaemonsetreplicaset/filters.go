@@ -74,8 +74,6 @@ func FilterAndMapPodsByNode(logger logr.Logger, replicaset *datadoghqv1alpha1.Ex
 
 			if _, scheduled := podutils.IsPodScheduled(&pod); !scheduled {
 				unscheduledPods = append(unscheduledPods, &podList.Items[id])
-
-				continue
 			}
 		} else {
 			if _, ok := ignoreMapNode[nodeName]; ok {
@@ -106,10 +104,7 @@ func FilterAndMapPodsByNode(logger logr.Logger, replicaset *datadoghqv1alpha1.Ex
 
 	// add duplicated pods to the pod deletion slice
 	for _, pod := range duplicatedPods {
-		nodeName, err := podutils.GetNodeNameFromPod(pod)
-		if err != nil {
-			continue
-		}
+		nodeName, _ := podutils.GetNodeNameFromPod(pod)
 		logger.V(1).Info("PodToDelete", "reason", "duplicatedPod", "pod.Name", pod.Name, "node.Name", nodeName)
 	}
 	podToDelete = append(podToDelete, duplicatedPods...)

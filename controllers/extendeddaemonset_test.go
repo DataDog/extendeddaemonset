@@ -44,7 +44,7 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 			Name:      name,
 		}
 
-		It("Should create one pod by nodes", func() {
+		It("Should create one pod by node", func() {
 			edsOptions := &testutils.NewExtendedDaemonsetOptions{
 				CanaryStrategy: nil,
 				RollingUpdate: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate{
