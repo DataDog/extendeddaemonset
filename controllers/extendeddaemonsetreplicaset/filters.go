@@ -56,12 +56,11 @@ func FilterAndMapPodsByNode(logger logr.Logger, replicaset *datadoghqv1alpha1.Ex
 	}
 
 	for id, pod := range podList.Items {
-		if _, scheduled := podutils.IsPodScheduled(&pod); !scheduled {
-			unscheduledPods = append(unscheduledPods, &podList.Items[id])
-
+		nodeName, err := podutils.GetNodeNameFromPod(&pod)
+		if err != nil {
 			continue
 		}
-		if _, ok := podsByNodeName[pod.Spec.NodeName]; ok {
+		if _, ok := podsByNodeName[nodeName]; ok {
 			// ignore pod with status phase unknown: usually it means the pod's node
 			// in unreacheable so the pod can't be delete. It will be cleanup by the
 			// pods garbage collector.
@@ -71,9 +70,15 @@ func FilterAndMapPodsByNode(logger logr.Logger, replicaset *datadoghqv1alpha1.Ex
 				continue
 			}
 
-			podsByNodeName[pod.Spec.NodeName] = append(podsByNodeName[pod.Spec.NodeName], &podList.Items[id])
+			podsByNodeName[nodeName] = append(podsByNodeName[nodeName], &podList.Items[id])
+
+			if _, scheduled := podutils.IsPodScheduled(&pod); !scheduled {
+				unscheduledPods = append(unscheduledPods, &podList.Items[id])
+
+				continue
+			}
 		} else {
-			if _, ok := ignoreMapNode[pod.Spec.NodeName]; ok {
+			if _, ok := ignoreMapNode[nodeName]; ok {
 				continue
 			}
 
@@ -90,7 +95,7 @@ func FilterAndMapPodsByNode(logger logr.Logger, replicaset *datadoghqv1alpha1.Ex
 			// Skip pod with DeletionTimestamp already set
 			if pod.DeletionTimestamp == nil {
 				podToDelete = append(podToDelete, &podList.Items[id])
-				logger.V(1).Info("PodToDelete", "reason", "DeletionTimestamp==nil", "pod.Name", pod.Name, "node.Name", pod.Spec.NodeName)
+				logger.V(1).Info("PodToDelete", "reason", "DeletionTimestamp==nil", "pod.Name", pod.Name, "node.Name", nodeName)
 			}
 		}
 	}
@@ -101,7 +106,11 @@ func FilterAndMapPodsByNode(logger logr.Logger, replicaset *datadoghqv1alpha1.Ex
 
 	// add duplicated pods to the pod deletion slice
 	for _, pod := range duplicatedPods {
-		logger.V(1).Info("PodToDelete", "reason", "duplicatedPod", "pod.Name", pod.Name, "node.Name", pod.Spec.NodeName)
+		nodeName, err := podutils.GetNodeNameFromPod(pod)
+		if err != nil {
+			continue
+		}
+		logger.V(1).Info("PodToDelete", "reason", "duplicatedPod", "pod.Name", pod.Name, "node.Name", nodeName)
 	}
 	podToDelete = append(podToDelete, duplicatedPods...)
 
