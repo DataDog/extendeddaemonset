@@ -9,6 +9,7 @@ BUNDLE_VERSION?=$(VERSION:v%=%)
 GIT_COMMIT?=$(shell git rev-parse HEAD)
 DATE=$(shell date +%Y-%m-%d/%H:%M:%S )
 LDFLAGS=-w -s -X ${BUILDINFOPKG}.Commit=${GIT_COMMIT} -X ${BUILDINFOPKG}.Version=${VERSION} -X ${BUILDINFOPKG}.BuildTime=${DATE}
+GOARCH?=amd64
 
 # Default bundle image tag
 BUNDLE_IMG ?= controller-bundle:$(BUNDLE_VERSION)
@@ -92,10 +93,10 @@ generate: controller-gen generate-openapi
 docker-build: generate docker-build-ci docker-build-check-ci
 
 docker-build-ci:
-	docker build . -t ${IMG} --build-arg LDFLAGS="${LDFLAGS}"
+	docker build . -t ${IMG} --build-arg LDFLAGS="${LDFLAGS}" --build-arg GOARCH="${GOARCH}"
 
 docker-build-check-ci:
-	docker build . -t ${IMG_CHECK} -f check-eds.Dockerfile --build-arg LDFLAGS="${LDFLAGS}"
+	docker build . -t ${IMG_CHECK} -f check-eds.Dockerfile --build-arg LDFLAGS="${LDFLAGS}" --build-arg GOARCH="${GOARCH}"
 
 # Push the docker images
 docker-push: docker-push-ci docker-push-check-ci
