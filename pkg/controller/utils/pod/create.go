@@ -58,10 +58,10 @@ func CreatePodFromDaemonSetReplicaSet(scheme *runtime.Scheme, replicaset *datado
 		Spec:       templateCopy.Spec,
 	}
 	if node != nil {
-		pod.Spec.NodeName = node.Name
-
 		if addNodeAffinity {
 			pod.Spec.Affinity = affinity.ReplaceNodeNameNodeAffinity(pod.Spec.Affinity, node.Name)
+		} else {
+			pod.Spec.NodeName = node.Name
 		}
 	}
 

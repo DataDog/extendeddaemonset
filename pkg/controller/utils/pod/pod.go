@@ -6,6 +6,7 @@
 package pod
 
 import (
+	"fmt"
 	"sort"
 	"time"
 
@@ -60,6 +61,20 @@ func IsPodAvailable(pod *v1.Pod, minReadySeconds int32, now metav1.Time) bool {
 	}
 
 	return false
+}
+
+// GetNodeNameFromPod returns the NodeName from Pod spec. either from `pod.Spec.NodeName`
+// if the pod is already scheduled, of from the NodeAffinity.
+func GetNodeNameFromPod(pod *v1.Pod) (string, error) {
+	if pod.Spec.NodeName != "" {
+		return pod.Spec.NodeName, nil
+	}
+	nodeName := affinity.GetNodeNameFromAffinity(pod.Spec.Affinity)
+	if nodeName == "" {
+		return "", fmt.Errorf("unable to retrieve nodeName for the pod: %s/%s", pod.Namespace, pod.Name)
+	}
+
+	return nodeName, nil
 }
 
 // IsPodReady returns true if a pod is ready; false otherwise.
