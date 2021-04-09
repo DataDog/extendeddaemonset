@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	utilserrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/util/flowcontrol"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -34,11 +35,12 @@ import (
 
 // Reconciler is the internal reconciler for ExtendedDaemonSetReplicaSet.
 type Reconciler struct {
-	options  ReconcilerOptions
-	client   client.Client
-	scheme   *runtime.Scheme
-	log      logr.Logger
-	recorder record.EventRecorder
+	options           ReconcilerOptions
+	client            client.Client
+	scheme            *runtime.Scheme
+	log               logr.Logger
+	recorder          record.EventRecorder
+	failedPodsBackOff *flowcontrol.Backoff
 }
 
 // ReconcilerOptions provides options read from command line.
@@ -49,11 +51,12 @@ type ReconcilerOptions struct {
 // NewReconciler returns a reconciler for DatadogAgent.
 func NewReconciler(options ReconcilerOptions, client client.Client, scheme *runtime.Scheme, log logr.Logger, recorder record.EventRecorder) (*Reconciler, error) {
 	return &Reconciler{
-		options:  options,
-		client:   client,
-		scheme:   scheme,
-		log:      log,
-		recorder: recorder,
+		options:           options,
+		client:            client,
+		scheme:            scheme,
+		log:               log,
+		recorder:          recorder,
+		failedPodsBackOff: flowcontrol.NewBackOff(10*time.Second, 15*time.Minute),
 	}, nil
 }
 
@@ -163,6 +166,12 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	reqLogger.V(1).Info("Updating ExtendedDaemonSetReplicaSet status")
 	err = r.updateReplicaSet(replicaSetInstance, newStatus)
 
+	// Garbage collect the failedPodsBackOff map once per minute,
+	// i.e. whenever the seconds [0,60] is less than the reconcile frequency
+	if now.Time.Second() < int(daemonsetInstance.Spec.Strategy.ReconcileFrequency.Duration.Seconds()) {
+		r.failedPodsBackOff.GC()
+	}
+
 	return result, err
 }
 
@@ -192,7 +201,7 @@ func (r *Reconciler) buildStrategyParams(logger logr.Logger, daemonset *datadogh
 	}
 
 	// Associate Pods to Nodes
-	strategyParams.NodeByName, strategyParams.PodByNodeName, strategyParams.PodToCleanUp, strategyParams.UnscheduledPods = FilterAndMapPodsByNode(logger.WithValues("status", string(rsStatus)), replicaset, nodeList, podList, nodesFilter)
+	strategyParams.NodeByName, strategyParams.PodByNodeName, strategyParams.PodToCleanUp, strategyParams.UnscheduledPods = r.FilterAndMapPodsByNode(logger.WithValues("status", string(rsStatus)), replicaset, nodeList, podList, nodesFilter)
 
 	return strategyParams, nil
 }

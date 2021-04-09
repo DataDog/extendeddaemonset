@@ -10,8 +10,14 @@ import (
 	"time"
 
 	cmp "github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/clock"
+	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/util/flowcontrol"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
@@ -108,7 +114,6 @@ func TestFilterPodsByNode(t *testing.T) {
 }
 
 func TestFilterAndMapPodsByNode(t *testing.T) {
-	ignoreEvictedPods = true
 	now := time.Now()
 	logf.SetLogger(zap.New())
 	log := logf.Log.WithName("TestFilterAndMapPodsByNode")
@@ -151,6 +156,12 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 	})
 
 	pod5Node1 := ctrltest.NewPod(ns, "pod5", node1.Name, &ctrltest.NewPodOptions{
+		CreationTimestamp: metav1.NewTime(now),
+		Phase:             corev1.PodFailed,
+		Reason:            "Evicted",
+	})
+
+	pod6Node1 := ctrltest.NewPod(ns, "pod6", node1.Name, &ctrltest.NewPodOptions{
 		CreationTimestamp: metav1.NewTime(now),
 		Phase:             corev1.PodFailed,
 		Reason:            "Evicted",
@@ -380,7 +391,7 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 			wantUnscheduledPods: nil,
 		},
 		{
-			name: "filter evicted pod",
+			name: "delete evicted pod",
 			args: args{
 				replicaset: datadoghqv1alpha1test.NewExtendedDaemonSetReplicaSet("foo", "bar", nil),
 				nodeList: &strategy.NodeList{
@@ -402,14 +413,77 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 			wantPodByNode: map[string]*corev1.Pod{
 				"node1": pod1Node1,
 			},
-			wantPodToDelete:     nil,
+			wantPodToDelete:     []*corev1.Pod{pod5Node1},
+			wantUnscheduledPods: nil,
+		},
+		{
+			name: "delete evicted and duplicate pods",
+			args: args{
+				replicaset: datadoghqv1alpha1test.NewExtendedDaemonSetReplicaSet("foo", "bar", nil),
+				nodeList: &strategy.NodeList{
+					Items: []*strategy.NodeItem{
+						strategy.NewNodeItem(node1, nil),
+					},
+				},
+				podList: &corev1.PodList{
+					Items: []corev1.Pod{
+						*pod1Node1,
+						*pod5Node1,
+						*pod6Node1,
+					},
+				},
+				ignoreNodes: []string{},
+			},
+			wantNodeByName: map[string]*strategy.NodeItem{
+				"node1": strategy.NewNodeItem(node1, nil),
+			},
+			wantPodByNode: map[string]*corev1.Pod{
+				"node1": pod1Node1,
+			},
+			wantPodToDelete:     []*corev1.Pod{pod5Node1, pod6Node1},
+			wantUnscheduledPods: nil,
+		},
+		{
+			name: "delete evicted but not duplicate pod",
+			args: args{
+				replicaset: datadoghqv1alpha1test.NewExtendedDaemonSetReplicaSet("foo", "bar", nil),
+				nodeList: &strategy.NodeList{
+					Items: []*strategy.NodeItem{
+						strategy.NewNodeItem(node1, nil),
+					},
+				},
+				podList: &corev1.PodList{
+					Items: []corev1.Pod{
+						*pod5Node1,
+						*pod6Node1,
+					},
+				},
+				ignoreNodes: []string{},
+			},
+
+			wantNodeByName: map[string]*strategy.NodeItem{
+				"node1": strategy.NewNodeItem(node1, nil),
+			},
+			wantPodByNode: map[string]*corev1.Pod{
+				"node1": pod6Node1,
+			},
+			wantPodToDelete:     []*corev1.Pod{pod5Node1},
 			wantUnscheduledPods: nil,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			eventBroadcaster := record.NewBroadcaster()
+			r := &Reconciler{
+				client:            fake.NewClientBuilder().Build(),
+				scheme:            scheme.Scheme,
+				recorder:          eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "TestReconcileExtendedDaemonSet_Reconcile"}),
+				failedPodsBackOff: flowcontrol.NewFakeBackOff(30*time.Second, 15*time.Minute, clock.NewFakeClock(now)),
+				log:               log,
+			}
 			reqLogger := log.WithValues("test:", tt.name)
-			gotNodeByName, gotPodByNode, gotPodToDelete, gotUnscheduledPods := FilterAndMapPodsByNode(reqLogger, tt.args.replicaset, tt.args.nodeList, tt.args.podList, tt.args.ignoreNodes)
+
+			gotNodeByName, gotPodByNode, gotPodToDelete, gotUnscheduledPods := r.FilterAndMapPodsByNode(reqLogger, tt.args.replicaset, tt.args.nodeList, tt.args.podList, tt.args.ignoreNodes)
 			if diff := cmp.Diff(tt.wantNodeByName, gotNodeByName); diff != "" {
 				t.Errorf("FilterAndMapPodsByNode() gotNodeByName mismatch (-want +got):\n%s", diff)
 			}
@@ -430,70 +504,39 @@ func TestFilterAndMapPodsByNode(t *testing.T) {
 	}
 }
 
-func Test_shouldIgnorePod(t *testing.T) {
-	tests := []struct {
-		name              string
-		ignoreEvictedPods bool
-		status            corev1.PodStatus
-		want              bool
-	}{
-		{
-			name: "unknown",
-			status: corev1.PodStatus{
-				Phase: corev1.PodUnknown,
-			},
-			ignoreEvictedPods: true,
-			want:              true,
-		},
-		{
-			name: "evicted",
-			status: corev1.PodStatus{
-				Phase:  corev1.PodFailed,
-				Reason: "Evicted",
-			},
-			ignoreEvictedPods: true,
-			want:              true,
-		},
-		{
-			name: "running",
-			status: corev1.PodStatus{
-				Phase: corev1.PodRunning,
-			},
-			ignoreEvictedPods: true,
-			want:              false,
-		},
-		{
-			name: "unknown",
-			status: corev1.PodStatus{
-				Phase: corev1.PodUnknown,
-			},
-			ignoreEvictedPods: false,
-			want:              true,
-		},
-		{
-			name: "evicted",
-			status: corev1.PodStatus{
-				Phase:  corev1.PodFailed,
-				Reason: "Evicted",
-			},
-			ignoreEvictedPods: false,
-			want:              false,
-		},
-		{
-			name: "running",
-			status: corev1.PodStatus{
-				Phase: corev1.PodRunning,
-			},
-			ignoreEvictedPods: false,
-			want:              false,
-		},
+func Test_shouldDeleteFailedPod(t *testing.T) {
+	now := time.Now()
+	logf.SetLogger(zap.New())
+	log := logf.Log.WithName("Test_shouldDeleteFailedPod")
+
+	rs := datadoghqv1alpha1test.NewExtendedDaemonSetReplicaSet("foo", "bar", nil)
+
+	eventBroadcaster := record.NewBroadcaster()
+	fakeBackOff := flowcontrol.NewFakeBackOff(1*time.Second, 15*time.Minute, clock.NewFakeClock(now))
+	r := &Reconciler{
+		client:            fake.NewClientBuilder().Build(),
+		scheme:            scheme.Scheme,
+		recorder:          eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "TestReconcileExtendedDaemonSet_Reconcile"}),
+		failedPodsBackOff: fakeBackOff,
+		log:               log,
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ignoreEvictedPods = tt.ignoreEvictedPods
-			if got := shouldIgnorePod(tt.status); got != tt.want {
-				t.Errorf("shouldIgnorePod() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+
+	// First pod should be deleted
+	result := r.shouldDeleteFailedPod(rs, "node1")
+	assert.True(t, result)
+
+	// Second pod should not be deleted because it is in backoff
+	result = r.shouldDeleteFailedPod(rs, "node1")
+	assert.False(t, result)
+
+	// Fake sleep for 1s
+	fakeBackOff.Clock.Sleep(time.Second)
+
+	// Third pod should be deleted because backoff is over
+	result = r.shouldDeleteFailedPod(rs, "node1")
+	assert.True(t, result)
+
+	// Fourth pod should be deleted because it is on a different node
+	result = r.shouldDeleteFailedPod(rs, "node2")
+	assert.True(t, result)
 }

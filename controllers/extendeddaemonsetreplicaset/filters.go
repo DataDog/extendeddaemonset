@@ -6,6 +6,7 @@
 package extendeddaemonsetreplicaset
 
 import (
+	"fmt"
 	"sort"
 
 	"github.com/go-logr/logr"
@@ -18,27 +19,29 @@ import (
 	podutils "github.com/DataDog/extendeddaemonset/pkg/controller/utils/pod"
 )
 
+// Deprecated: This flag is deprecated and will be removed in a subsequent version.
 var ignoreEvictedPods = false
 
 func init() {
 	pflag.BoolVarP(&ignoreEvictedPods, "ignoreEvictedPods", "i", ignoreEvictedPods, "Enabling this will force new pods creation on nodes where pods are evicted")
 }
 
-// FilterAndMapPodsByNode used to map pods by associated node. It also return the list of pods that
+// FilterAndMapPodsByNode is used to map pods by associated node. It also returns the list of pods that
 // should be deleted (not needed anymore), and pods that are not scheduled yet (created but not scheduled).
-func FilterAndMapPodsByNode(logger logr.Logger, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet,
-	nodeList *strategy.NodeList, podList *corev1.PodList, ignoreNodes []string) (nodesByName map[string]*strategy.NodeItem, podByNode map[*strategy.NodeItem]*corev1.Pod,
-	podToDelete, unscheduledPods []*corev1.Pod) {
-	// For faster search convert slice to map
+func (r *Reconciler) FilterAndMapPodsByNode(
+	logger logr.Logger, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, nodeList *strategy.NodeList, podList *corev1.PodList, ignoreNodes []string,
+) (
+	nodesByName map[string]*strategy.NodeItem, podsByNode map[*strategy.NodeItem]*corev1.Pod, podsToDelete, unscheduledPods []*corev1.Pod,
+) {
+	// For faster search convert nodes to ignore from a slice to a map
 	ignoreMapNode := make(map[string]bool)
 	for _, name := range ignoreNodes {
 		ignoreMapNode[name] = true
 	}
 
-	// create a Fake pod from the current replicaset.spec.template
+	// Create a fake pod from the current replicaset.spec.template
+	// Use this pod to check fitness of nodes in nodeList
 	newPod, _ := podutils.CreatePodFromDaemonSetReplicaSet(nil, replicaset, nil, nil, false)
-	// var unschedulabledNodes []*corev1.Node
-	// Associate Pods to Nodes
 	podsByNodeName := make(map[string][]*corev1.Pod)
 	nodesByName = make(map[string]*strategy.NodeItem)
 	for id := range nodeList.Items {
@@ -47,7 +50,7 @@ func FilterAndMapPodsByNode(logger logr.Logger, replicaset *datadoghqv1alpha1.Ex
 		if _, ok := ignoreMapNode[nodeItem.Node.Name]; ok {
 			continue
 		}
-		// Filter Nodes Unschedulabled
+		// Populate podsByNodeName with nodes that are deemed schedulable
 		if scheduler.CheckNodeFitness(logger.WithValues("filter", "FilterAndMapPodsByNode"), newPod, nodeItem.Node) {
 			podsByNodeName[nodeItem.Node.Name] = nil
 		} else {
@@ -55,21 +58,31 @@ func FilterAndMapPodsByNode(logger logr.Logger, replicaset *datadoghqv1alpha1.Ex
 		}
 	}
 
+	// Associate Pods to Nodes
 	for id, pod := range podList.Items {
 		nodeName, err := podutils.GetNodeNameFromPod(&pod)
 		if err != nil {
 			continue
 		}
-		if _, ok := podsByNodeName[nodeName]; ok {
-			// ignore pod with status phase unknown: usually it means the pod's node
-			// in unreacheable so the pod can't be delete. It will be cleanup by the
-			// pods garbage collector.
-			// Ignore evicted pods to try scheduling new pods.
-			// Evicted pods will be cleaned up by pods garbage collector.
-			if shouldIgnorePod(pod.Status) {
-				continue
-			}
 
+		// Ignore pods with status phase Unknown: usually it means the pod's node
+		// in unreacheable so the pod can't be deleted. It will be cleaned up by the
+		// pods garbage collector.
+		if pod.Status.Phase == corev1.PodUnknown {
+			continue
+		}
+
+		if _, ok := podsByNodeName[nodeName]; ok {
+			if pod.Status.Phase == corev1.PodFailed {
+				if r.shouldDeleteFailedPod(replicaset, nodeName) {
+					podsToDelete = append(podsToDelete, &podList.Items[id])
+					logger.Info("Failed pod is marked for deletion", "pod.Namespace", pod.Namespace, "pod.Name", pod.Name, "nodeName", nodeName)
+
+					continue
+				} else {
+					logger.V(1).Info("Failed pod deletion has been limited by backoff", pod.Namespace, "pod.Name", pod.Name, "nodeName", nodeName)
+				}
+			}
 			podsByNodeName[nodeName] = append(podsByNodeName[nodeName], &podList.Items[id])
 
 			if _, scheduled := podutils.IsPodScheduled(&pod); !scheduled {
@@ -80,43 +93,50 @@ func FilterAndMapPodsByNode(logger logr.Logger, replicaset *datadoghqv1alpha1.Ex
 				continue
 			}
 
-			// ignore pod with status phase unknown: usually it means the pod's node
-			// in unreacheable so the pod can't be delete. It will be cleanup by the
-			// pods garbage collector.
-			// Ignore evicted pods to try scheduling new pods.
-			// Evicted pods will be cleaned up by pods garbage collector.
-			if shouldIgnorePod(pod.Status) {
-				continue
-			}
-
-			// Add pod with missing Node in podToDelete slice
+			// Add pod with missing Node in podsToDelete slice
 			// Skip pod with DeletionTimestamp already set
 			if pod.DeletionTimestamp == nil {
-				podToDelete = append(podToDelete, &podList.Items[id])
+				podsToDelete = append(podsToDelete, &podList.Items[id])
 				logger.V(1).Info("PodToDelete", "reason", "DeletionTimestamp==nil", "pod.Name", pod.Name, "node.Name", nodeName)
 			}
 		}
 	}
 
-	// filter pod node, remove duplicated
+	// Filter pod node, remove duplicated
 	var duplicatedPods []*corev1.Pod
-	podByNode, duplicatedPods = FilterPodsByNode(podsByNodeName, nodesByName)
+	podsByNode, duplicatedPods = FilterPodsByNode(podsByNodeName, nodesByName)
 
-	// add duplicated pods to the pod deletion slice
+	// Add duplicated pods to the pod deletion slice
 	for _, pod := range duplicatedPods {
 		nodeName, _ := podutils.GetNodeNameFromPod(pod)
 		logger.V(1).Info("PodToDelete", "reason", "duplicatedPod", "pod.Name", pod.Name, "node.Name", nodeName)
 	}
-	podToDelete = append(podToDelete, duplicatedPods...)
+	podsToDelete = append(podsToDelete, duplicatedPods...)
 
 	// Filter Pods in Terminated state
-	return nodesByName, podByNode, podToDelete, unscheduledPods
+	return nodesByName, podsByNode, podsToDelete, unscheduledPods
+}
+
+func (r *Reconciler) shouldDeleteFailedPod(replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, nodeName string) bool {
+	key := getBackOffKey(replicaset, nodeName)
+	now := r.failedPodsBackOff.Clock.Now()
+	inBackOff := r.failedPodsBackOff.IsInBackOffSinceUpdate(key, now)
+	if inBackOff {
+		return false
+	}
+	r.failedPodsBackOff.Next(key, now)
+
+	return true
+}
+
+func getBackOffKey(replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, nodeName string) string {
+	return fmt.Sprintf("%s/%s/%s", replicaset.UID, replicaset.Name, nodeName)
 }
 
 // FilterPodsByNode if several Pods are listed for the same Node select "best" Pod one, and add other pod to
 // the deletion pod slice.
 func FilterPodsByNode(podsByNodeName map[string][]*corev1.Pod, nodesMap map[string]*strategy.NodeItem) (map[*strategy.NodeItem]*corev1.Pod, []*corev1.Pod) {
-	// filter pod node, remove duplicated
+	// Filter pod node, remove duplicated
 	podByNodeName := map[*strategy.NodeItem]*corev1.Pod{}
 	duplicatedPods := []*corev1.Pod{}
 	for node, pods := range podsByNodeName {
@@ -132,12 +152,6 @@ func FilterPodsByNode(podsByNodeName map[string][]*corev1.Pod, nodesMap map[stri
 	}
 
 	return podByNodeName, duplicatedPods
-}
-
-// shouldIgnorePod returns true if the pod is in an unknown phase or was evicted
-// if ignoreEvictedPods is disabled, only the unknown phase will be considered.
-func shouldIgnorePod(status corev1.PodStatus) bool {
-	return status.Phase == corev1.PodUnknown || (ignoreEvictedPods && podutils.IsEvicted(&status))
 }
 
 type sortPodByNodeName []*corev1.Pod
