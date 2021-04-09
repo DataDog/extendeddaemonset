@@ -2,13 +2,13 @@
 
 ## Overview
 
-The release process is based on freezing master, merging fixes to a dedicated release branch and releasing release candidates as things progress. Once we have a final version, the release branch is merged into master and the freeze is lifted.
+The release process is based on freezing `main`, merging fixes to a dedicated release branch and releasing release candidates as things progress. Once we have a final version, the release branch is merged into `main` and the freeze is lifted.
 
 ## Steps
 
 ### Create the release branch and the first release candidate
 
-1. Checkout the repository on the correct branch and changeset (`master`).
+1. Checkout the repository on the correct branch and changeset (`main`).
 2. Create a new branch: `git checkout -b vX.Y`.
 3. Prepare the first release candidate by running the bundle generation: `make VERSION=x.v.z-rc.1 bundle`.
 4. Commit all the changes generated from the previous command:
@@ -28,7 +28,7 @@ The release process is based on freezing master, merging fixes to a dedicated re
 
 ### Create a release candidate after a bug fix
 
-**Note:** The fix must be merged to the release branch `vX.Y`, not `master`.
+**Note:** The fix must be merged to the release branch `vX.Y`, not `main`.
 
 1. Update the release branch `vX.Y` locally by pulling the bug fix merged upstream (`git fetch`, `git pull`)
 2. Prepare the release candidate by running the bundle generation: `make VERSION=x.v.z-rc.w bundle`.
@@ -66,5 +66,5 @@ The release process is based on freezing master, merging fixes to a dedicated re
    $ git push origin vX.Y.Z
    ```
 
-6. Merge `vX.Y` into `master`
+6. Merge `vX.Y` into `main`
 

@@ -2,7 +2,7 @@
 
 ![badge](https://action-badges.now.sh/datadog/extendeddaemonset)
 [![Go Report Card](https://goreportcard.com/badge/github.com/DataDog/extendeddaemonset)](https://goreportcard.com/report/github.com/DataDog/extendeddaemonset)
-[![codecov](https://codecov.io/gh/datadog/extendeddaemonset/branch/master/graph/badge.svg)](https://codecov.io/gh/datadog/extendeddaemonset)
+[![codecov](https://codecov.io/gh/datadog/extendeddaemonset/branch/main/graph/badge.svg)](https://codecov.io/gh/datadog/extendeddaemonset)
 
 **ExtendedDaemonSet** aims to provide a new implementation of the Kubernetes `DaemonSet` resource with key features:
 
@@ -41,7 +41,7 @@ If you want to test and compare the advantages of the ExtendedDaemonSet over the
 
 First, you need a Kubernetes cluster with several nodes; we recommend using three nodes. If you want, you can use [kind.sigs.k8s.io](https://kind.sigs.k8s.io/) to create a three node cluster with the following command: `kind create cluster --config examples/kind-cluster-configuration.yaml`.
 
-This creates a three node cluster with one master and two worker nodes:
+This creates a three node cluster with one control-plane and two worker nodes:
 
 ```console
 $ kind create cluster --config examples/kind-cluster-configuration.yaml
