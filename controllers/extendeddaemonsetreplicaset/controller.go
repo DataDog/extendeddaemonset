@@ -167,8 +167,9 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	err = r.updateReplicaSet(replicaSetInstance, newStatus)
 
 	// Garbage collect the failedPodsBackOff map once per minute,
-	// i.e. whenever the seconds [0,60] is less than the reconcile frequency
+	// i.e. whenever the seconds [0,59] is less than the reconcile frequency
 	if now.Time.Second() < int(daemonsetInstance.Spec.Strategy.ReconcileFrequency.Duration.Seconds()) {
+		// Garbage collect records that have aged past the maxDuration (here: 15min)
 		r.failedPodsBackOff.GC()
 	}
 
