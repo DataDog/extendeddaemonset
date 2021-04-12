@@ -17,9 +17,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/util/flowcontrol"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -160,10 +162,11 @@ func TestReconcileExtendedDaemonSetReplicaSet_Reconcile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &Reconciler{
-				client:   tt.fields.client,
-				scheme:   tt.fields.scheme,
-				recorder: tt.fields.recorder,
-				log:      testLogger,
+				client:            tt.fields.client,
+				scheme:            tt.fields.scheme,
+				recorder:          tt.fields.recorder,
+				failedPodsBackOff: flowcontrol.NewFakeBackOff(30*time.Second, 15*time.Minute, clock.NewFakeClock(time.Now())),
+				log:               testLogger,
 			}
 			got, err := r.Reconcile(context.TODO(), tt.args.request)
 			if (err != nil) != tt.wantErr {
@@ -356,9 +359,10 @@ func TestReconcileExtendedDaemonSetReplicaSet_getPodList(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &Reconciler{
-				client:   tt.fields.client,
-				scheme:   tt.fields.scheme,
-				recorder: tt.fields.recorder,
+				client:            tt.fields.client,
+				scheme:            tt.fields.scheme,
+				recorder:          tt.fields.recorder,
+				failedPodsBackOff: flowcontrol.NewFakeBackOff(30*time.Second, 15*time.Minute, clock.NewFakeClock(time.Now())),
 			}
 			got, err := r.getPodList(tt.args.ds)
 			if (err != nil) != tt.wantErr {
@@ -432,10 +436,11 @@ func TestReconcileExtendedDaemonSetReplicaSet_getNodeList(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &Reconciler{
-				client:   tt.fields.client,
-				scheme:   tt.fields.scheme,
-				recorder: tt.fields.recorder,
-				log:      testLogger,
+				client:            tt.fields.client,
+				scheme:            tt.fields.scheme,
+				recorder:          tt.fields.recorder,
+				failedPodsBackOff: flowcontrol.NewFakeBackOff(30*time.Second, 15*time.Minute, clock.NewFakeClock(time.Now())),
+				log:               testLogger,
 			}
 			got, err := r.getNodeList(eds, tt.args.replicaset)
 			if (err != nil) != tt.wantErr {
@@ -519,10 +524,11 @@ func TestReconcileExtendedDaemonSetReplicaSet_getDaemonsetOwner(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &Reconciler{
-				client:   tt.fields.client,
-				scheme:   tt.fields.scheme,
-				recorder: tt.fields.recorder,
-				log:      testLogger,
+				client:            tt.fields.client,
+				scheme:            tt.fields.scheme,
+				recorder:          tt.fields.recorder,
+				failedPodsBackOff: flowcontrol.NewFakeBackOff(30*time.Second, 15*time.Minute, clock.NewFakeClock(time.Now())),
+				log:               testLogger,
 			}
 			got, err := r.getDaemonsetOwner(tt.args.replicaset)
 			if (err != nil) != tt.wantErr {
@@ -605,10 +611,11 @@ func TestReconcileExtendedDaemonSetReplicaSet_updateReplicaSet(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &Reconciler{
-				client:   tt.fields.client,
-				scheme:   tt.fields.scheme,
-				recorder: tt.fields.recorder,
-				log:      testLogger,
+				client:            tt.fields.client,
+				scheme:            tt.fields.scheme,
+				recorder:          tt.fields.recorder,
+				failedPodsBackOff: flowcontrol.NewFakeBackOff(30*time.Second, 15*time.Minute, clock.NewFakeClock(time.Now())),
+				log:               testLogger,
 			}
 			if err := r.updateReplicaSet(tt.args.replicaset, tt.args.newStatus); (err != nil) != tt.wantErr {
 				t.Errorf("ReconcileExtendedDaemonSetReplicaSet.updateReplicaSet() error = %v, wantErr %v", err, tt.wantErr)
