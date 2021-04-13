@@ -10,7 +10,40 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+
+	"github.com/DataDog/extendeddaemonset/controllers/testutils"
 )
+
+func TestIntToString(t *testing.T) {
+	tests := []struct {
+		name string
+		arg  int32
+		want string
+	}{
+		{
+			name: "simple",
+			arg:  int32(5),
+			want: "5",
+		},
+		{
+			name: "multi",
+			arg:  int32(15),
+			want: "15",
+		},
+		{
+			name: "zero",
+			arg:  int32(0),
+			want: "0",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := IntToString(tt.arg)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
 
 func TestIsPodNotReady(t *testing.T) {
 	tests := []struct {
@@ -153,6 +186,43 @@ func TestContainersInfo(t *testing.T) {
 			assert.Equal(t, ready, tt.ready)
 			assert.Equal(t, containers, tt.containers)
 			assert.Equal(t, restarts, tt.restarts)
+		})
+	}
+}
+
+func Test_getNodeReadiness(t *testing.T) {
+	nodeReady := testutils.NewNode("nodeReady", nil)
+	options := testutils.NewNodeOptions{
+		Readiness: false,
+	}
+	nodeNotReady := testutils.NewNode("nodeNotReady", &options)
+
+	tests := []struct {
+		name string
+		arg  string
+		want string
+	}{
+		{
+			name: "ready",
+			arg:  "nodeReady",
+			want: "true",
+		},
+		{
+			name: "not ready",
+			arg:  "nodeNotReady",
+			want: "false",
+		},
+		{
+			name: "unknown",
+			arg:  "nodeUnknown",
+			want: "Unknown",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			client := fake.NewClientBuilder().WithObjects(nodeReady, nodeNotReady).Build()
+			got := getNodeReadiness(client, tt.arg)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

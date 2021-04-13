@@ -11,8 +11,23 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// NewNodeOptions store NewNode options.
+type NewNodeOptions struct {
+	Labels    map[string]string
+	Readiness bool
+}
+
 // NewNode returns a fake, but ready, K8S node.
-func NewNode(name string, labels map[string]string) *corev1.Node {
+func NewNode(name string, options *NewNodeOptions) *corev1.Node {
+	labels := make(map[string]string)
+	readiness := corev1.ConditionTrue
+	if options != nil {
+		if !options.Readiness {
+			readiness = corev1.ConditionFalse
+		}
+		labels = options.Labels
+	}
+
 	return &corev1.Node{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   name,
@@ -33,6 +48,12 @@ func NewNode(name string, labels map[string]string) *corev1.Node {
 				corev1.ResourceEphemeralStorage: resource.MustParse("10Gi"),
 			},
 			Phase: corev1.NodeRunning,
+			Conditions: []corev1.NodeCondition{
+				{
+					Type:   corev1.NodeReady,
+					Status: readiness,
+				},
+			},
 		},
 	}
 }
