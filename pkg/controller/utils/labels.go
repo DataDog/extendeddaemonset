@@ -13,8 +13,10 @@ import (
 )
 
 const (
-	resourceNamePromLabel      = "name"
-	resourceNamespacePromLabel = "namespace"
+	// ResourceNamePromLabel refers to the resource name label key.
+	ResourceNamePromLabel = "name"
+	// ResourceNamespacePromLabel refers to the resource namespace label key.
+	ResourceNamespacePromLabel = "namespace"
 )
 
 var invalidLabelCharRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
@@ -22,8 +24,8 @@ var invalidLabelCharRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
 // GetLabelsValues returns name and namespace as label values.
 func GetLabelsValues(obj *metav1.ObjectMeta) ([]string, []string) {
 	return []string{
-		resourceNamespacePromLabel,
-		resourceNamePromLabel,
+		ResourceNamespacePromLabel,
+		ResourceNamePromLabel,
 	}, []string{obj.GetNamespace(), obj.GetName()}
 }
 

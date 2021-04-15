@@ -30,6 +30,7 @@ import (
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonset/conditions"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/scheduler"
+	"github.com/DataDog/extendeddaemonset/pkg/controller/metrics"
 	"github.com/DataDog/extendeddaemonset/pkg/controller/utils"
 	"github.com/DataDog/extendeddaemonset/pkg/controller/utils/comparison"
 	podutils "github.com/DataDog/extendeddaemonset/pkg/controller/utils/pod"
@@ -567,6 +568,7 @@ func (r *Reconciler) cleanupReplicaSet(logger logr.Logger, rsList *datadoghqv1al
 				errsChan <- fmt.Errorf("unable to get podList from: %s", obj.Name)
 			} else if len(podList.Items) == 0 {
 				logger.Info("Delete replicaset", "replicaset_name", obj.Name)
+				metrics.DeleteERSMetrics(obj.GetName(), obj.GetNamespace())
 				err := r.client.Delete(context.TODO(), obj)
 				if err != nil {
 					errsChan <- err
