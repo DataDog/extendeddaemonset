@@ -6,26 +6,26 @@ metadata:
     capabilities: Full Lifecycle
     operators.operatorframework.io/builder: operator-sdk-v1.0.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
-  name: extendeddaemonset.vX.Y.Z
+  name: extendeddaemonset.v0.0.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
-    - description: ExtendedDaemonSet is the Schema for the extendeddaemonsets API
+    - description: ExtendedDaemonSetReplicaSet is the Schema for the extendeddaemonsetreplicasets API.
+      displayName: Extended Daemon Set Replica Set
+      kind: ExtendedDaemonSetReplicaSet
+      name: extendeddaemonsetreplicasets.datadoghq.com
+      version: v1alpha1
+    - description: ExtendedDaemonSet is the Schema for the extendeddaemonsets API.
       displayName: Extended Daemon Set
       kind: ExtendedDaemonSet
       name: extendeddaemonsets.datadoghq.com
       version: v1alpha1
-    - description: ExtendedDaemonsetSetting is the Schema for the extendeddaemonsetsettings API
+    - description: ExtendedDaemonsetSetting is the Schema for the extendeddaemonsetsettings API.
       displayName: Extended Daemonset Setting
       kind: ExtendedDaemonsetSetting
       name: extendeddaemonsetsettings.datadoghq.com
-      version: v1alpha1
-    - description: ExtendedDaemonSetReplicaSet is the Schema for the extendeddaemonsetreplicasets API
-      displayName: Extended Daemon Set Replica Set
-      kind: ExtendedDaemonSetReplicaSet
-      name: extendeddaemonsetreplicasets.datadoghq.com
       version: v1alpha1
   description: |-
     ExtendedDaemonSet aims to provide a new implementation of the Kubernetes DaemonSet resource with key features:

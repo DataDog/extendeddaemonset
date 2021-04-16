@@ -30,7 +30,7 @@ spec:
     status: {}
   validation:
     openAPIV3Schema:
-      description: ExtendedDaemonsetSetting is the Schema for the extendeddaemonsetsettings API
+      description: ExtendedDaemonsetSetting is the Schema for the extendeddaemonsetsettings API.
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
@@ -126,12 +126,12 @@ spec:
           - reference
           type: object
         status:
-          description: ExtendedDaemonsetSettingStatus defines the observed state of ExtendedDaemonsetSetting
+          description: ExtendedDaemonsetSettingStatus defines the observed state of ExtendedDaemonsetSetting.
           properties:
             error:
               type: string
             status:
-              description: ExtendedDaemonsetSettingStatusStatus defines the readable status in ExtendedDaemonsetSettingStatus
+              description: ExtendedDaemonsetSettingStatusStatus defines the readable status in ExtendedDaemonsetSettingStatus.
               type: string
           required:
           - status
