@@ -73,7 +73,7 @@ metadata:
     capabilities: Full Lifecycle
     operators.operatorframework.io/builder: operator-sdk-v1.4.0+git
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
-  name: extendeddaemonset.v0.6.0-rc.1
+  name: extendeddaemonset.v0.6.0-rc.2
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -277,6 +277,18 @@ spec:
           verbs:
           - create
           - patch
+        - apiGroups:
+          - coordination.k8s.io
+          resources:
+          - leases
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - update
+          - patch
+          - delete
         serviceAccountName: default
     strategy: deployment
   installModes:
@@ -303,4 +315,4 @@ spec:
   provider:
     name: Datadog
     url: https://github.com/DataDog/extendeddaemonset
-  version: 0.6.0-rc.1
+  version: 0.6.0-rc.2
