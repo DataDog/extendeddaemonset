@@ -67,6 +67,7 @@ type NewPodOptions struct {
 	Resources         corev1.ResourceRequirements
 	NodeSelector      map[string]string
 	Tolerations       []corev1.Toleration
+	Affinity          corev1.Affinity
 }
 
 // NewPod used to return new pod instance.
@@ -117,6 +118,7 @@ func NewPod(namespace, name, nodeName string, opts *NewPodOptions) *corev1.Pod {
 		pod.Status.Reason = opts.Reason
 		pod.Status.ContainerStatuses = opts.ContainerStatuses
 		pod.Spec.Tolerations = append(pod.Spec.Tolerations, opts.Tolerations...)
+		pod.Spec.Affinity = &opts.Affinity
 	}
 
 	if nodeName != "" {
