@@ -23,8 +23,8 @@ const (
 )
 
 var failExample = `
-    # %[1]s a canary deployment
-    kubectl eds %[1]s foo
+    # fail a canary deployment
+    kubectl eds canary fail foo
 `
 
 // failOptions provides information required to manage ExtendedDaemonSet.
@@ -59,7 +59,7 @@ func newCmdFail(streams genericclioptions.IOStreams) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:          "fail [ExtendedDaemonSet name]",
 		Short:        "fail canary deployment",
-		Example:      fmt.Sprintf(failExample, "fail"),
+		Example:      failExample,
 		SilenceUsage: true,
 		RunE: func(c *cobra.Command, args []string) error {
 			if err := o.complete(c, args); err != nil {
