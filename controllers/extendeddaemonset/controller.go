@@ -118,7 +118,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	var activeRS *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet
 	for id, rs := range replicaSetList.Items {
 		podsCounter.Ready += rs.Status.Ready
-		podsCounter.Current += rs.Status.Available
+		podsCounter.Current += rs.Status.Current
 
 		// Check if ReplicaSet is currently active
 		if rs.Name == instance.Status.ActiveReplicaSet {
