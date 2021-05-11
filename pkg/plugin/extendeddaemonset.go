@@ -37,7 +37,7 @@ func NewCmdExtendedDaemonset(streams genericclioptions.IOStreams) *cobra.Command
 	o := NewExtendedDaemonsetOptions(streams)
 
 	cmd := &cobra.Command{
-		Use: "ExtendedDaemonset [subcommand] [flags]",
+		Use: "kubectl eds [subcommand] [flags]",
 	}
 
 	cmd.AddCommand(canary.NewCmdCanary(streams))

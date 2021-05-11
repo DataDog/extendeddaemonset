@@ -20,7 +20,7 @@ import (
 
 var validateExample = `
 	# validate a canary replicaset
-	%[1]s canary validate foo
+	kubectl eds canary validate foo
 `
 
 // validateOptions provides information required to manage ExtendedDaemonSet.
@@ -50,9 +50,9 @@ func newCmdValidate(streams genericclioptions.IOStreams) *cobra.Command {
 	o := newValidateOptions(streams)
 
 	cmd := &cobra.Command{
-		Use:          "validate an ExtendedDaemonSet canary replicaset",
+		Use:          "validate [ExtendedDaemonSet name]",
 		Short:        "validate canary replicaset",
-		Example:      fmt.Sprintf(validateExample, "kubectl"),
+		Example:      validateExample,
 		SilenceUsage: true,
 		RunE: func(c *cobra.Command, args []string) error {
 			if err := o.complete(c, args); err != nil {
