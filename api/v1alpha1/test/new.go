@@ -131,9 +131,10 @@ func NewExtendedDaemonSetReplicaSet(ns, name string, options *NewExtendedDaemonS
 
 // NewExtendedDaemonsetSettingOptions used to provide creation options to the NewExtendedDaemonsetSetting function.
 type NewExtendedDaemonsetSettingOptions struct {
-	CreationTime time.Time
-	Selector     map[string]string
-	Resources    map[string]corev1.ResourceRequirements
+	CreationTime        time.Time
+	Selector            map[string]string
+	Resources           map[string]corev1.ResourceRequirements
+	SelectorRequirement []metav1.LabelSelectorRequirement
 }
 
 // NewExtendedDaemonsetSetting returns new ExtendedDaemonsetSetting instance.
@@ -147,9 +148,13 @@ func NewExtendedDaemonsetSetting(ns, name, reference string, options *NewExtende
 	}
 	if options != nil {
 		edsNode.ObjectMeta.CreationTimestamp = metav1.Time{Time: options.CreationTime}
-		if options.Selector != nil {
-			edsNode.Spec.NodeSelector = metav1.LabelSelector{
-				MatchLabels: options.Selector,
+		if options.Selector != nil || len(options.SelectorRequirement) > 0 {
+			edsNode.Spec.NodeSelector = metav1.LabelSelector{}
+			if options.Selector != nil {
+				edsNode.Spec.NodeSelector.MatchLabels = options.Selector
+			}
+			if len(options.SelectorRequirement) > 0 {
+				edsNode.Spec.NodeSelector.MatchExpressions = options.SelectorRequirement
 			}
 		}
 
