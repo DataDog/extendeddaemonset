@@ -107,9 +107,20 @@ func main() {
 
 	// Read conf (env + CLI flags)
 	nodeAffinityMatchSupport := os.Getenv(config.NodeAffinityMatchSupportEnvVar) == "1"
+	validationModeEnvVar := os.Getenv(config.ValidationModeEnvVar)
+	var defaultValidationMode datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryValidationMode
+	switch {
+	case validationModeEnvVar == "" || validationModeEnvVar == "Auto":
+		defaultValidationMode = datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto
+	case validationModeEnvVar == "Manual":
+		defaultValidationMode = datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryValidationModeManual
+	default:
+		setupLog.Error(fmt.Errorf("unable to parse %s env var: unknown validation mode: %s", config.ValidationModeEnvVar, validationModeEnvVar), "")
+		os.Exit(1)
+	}
 
 	// Setup controllers and start manager
-	err = controllers.SetupControllers(mgr, nodeAffinityMatchSupport)
+	err = controllers.SetupControllers(mgr, nodeAffinityMatchSupport, defaultValidationMode)
 	if err != nil {
 		setupLog.Error(err, "unable to setup controllers")
 		os.Exit(1)

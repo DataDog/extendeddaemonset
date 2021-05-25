@@ -218,6 +218,13 @@ spec:
                       anyOf:
                       - type: integer
                       - type: string
+                    validationMode:
+                      description: ValidationMode used to configure how a canary deployment
+                        is validated. Possible values are 'Auto' (default) and 'Manual`
+                      enum:
+                      - Auto
+                      - Manual
+                      type: string
                   type: object
                 reconcileFrequency:
                   description: ReconcileFrequency use to configure how often the ExtendedDeamonset

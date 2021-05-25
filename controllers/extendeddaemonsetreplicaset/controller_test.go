@@ -135,7 +135,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_Reconcile(t *testing.T) {
 		{
 			name: "ReplicaSet, Daemonset exists, defaulted but without a status => should requeue in 1sec",
 			fields: fields{
-				client:   fake.NewClientBuilder().WithObjects(datadoghqv1alpha1.DefaultExtendedDaemonSet(daemonset), replicaset).Build(),
+				client:   fake.NewClientBuilder().WithObjects(datadoghqv1alpha1.DefaultExtendedDaemonSet(daemonset, datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto), replicaset).Build(),
 				scheme:   s,
 				recorder: recorder,
 			},
@@ -148,7 +148,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_Reconcile(t *testing.T) {
 		{
 			name: "ReplicaSet, Daemonset exists, defaulted and with a status",
 			fields: fields{
-				client:   fake.NewClientBuilder().WithObjects(datadoghqv1alpha1.DefaultExtendedDaemonSet(daemonsetWithStatus), replicaset).Build(),
+				client:   fake.NewClientBuilder().WithObjects(datadoghqv1alpha1.DefaultExtendedDaemonSet(daemonsetWithStatus, datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto), replicaset).Build(),
 				scheme:   s,
 				recorder: recorder,
 			},

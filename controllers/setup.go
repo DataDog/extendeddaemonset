@@ -11,19 +11,22 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
+	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonset"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetsetting"
 )
 
 // SetupControllers start all controllers (also used by unit and e2e tests).
-func SetupControllers(mgr manager.Manager, nodeAffinityMatchSupport bool) error {
+func SetupControllers(mgr manager.Manager, nodeAffinityMatchSupport bool, defaultValidationMode v1alpha1.ExtendedDaemonSetSpecStrategyCanaryValidationMode) error {
 	if err := (&ExtendedDaemonSetReconciler{
 		Client:   mgr.GetClient(),
 		Log:      ctrl.Log.WithName("controllers").WithName("ExtendedDaemonSet"),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("ExtendedDaemonSet"),
-		Options:  extendeddaemonset.ReconcilerOptions{},
+		Options: extendeddaemonset.ReconcilerOptions{
+			DefaultValidationMode: defaultValidationMode,
+		},
 	}).SetupWithManager(mgr); err != nil {
 		return fmt.Errorf("unable to create controller ExtendedDaemonSet: %w", err)
 	}

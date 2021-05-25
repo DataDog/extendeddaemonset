@@ -8,16 +8,23 @@ package v1alpha1
 import (
 	"testing"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestValidateExtendedDaemonSetSpec(t *testing.T) {
-	validNoCanary := DefaultExtendedDaemonSetSpec(&ExtendedDaemonSetSpec{})
+	validNoCanary := DefaultExtendedDaemonSetSpec(&ExtendedDaemonSetSpec{}, ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto)
 	validWithCanary := DefaultExtendedDaemonSetSpec(&ExtendedDaemonSetSpec{
 		Strategy: ExtendedDaemonSetSpecStrategy{
 			Canary: &ExtendedDaemonSetSpecStrategyCanary{},
 		},
-	})
+	}, ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto)
+	validWithCanaryManualValidationMode := DefaultExtendedDaemonSetSpec(&ExtendedDaemonSetSpec{
+		Strategy: ExtendedDaemonSetSpecStrategy{
+			Canary: &ExtendedDaemonSetSpecStrategyCanary{},
+		},
+	}, ExtendedDaemonSetSpecStrategyCanaryValidationModeManual)
 
 	validAutoFail := validWithCanary.DeepCopy()
 	*validAutoFail.Strategy.Canary.AutoPause.Enabled = true
@@ -42,6 +49,17 @@ func TestValidateExtendedDaemonSetSpec(t *testing.T) {
 	*validAutoPauseNoAutoFail.Strategy.Canary.AutoPause.MaxRestarts = 1
 	*validAutoPauseNoAutoFail.Strategy.Canary.AutoFail.Enabled = false
 	*validAutoPauseNoAutoFail.Strategy.Canary.AutoFail.MaxRestarts = 1
+
+	validManualValidationMode := validWithCanaryManualValidationMode.DeepCopy()
+	validManualValidationMode.Strategy.Canary.ValidationMode = ExtendedDaemonSetSpecStrategyCanaryValidationModeManual
+
+	invalidManualValidationDuration := validWithCanaryManualValidationMode.DeepCopy()
+	invalidManualValidationDuration.Strategy.Canary.ValidationMode = ExtendedDaemonSetSpecStrategyCanaryValidationModeManual
+	invalidManualValidationDuration.Strategy.Canary.Duration = &metav1.Duration{}
+
+	invalidManualValidationNoRestartsDuration := validWithCanaryManualValidationMode.DeepCopy()
+	invalidManualValidationNoRestartsDuration.Strategy.Canary.ValidationMode = ExtendedDaemonSetSpecStrategyCanaryValidationModeManual
+	invalidManualValidationNoRestartsDuration.Strategy.Canary.NoRestartsDuration = &metav1.Duration{}
 
 	tests := []struct {
 		name string
@@ -72,6 +90,20 @@ func TestValidateExtendedDaemonSetSpec(t *testing.T) {
 		{
 			name: "valid autoPause no autoFail",
 			spec: validAutoFailNoAutoPause,
+		},
+		{
+			name: "valid manual validation mode",
+			spec: validManualValidationMode,
+		},
+		{
+			name: "invalid manual validation mode with duration",
+			spec: invalidManualValidationDuration,
+			err:  ErrDurationWithManualValidationMode,
+		},
+		{
+			name: "invalid manual validation mode with noRestartsDuration",
+			spec: invalidManualValidationNoRestartsDuration,
+			err:  ErrNoRestartsDurationWithManualValidationMode,
 		},
 	}
 	for _, test := range tests {

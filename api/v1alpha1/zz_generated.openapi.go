@@ -401,6 +401,13 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanary(ref common.Referen
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
+					"validationMode": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ValidationMode used to configure how a canary deployment is validated. Possible values are 'Auto' (default) and 'Manual'",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 				},
 			},
 		},
