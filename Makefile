@@ -187,7 +187,7 @@ vendor:
 	go mod vendor
 
 kubectl-eds: fmt vet lint
-	go build -ldflags '${LDFLAGS}' -o bin/kubectl-eds ./cmd/kubectl-eds/main.go
+	CGO_ENABLED=1 go build -ldflags '${LDFLAGS}' -o bin/kubectl-eds ./cmd/kubectl-eds/main.go
 
 check-eds: fmt vet lint
 	go build -ldflags '${LDFLAGS}' -o bin/check-eds ./cmd/check-eds/main.go
