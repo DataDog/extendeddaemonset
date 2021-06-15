@@ -51,7 +51,7 @@ func NewOptions(streams genericclioptions.IOStreams) *Options {
 		configFlags: genericclioptions.NewConfigFlags(false),
 
 		IOStreams:         streams,
-		checkPeriod:       10 * time.Second,
+		checkPeriod:       30 * time.Second,
 		checkTimeout:      2 * time.Hour,
 		nodeCompletionPct: 0.95,
 		nodeCompletionMin: 10,
@@ -66,6 +66,12 @@ func NewOptions(streams genericclioptions.IOStreams) *Options {
 	if val, found := os.LookupEnv("NODE_COMPLETION_MIN"); found {
 		if iVal, err := strconv.ParseInt(val, 10, 32); err == nil {
 			opts.nodeCompletionMin = int32(iVal)
+		}
+	}
+
+	if val, found := os.LookupEnv("CHECK_TIMEOUT_MINUTES"); found {
+		if iVal, err := strconv.ParseInt(val, 10, 32); err == nil {
+			opts.checkTimeout = time.Duration(iVal) * time.Minute
 		}
 	}
 
