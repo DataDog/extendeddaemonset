@@ -9,6 +9,8 @@ package upgrade
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -39,17 +41,41 @@ type Options struct {
 	userExtendedDaemonSetName string
 	checkPeriod               time.Duration
 	checkTimeout              time.Duration
+	nodeCompletionPct         float64
+	nodeCompletionMin         int32
 }
 
 // NewOptions provides an instance of Options with default values.
 func NewOptions(streams genericclioptions.IOStreams) *Options {
-	return &Options{
+	opts := &Options{
 		configFlags: genericclioptions.NewConfigFlags(false),
 
-		IOStreams:    streams,
-		checkPeriod:  10 * time.Second,
-		checkTimeout: 2 * time.Hour,
+		IOStreams:         streams,
+		checkPeriod:       30 * time.Second,
+		checkTimeout:      2 * time.Hour,
+		nodeCompletionPct: 0.95,
+		nodeCompletionMin: 10,
 	}
+
+	if val, found := os.LookupEnv("NODE_COMPLETION_PCT"); found {
+		if iVal, err := strconv.ParseFloat(val, 64); err == nil {
+			opts.nodeCompletionPct = iVal / 100
+		}
+	}
+
+	if val, found := os.LookupEnv("NODE_COMPLETION_MIN"); found {
+		if iVal, err := strconv.ParseInt(val, 10, 32); err == nil {
+			opts.nodeCompletionMin = int32(iVal)
+		}
+	}
+
+	if val, found := os.LookupEnv("CHECK_TIMEOUT_MINUTES"); found {
+		if iVal, err := strconv.ParseInt(val, 10, 32); err == nil {
+			opts.checkTimeout = time.Duration(iVal) * time.Minute
+		}
+	}
+
+	return opts
 }
 
 // NewCmdUpgrade provides a cobra command wrapping Options.
@@ -137,14 +163,17 @@ func (o *Options) Run() error {
 
 			return false, nil
 		}
-		if eds.Status.UpToDate < eds.Status.Current {
-			o.printOutf("still upgrading nb pods: %d, nb updated pods: %d", eds.Status.Current, eds.Status.UpToDate)
 
-			return false, nil
+		if float64(eds.Status.UpToDate)*o.nodeCompletionPct > float64(eds.Status.Current) ||
+			eds.Status.Current-eds.Status.UpToDate < o.nodeCompletionMin {
+			o.printOutf("upgrade is now finished (reached threshold): %d, nb updated pods: %d, threshold pct: %f, min threshold: %d", eds.Status.Current, eds.Status.UpToDate, o.nodeCompletionPct, o.nodeCompletionMin)
+
+			return true, nil
 		}
-		o.printOutf("upgrade is now finished")
 
-		return true, nil
+		o.printOutf("still upgrading nb pods: %d, nb updated pods: %d", eds.Status.Current, eds.Status.UpToDate)
+
+		return false, nil
 	}
 
 	return wait.Poll(o.checkPeriod, o.checkTimeout, checkUpgradeDown)
