@@ -49,6 +49,8 @@ spec:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
               value: {{ .Chart.Name }}
+            - name: EDS_VALIDATION_MODE
+              value: "{{ .Values.validationMode }}"
           ports:
             - name: metrics
               containerPort: 8080
