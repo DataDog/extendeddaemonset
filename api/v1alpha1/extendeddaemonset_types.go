@@ -70,14 +70,14 @@ type ExtendedDaemonSetSpecStrategyRollingUpdate struct {
 }
 
 // ExtendedDaemonSetSpecStrategyCanaryValidationMode type representing the ExtendedDaemonSetSpecStrategyCanary validation mode.
-// +kubebuilder:validation:Enum=Auto;Manual
+// +kubebuilder:validation:Enum=auto;manual
 type ExtendedDaemonSetSpecStrategyCanaryValidationMode string
 
 const (
 	// ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto the ExtendedDaemonSetSpecStrategyCanary automatic validation mode.
-	ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto ExtendedDaemonSetSpecStrategyCanaryValidationMode = "Auto"
+	ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto ExtendedDaemonSetSpecStrategyCanaryValidationMode = "auto"
 	// ExtendedDaemonSetSpecStrategyCanaryValidationModeManual the ExtendedDaemonSetSpecStrategyCanary manual validation mode.
-	ExtendedDaemonSetSpecStrategyCanaryValidationModeManual ExtendedDaemonSetSpecStrategyCanaryValidationMode = "Manual"
+	ExtendedDaemonSetSpecStrategyCanaryValidationModeManual ExtendedDaemonSetSpecStrategyCanaryValidationMode = "manual"
 )
 
 // ExtendedDaemonSetSpecStrategyCanary defines the canary deployment strategy of ExtendedDaemonSet.
@@ -92,7 +92,7 @@ type ExtendedDaemonSetSpecStrategyCanary struct {
 	AutoFail             *ExtendedDaemonSetSpecStrategyCanaryAutoFail  `json:"autoFail,omitempty"`
 	// NoRestartsDuration defines min duration since last restart to end the canary phase.
 	NoRestartsDuration *metav1.Duration `json:"noRestartsDuration,omitempty"`
-	// ValidationMode used to configure how a canary deployment is validated. Possible values are 'Auto' (default) and 'Manual'
+	// ValidationMode used to configure how a canary deployment is validated. Possible values are 'auto' (default) and 'manual'
 	ValidationMode ExtendedDaemonSetSpecStrategyCanaryValidationMode `json:"validationMode,omitempty"`
 }
 

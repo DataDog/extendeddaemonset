@@ -110,9 +110,9 @@ func main() {
 	validationModeEnvVar := os.Getenv(config.ValidationModeEnvVar)
 	var defaultValidationMode datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryValidationMode
 	switch {
-	case validationModeEnvVar == "" || validationModeEnvVar == "Auto":
+	case validationModeEnvVar == "" || validationModeEnvVar == "auto":
 		defaultValidationMode = datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto
-	case validationModeEnvVar == "Manual":
+	case validationModeEnvVar == "manual":
 		defaultValidationMode = datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryValidationModeManual
 	default:
 		setupLog.Error(fmt.Errorf("unable to parse %s env var: unknown validation mode: %s", config.ValidationModeEnvVar, validationModeEnvVar), "")

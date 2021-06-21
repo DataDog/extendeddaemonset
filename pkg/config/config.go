@@ -24,9 +24,9 @@ const (
 	// which specifies the Namespace to watch.
 	// An empty value means the operator is running with cluster scope.
 	WatchNamespaceEnvVar = "WATCH_NAMESPACE"
-	// ValidationModeEnvVar is the constant for env variable VALIDATION_MODE
+	// ValidationModeEnvVar is the constant for env variable EDS_VALIDATION_MODE
 	// It allows to override default validationMode setting for ExtendedDaemonSetSpecStrategyCanary.
-	ValidationModeEnvVar = "VALIDATION_MODE"
+	ValidationModeEnvVar = "EDS_VALIDATION_MODE"
 )
 
 // GetWatchNamespaces returns the Namespaces the operator should be watching for changes.

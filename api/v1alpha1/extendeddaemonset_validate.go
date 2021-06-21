@@ -10,10 +10,10 @@ import "errors"
 var (
 	// ErrInvalidAutoFailRestarts is returned in case of a validation failure for maxRestarts in autoFail.
 	ErrInvalidAutoFailRestarts = errors.New("canary autoFail.maxRestarts must be higher than autoPause.maxRestarts")
-	// ErrDurationWithManualValidationMode is returned when validationMode=Manual and duration is specified.
-	ErrDurationWithManualValidationMode = errors.New("canary duration does not have effect with validationMode=Manual")
-	// ErrNoRestartsDurationWithManualValidationMode is returned when validationMode=Manual and noRestartsDuration is specified.
-	ErrNoRestartsDurationWithManualValidationMode = errors.New("canary noRestartsDuration does not have effect with validationMode=Manual")
+	// ErrDurationWithManualValidationMode is returned when validationMode=manual and duration is specified.
+	ErrDurationWithManualValidationMode = errors.New("canary duration does not have effect with validationMode=manual")
+	// ErrNoRestartsDurationWithManualValidationMode is returned when validationMode=manual and noRestartsDuration is specified.
+	ErrNoRestartsDurationWithManualValidationMode = errors.New("canary noRestartsDuration does not have effect with validationMode=manual")
 )
 
 // ValidateExtendedDaemonSetSpec validates an ExtendedDaemonSet spec

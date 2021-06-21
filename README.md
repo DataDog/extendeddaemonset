@@ -237,9 +237,9 @@ The Canary deployment can be customized in a few ways.
 - `duration`: The duration of the Canary deployment, after which the Canary deployment will end and the active ExtendedReplicaSet will update
 - `autoPause.enabled`: Activation of the Canary deployment auto pausing feature (default is `true`)
 - `autoPause.maxRestarts`: The maximum number of restarts tolerable before the Canary deployment is automatically paused (default is `2`)
-- `validationMode`: Used to configure how a canary deployment is validated. Possible values are `Auto` (default) and `Manual`. 
-  In manual mode canary will be validated only after `kubectl-eds canary validate` command. You can control default value by setting `VALIDATION_MODE` environment variable for deployment.
-  When set to `Manual` `duration` and `noRestartsDuration` will have no effect and will not be defaulted. Setting them to some value will result in validation error.
+- `validationMode`: Used to configure how a canary deployment is validated. Possible values are `auto` (default) and `manual`. 
+  In manual mode canary will be validated only after `kubectl-eds canary validate` command. You can control default value by setting `EDS_VALIDATION_MODE` environment variable for deployment.
+  When set to `manual` `duration` and `noRestartsDuration` will have no effect and will not be defaulted. Setting them to some value will result in validation error.
 
 Example configuration of the spec canary strategy:
 

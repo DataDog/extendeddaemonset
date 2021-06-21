@@ -403,7 +403,7 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanary(ref common.Referen
 					},
 					"validationMode": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ValidationMode used to configure how a canary deployment is validated. Possible values are 'Auto' (default) and 'Manual'",
+							Description: "ValidationMode used to configure how a canary deployment is validated. Possible values are 'auto' (default) and 'manual'",
 							Type:        []string{"string"},
 							Format:      "",
 						},
