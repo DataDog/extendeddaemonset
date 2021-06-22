@@ -46,7 +46,9 @@ type Reconciler struct {
 }
 
 // ReconcilerOptions provides options read from command line.
-type ReconcilerOptions struct{}
+type ReconcilerOptions struct {
+	DefaultValidationMode datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryValidationMode
+}
 
 // NewReconciler returns a reconciler for DatadogAgent.
 func NewReconciler(options ReconcilerOptions, client client.Client, scheme *runtime.Scheme, log logr.Logger, recorder record.EventRecorder) (*Reconciler, error) {
@@ -86,7 +88,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 
 	if !datadoghqv1alpha1.IsDefaultedExtendedDaemonSet(instance) {
 		reqLogger.Info("Defaulting values")
-		defaultedInstance := datadoghqv1alpha1.DefaultExtendedDaemonSet(instance)
+		defaultedInstance := datadoghqv1alpha1.DefaultExtendedDaemonSet(instance, r.options.DefaultValidationMode)
 		err = r.client.Update(context.TODO(), defaultedInstance)
 		if err != nil {
 			return reconcile.Result{}, err

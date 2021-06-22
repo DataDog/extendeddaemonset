@@ -83,7 +83,10 @@ func IsDefaultedExtendedDaemonSetSpecStrategyCanary(canary *ExtendedDaemonSetSpe
 	if canary.Replicas == nil {
 		return false
 	}
-	if canary.Duration == nil {
+	if canary.ValidationMode == "" {
+		return false
+	}
+	if canary.Duration == nil && canary.ValidationMode == ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto {
 		return false
 	}
 	if canary.NodeSelector == nil {
@@ -102,22 +105,22 @@ func IsDefaultedExtendedDaemonSetSpecStrategyCanary(canary *ExtendedDaemonSetSpe
 
 // DefaultExtendedDaemonSet used to default an ExtendedDaemonSet
 // return a list of errors in case of invalid fields.
-func DefaultExtendedDaemonSet(dd *ExtendedDaemonSet) *ExtendedDaemonSet {
+func DefaultExtendedDaemonSet(dd *ExtendedDaemonSet, defaultValidationMode ExtendedDaemonSetSpecStrategyCanaryValidationMode) *ExtendedDaemonSet {
 	defaultedDD := dd.DeepCopy()
-	DefaultExtendedDaemonSetSpec(&defaultedDD.Spec)
+	DefaultExtendedDaemonSetSpec(&defaultedDD.Spec, defaultValidationMode)
 
 	return defaultedDD
 }
 
 // DefaultExtendedDaemonSetSpec used to default an ExtendedDaemonSetSpec.
-func DefaultExtendedDaemonSetSpec(spec *ExtendedDaemonSetSpec) *ExtendedDaemonSetSpec {
+func DefaultExtendedDaemonSetSpec(spec *ExtendedDaemonSetSpec, defaultValidationMode ExtendedDaemonSetSpecStrategyCanaryValidationMode) *ExtendedDaemonSetSpec {
 	// reset template name
 	spec.Template.Name = ""
 
 	DefaultExtendedDaemonSetSpecStrategyRollingUpdate(&spec.Strategy.RollingUpdate)
 
 	if spec.Strategy.Canary != nil {
-		DefaultExtendedDaemonSetSpecStrategyCanary(spec.Strategy.Canary)
+		DefaultExtendedDaemonSetSpecStrategyCanary(spec.Strategy.Canary, defaultValidationMode)
 	}
 
 	if spec.Strategy.ReconcileFrequency == nil {
@@ -128,8 +131,11 @@ func DefaultExtendedDaemonSetSpec(spec *ExtendedDaemonSetSpec) *ExtendedDaemonSe
 }
 
 // DefaultExtendedDaemonSetSpecStrategyCanary used to default an ExtendedDaemonSetSpecStrategyCanary.
-func DefaultExtendedDaemonSetSpecStrategyCanary(c *ExtendedDaemonSetSpecStrategyCanary) *ExtendedDaemonSetSpecStrategyCanary {
-	if c.Duration == nil {
+func DefaultExtendedDaemonSetSpecStrategyCanary(c *ExtendedDaemonSetSpecStrategyCanary, defaultValidationMode ExtendedDaemonSetSpecStrategyCanaryValidationMode) *ExtendedDaemonSetSpecStrategyCanary {
+	if c.ValidationMode == "" {
+		c.ValidationMode = defaultValidationMode
+	}
+	if c.Duration == nil && c.ValidationMode == ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto {
 		c.Duration = &metav1.Duration{
 			Duration: defaultCanaryDuration * time.Minute,
 		}
@@ -153,7 +159,7 @@ func DefaultExtendedDaemonSetSpecStrategyCanary(c *ExtendedDaemonSetSpecStrategy
 	}
 	DefaultExtendedDaemonSetSpecStrategyCanaryAutoFail(c.AutoFail)
 
-	if c.NoRestartsDuration == nil {
+	if c.NoRestartsDuration == nil && c.ValidationMode == ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto {
 		c.Duration = &metav1.Duration{
 			Duration: defaultCanaryNoRestartsDuration * time.Minute,
 		}

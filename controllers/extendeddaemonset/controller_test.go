@@ -999,7 +999,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 				request: newRequest("bar", "foo"),
 				loadFunc: func(c client.Client) {
 					dd := test.NewExtendedDaemonSet("bar", "foo", &test.NewExtendedDaemonSetOptions{Labels: map[string]string{"foo-key": "bar-value"}})
-					dd = datadoghqv1alpha1.DefaultExtendedDaemonSet(dd)
+					dd = datadoghqv1alpha1.DefaultExtendedDaemonSet(dd, datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto)
 					_ = c.Create(context.TODO(), dd)
 				},
 			},
@@ -1034,7 +1034,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 				request: newRequest("bar", "foo"),
 				loadFunc: func(c client.Client) {
 					dd := test.NewExtendedDaemonSet("bar", "foo", &test.NewExtendedDaemonSetOptions{Labels: map[string]string{"foo-key": "bar-value"}})
-					dd = datadoghqv1alpha1.DefaultExtendedDaemonSet(dd)
+					dd = datadoghqv1alpha1.DefaultExtendedDaemonSet(dd, datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto)
 
 					hash, _ := comparison.GenerateMD5PodTemplateSpec(&dd.Spec.Template)
 					rsOptions := &test.NewExtendedDaemonSetReplicaSetOptions{
@@ -1079,7 +1079,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 				request: newRequest("bar", "foo"),
 				loadFunc: func(c client.Client) {
 					dd := test.NewExtendedDaemonSet("bar", "foo", &test.NewExtendedDaemonSetOptions{Labels: map[string]string{"foo-key": "bar-value"}})
-					dd = datadoghqv1alpha1.DefaultExtendedDaemonSet(dd)
+					dd = datadoghqv1alpha1.DefaultExtendedDaemonSet(dd, datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto)
 
 					rsOptions := &test.NewExtendedDaemonSetReplicaSetOptions{
 						GenerateName: "foo-",
@@ -1212,7 +1212,7 @@ func Test_isCanaryActive(t *testing.T) {
 		{
 			name: "CanarySpec Enabled, 2 ers, canary not failed",
 			args: args{
-				daemonset:       test.NewExtendedDaemonSet("ns-foo", "foo", &test.NewExtendedDaemonSetOptions{Canary: datadoghqv1alpha1.DefaultExtendedDaemonSetSpecStrategyCanary(&datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{})}),
+				daemonset:       test.NewExtendedDaemonSet("ns-foo", "foo", &test.NewExtendedDaemonSetOptions{Canary: datadoghqv1alpha1.DefaultExtendedDaemonSetSpecStrategyCanary(&datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{}, datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto)}),
 				activeERSName:   "foo-old",
 				upToDateERSName: "foo-new",
 				isCanaryFailed:  false,
@@ -1222,7 +1222,7 @@ func Test_isCanaryActive(t *testing.T) {
 		{
 			name: "CanarySpec Enabled, But canary failed",
 			args: args{
-				daemonset:       test.NewExtendedDaemonSet("ns-foo", "foo", &test.NewExtendedDaemonSetOptions{Canary: datadoghqv1alpha1.DefaultExtendedDaemonSetSpecStrategyCanary(&datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{})}),
+				daemonset:       test.NewExtendedDaemonSet("ns-foo", "foo", &test.NewExtendedDaemonSetOptions{Canary: datadoghqv1alpha1.DefaultExtendedDaemonSetSpecStrategyCanary(&datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{}, datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto)}),
 				activeERSName:   "foo-old",
 				upToDateERSName: "foo-new",
 				isCanaryFailed:  true,
@@ -1232,7 +1232,7 @@ func Test_isCanaryActive(t *testing.T) {
 		{
 			name: "CanarySpec Enabled, but ERS active == ERS up-to-date",
 			args: args{
-				daemonset:       test.NewExtendedDaemonSet("ns-foo", "foo", &test.NewExtendedDaemonSetOptions{Canary: datadoghqv1alpha1.DefaultExtendedDaemonSetSpecStrategyCanary(&datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{})}),
+				daemonset:       test.NewExtendedDaemonSet("ns-foo", "foo", &test.NewExtendedDaemonSetOptions{Canary: datadoghqv1alpha1.DefaultExtendedDaemonSetSpecStrategyCanary(&datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{}, datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto)}),
 				activeERSName:   "foo-new",
 				upToDateERSName: "foo-new",
 			},

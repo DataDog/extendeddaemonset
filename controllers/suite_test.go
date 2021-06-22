@@ -108,7 +108,7 @@ var _ = BeforeSuite(func(done Done) {
 	})
 	Expect(err).ToNot(HaveOccurred())
 
-	err = SetupControllers(mgr, true)
+	err = SetupControllers(mgr, true, datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto)
 	Expect(err).ToNot(HaveOccurred())
 
 	go func() {
