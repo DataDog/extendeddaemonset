@@ -9,7 +9,6 @@ import (
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	intstrutil "k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	podutils "github.com/DataDog/extendeddaemonset/pkg/controller/utils/pod"
@@ -26,18 +25,11 @@ func ManageUnknown(client client.Client, params *Parameters) (*Result, error) {
 	metaNow := metav1.NewTime(now)
 	var desiredPods, currentPods, availablePods, readyPods, nbIgnoredUnresponsiveNodes int32
 
-	maxPodSchedulerFailure, err := intstrutil.GetValueFromIntOrPercent(params.Strategy.RollingUpdate.MaxPodSchedulerFailure, len(params.PodByNodeName), true)
-	if err != nil {
-		params.Logger.Error(err, "unable to retrieve maxPodSchedulerFailure from the strategy.RollingUpdate.MaxPodSchedulerFailure parameter")
-
-		return result, err
-	}
-
 	for node, pod := range params.PodByNodeName {
 		desiredPods++
 		if pod != nil {
 			if compareCurrentPodWithNewPod(params, pod, node) {
-				if podutils.HasPodSchedulerIssue(pod) && int(nbIgnoredUnresponsiveNodes) < maxPodSchedulerFailure {
+				if podutils.HasPodSchedulerIssue(pod) {
 					nbIgnoredUnresponsiveNodes++
 
 					continue
