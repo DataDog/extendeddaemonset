@@ -8,11 +8,12 @@ package limits
 
 // Parameters use to provide the parameters to the Calculation function.
 type Parameters struct {
-	NbNodes            int
-	NbPods             int
-	NbAvailablesPod    int
-	NbOldAvailablesPod int
-	NbCreatedPod       int
+	NbNodes             int
+	NbPods              int
+	NbAvailablesPod     int
+	NbOldAvailablesPod  int
+	NbCreatedPod        int
+	NbUnresponsiveNodes int
 
 	MaxPodCreation      int
 	MaxUnavailablePod   int
@@ -31,7 +32,12 @@ func CalculatePodToCreateAndDelete(params Parameters) (nbCreation, nbDeletion in
 		nbCreation = 0
 	}
 
-	nbDeletion = params.MaxUnavailablePod - (params.NbNodes - params.NbAvailablesPod - params.NbOldAvailablesPod)
+	effectiveUnresponsive := params.NbUnresponsiveNodes
+	if effectiveUnresponsive > params.MaxUnschedulablePod {
+		effectiveUnresponsive = params.MaxUnschedulablePod
+	}
+
+	nbDeletion = params.MaxUnavailablePod - (params.NbNodes - effectiveUnresponsive - params.NbAvailablesPod - params.NbOldAvailablesPod)
 	if nbDeletion < 0 {
 		nbDeletion = 0
 	}
