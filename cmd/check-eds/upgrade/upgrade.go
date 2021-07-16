@@ -164,7 +164,7 @@ func (o *Options) Run() error {
 			return false, nil
 		}
 
-		if float64(eds.Status.UpToDate)*o.nodeCompletionPct > float64(eds.Status.Current) ||
+		if float64(eds.Status.UpToDate) > float64(eds.Status.Current)*o.nodeCompletionPct ||
 			eds.Status.Current-eds.Status.UpToDate < o.nodeCompletionMin {
 			o.printOutf("upgrade is now finished (reached threshold): %d, nb updated pods: %d, threshold pct: %f, min threshold: %d", eds.Status.Current, eds.Status.UpToDate, o.nodeCompletionPct, o.nodeCompletionMin)
 
