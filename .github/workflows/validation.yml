@@ -62,6 +62,7 @@ jobs:
         with:
           config: test/cluster-kind.yaml
           cluster_name: eds-e2e
+          wait: 600s
       - name: Run e2e tests - kube ${{ matrix.k8s }}
         run: |
           export PATH=$PATH:$(pwd)/bin
