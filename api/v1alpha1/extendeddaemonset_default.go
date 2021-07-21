@@ -160,7 +160,7 @@ func DefaultExtendedDaemonSetSpecStrategyCanary(c *ExtendedDaemonSetSpecStrategy
 	DefaultExtendedDaemonSetSpecStrategyCanaryAutoFail(c.AutoFail)
 
 	if c.NoRestartsDuration == nil && c.ValidationMode == ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto {
-		c.Duration = &metav1.Duration{
+		c.NoRestartsDuration = &metav1.Duration{
 			Duration: defaultCanaryNoRestartsDuration * time.Minute,
 		}
 	}
