@@ -29,10 +29,18 @@ $YQ m -i "$ROOT_DIR/$v1beta1/datadoghq.com_extendeddaemonsets.yaml" "$ROOT_DIR/h
 $YQ m -i "$ROOT_DIR/$v1/datadoghq.com_extendeddaemonsetreplicasets.yaml" "$ROOT_DIR/hack/patch-crd-v1-protocol-kube1.18.yaml"
 $YQ m -i "$ROOT_DIR/$v1/datadoghq.com_extendeddaemonsets.yaml" "$ROOT_DIR/hack/patch-crd-v1-protocol-kube1.18.yaml"
 
+
 # Update `metadata` attribute of v1.PodTemplateSpec to properly validate the
 # resource's metadata, since the automatically generated validation is
 # insufficient.
-$YQ m -i "$ROOT_DIR/$v1beta1/datadoghq.com_extendeddaemonsetreplicasets.yaml" "$ROOT_DIR/hack/patch-crd-metadata.yaml"
-$YQ m -i "$ROOT_DIR/$v1beta1/datadoghq.com_extendeddaemonsets.yaml" "$ROOT_DIR/hack/patch-crd-metadata.yaml"
-$YQ m -i "$ROOT_DIR/$v1/datadoghq.com_extendeddaemonsetreplicasets.yaml" "$ROOT_DIR/hack/patch-crd-metadata.yaml"
-$YQ m -i "$ROOT_DIR/$v1/datadoghq.com_extendeddaemonsets.yaml" "$ROOT_DIR/hack/patch-crd-metadata.yaml"
+patch_CRD_metadata="$ROOT_DIR/hack/patch-crd-metadata.yaml"
+
+# Different object path in v1beta1 and v1. Notice that v1 assumes that there's just 1 version
+openAPIV3Schema_path_v1beta1="spec.validation.openAPIV3Schema"
+openAPIV3Schema_path="spec.versions[0].schema.openAPIV3Schema"
+metadata_subpath="properties.spec.properties.template.properties.metadata"
+
+$YQ w -i "$ROOT_DIR/$v1beta1/datadoghq.com_extendeddaemonsetreplicasets.yaml" "$openAPIV3Schema_path_v1beta1"."$metadata_subpath" -f "$patch_CRD_metadata"
+$YQ w -i "$ROOT_DIR/$v1beta1/datadoghq.com_extendeddaemonsets.yaml" "$openAPIV3Schema_path_v1beta1"."$metadata_subpath" -f "$patch_CRD_metadata"
+$YQ w -i "$ROOT_DIR/$v1/datadoghq.com_extendeddaemonsetreplicasets.yaml" "$openAPIV3Schema_path"."$metadata_subpath" -f "$patch_CRD_metadata"
+$YQ w -i "$ROOT_DIR/$v1/datadoghq.com_extendeddaemonsets.yaml" "$openAPIV3Schema_path"."$metadata_subpath" -f "$patch_CRD_metadata"
