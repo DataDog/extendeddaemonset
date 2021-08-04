@@ -35,6 +35,15 @@ By default, the controller only watches the ExtendedDaemonSet resources that are
               value: ""
 ```
 
+Alternatively, you can use this [helm chart](
+https://github.com/DataDog/helm-charts/tree/master/charts/extended-daemon-set) to deploy:
+
+```bash
+helm repo add datadog https://helm.datadoghq.com
+helm repo update
+helm install eds datadog/extendeddaemonset
+```
+
 ### Demo application
 
 If you want to test and compare the advantages of the ExtendedDaemonSet over the the standard DaemonSet, you can use the demo application available in the `/example` folder. Follow the below scenario:
