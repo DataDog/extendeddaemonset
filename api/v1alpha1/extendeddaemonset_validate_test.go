@@ -89,7 +89,7 @@ func TestValidateExtendedDaemonSetSpec(t *testing.T) {
 		},
 		{
 			name: "valid autoPause no autoFail",
-			spec: validAutoFailNoAutoPause,
+			spec: validAutoPauseNoAutoFail,
 		},
 		{
 			name: "valid manual validation mode",
