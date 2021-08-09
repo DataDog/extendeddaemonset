@@ -341,3 +341,73 @@ func Test_deletePodLabel(t *testing.T) {
 		})
 	}
 }
+
+func Test_cleanupPods(t *testing.T) {
+
+	logf.SetLogger(zap.New())
+	logger := logf.Log.WithName("test")
+
+	status := &datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus{
+		Status:    "canary",
+		Desired:   3,
+		Current:   1,
+		Ready:     1,
+		Available: 1,
+	}
+
+	pod1 := newTestCanaryPod("foo-a", "v1", readyPodStatus)
+	pods := []*corev1.Pod{
+		pod1,
+	}
+	client := fake.NewClientBuilder().WithObjects(pod1).Build()
+
+	err := cleanupPods(client, logger, status, pods)
+	assert.Nilf(t, err, "error must be nil, err: %v", err)
+}
+
+func Test_manageUnscheduledPodNodes(t *testing.T) {
+
+	podStatus1 := corev1.PodStatus{
+		Conditions: []corev1.PodCondition{
+			{
+				Type:   corev1.PodScheduled,
+				Status: corev1.ConditionFalse,
+				Reason: corev1.PodReasonUnschedulable,
+			},
+		},
+	}
+	pod1 := newTestCanaryPod("foo-a", "v1", podStatus1)
+	pod1.Spec.NodeName = "test-node1"
+
+	podStatus2 := corev1.PodStatus{
+		Conditions: []corev1.PodCondition{
+			{
+				Type:   corev1.PodScheduled,
+				Status: corev1.ConditionFalse,
+				Reason: "",
+			},
+		},
+	}
+	pod2 := newTestCanaryPod("foo-b", "v1", podStatus2)
+	pod2.Spec.NodeName = "test-node2"
+
+	podStatus3 := corev1.PodStatus{
+		Conditions: []corev1.PodCondition{
+			{
+				Type:   corev1.PodReady,
+				Status: corev1.ConditionTrue,
+			},
+		},
+	}
+	pod3 := newTestCanaryPod("foo-c", "v1", podStatus3)
+	pod3.Spec.NodeName = "test-node3"
+
+	pods := []*corev1.Pod{
+		pod1,
+		pod2,
+		pod3,
+	}
+
+	nodes := manageUnscheduledPodNodes(pods)
+	assert.Equal(t, len(nodes), 1)
+}

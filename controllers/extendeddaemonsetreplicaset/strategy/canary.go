@@ -172,7 +172,7 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 			cannotStartPodStatus = fmt.Sprintf("Pod %s cannot start with reason: %s", pod.ObjectMeta.Name, string(cannotStartReason))
 			cannotStartPodReason = cannotStartReason
 		} else if autoPauseEnabled && podUtils.PendingCreate(pod) && params.Strategy.Canary.AutoPause.MaxSlowStartDuration != nil {
-			if time.Now().After(pod.Status.StartTime.Time.Add(params.Strategy.Canary.AutoPause.MaxSlowStartDuration.Duration)) {
+			if now.After(pod.Status.StartTime.Time.Add(params.Strategy.Canary.AutoPause.MaxSlowStartDuration.Duration)) {
 				params.Logger.Info(
 					"PendingCreate",
 					"PodName", pod.ObjectMeta.Name,
@@ -299,7 +299,7 @@ func ensureCanaryPodLabels(client client.Client, params *Parameters) error {
 			// Check if that ERS is the Pod's parent, to not label a pod
 			// from the previous ERS (if the previous Pod is not yet deleted).
 			if pod.Labels[v1alpha1.ExtendedDaemonSetReplicaSetNameLabelKey] == params.Replicaset.GetName() {
-				params.Logger.V(1).Info("Add Canary label", "podName", pod.Name)
+				params.Logger.V(1).Info("Add Canary label", "podName", pod.GetName())
 				err := addPodLabel(params.Logger,
 					client,
 					pod,

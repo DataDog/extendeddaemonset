@@ -29,9 +29,8 @@ import (
 const cleanCanaryLabelsThreshold = 5 * time.Minute
 
 // ManageDeployment used to manage ReplicaSet in rollingupdate state.
-func ManageDeployment(client runtimeclient.Client, daemonset *datadoghqv1alpha1.ExtendedDaemonSet, params *Parameters) (*Result, error) {
-	now := time.Now()
-	metaNow := metav1.NewTime(now)
+func ManageDeployment(client runtimeclient.Client, daemonset *datadoghqv1alpha1.ExtendedDaemonSet, params *Parameters, metaNow metav1.Time) (*Result, error) {
+	now := metaNow.Time
 	result := &Result{
 		IsPaused: eds.IsRollingUpdatePaused(daemonset.GetAnnotations()),
 		IsFrozen: eds.IsRolloutFrozen(daemonset.GetAnnotations()),
@@ -71,6 +70,7 @@ func ManageDeployment(client runtimeclient.Client, daemonset *datadoghqv1alpha1.
 			}
 
 			allPods++
+			// Check for any differences between stored pod and existing pod
 			if !compareCurrentPodWithNewPod(params, pod, node) {
 				if pod.DeletionTimestamp == nil {
 					allPodToDelete = append(allPodToDelete, node)
