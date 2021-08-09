@@ -343,7 +343,6 @@ func Test_deletePodLabel(t *testing.T) {
 }
 
 func Test_cleanupPods(t *testing.T) {
-
 	logf.SetLogger(zap.New())
 	logger := logf.Log.WithName("test")
 
@@ -366,7 +365,6 @@ func Test_cleanupPods(t *testing.T) {
 }
 
 func Test_manageUnscheduledPodNodes(t *testing.T) {
-
 	podStatus1 := corev1.PodStatus{
 		Conditions: []corev1.PodCondition{
 			{

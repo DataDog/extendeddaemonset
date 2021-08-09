@@ -105,17 +105,6 @@ func podWaitingStatus(reason, message string) v1.PodStatus {
 	}
 }
 
-func podRestartingStatus(restartCount int32) v1.PodStatus {
-	return v1.PodStatus{
-		ContainerStatuses: []v1.ContainerStatus{
-			{
-				Name:         "restarting",
-				RestartCount: restartCount,
-			},
-		},
-	}
-}
-
 func withDeletionTimestamp(pod *v1.Pod) *v1.Pod {
 	ts := metav1.Now()
 	pod.DeletionTimestamp = &ts
