@@ -225,7 +225,7 @@ func (r *Reconciler) updateInstanceWithCurrentRS(logger logr.Logger, now time.Ti
 	if current != nil {
 		newDaemonset.Status.ActiveReplicaSet = current.Name
 		newDaemonset.Status.Desired = current.Status.Desired
-		newDaemonset.Status.UpToDate = current.Status.Available
+		newDaemonset.Status.UpToDate = current.Status.Current
 		newDaemonset.Status.Available = current.Status.Available
 		newDaemonset.Status.State = nonCanaryState(daemonset.GetAnnotations())
 		newDaemonset.Status.IgnoredUnresponsiveNodes = current.Status.IgnoredUnresponsiveNodes
