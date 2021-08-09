@@ -15,6 +15,7 @@ import (
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonset"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetsetting"
+	"github.com/DataDog/extendeddaemonset/controllers/podtemplate"
 )
 
 // SetupControllers start all controllers (also used by unit and e2e tests).
@@ -51,6 +52,16 @@ func SetupControllers(mgr manager.Manager, nodeAffinityMatchSupport bool, defaul
 		},
 	}).SetupWithManager(mgr); err != nil {
 		return fmt.Errorf("unable to create controller ExtendedDaemonSetReplicaSet: %w", err)
+	}
+
+	if err := (&PodTemplateReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("controllers").WithName("PodTemplate"),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("PodTemplate"),
+		Options:  podtemplate.ReconcilerOptions{},
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create controller PodTemplate: %w", err)
 	}
 
 	return nil
