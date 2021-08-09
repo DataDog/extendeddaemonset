@@ -585,9 +585,12 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 	replicassetCurrent := test.NewExtendedDaemonSetReplicaSet("bar", "current", &test.NewExtendedDaemonSetReplicaSetOptions{
 		Labels: map[string]string{"foo-key": "current-value"},
 		Status: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus{
-			Desired:   3,
-			Available: 3,
+			// Define different values for all the attributes to avoid passing tests by chance.
+			// Constraints: desired >= current >= ready >= available
+			Desired:   4,
+			Current:   3,
 			Ready:     2,
+			Available: 1,
 		},
 	})
 
@@ -609,10 +612,10 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 		daemonsetWithStatus.ResourceVersion = "1"
 		daemonsetWithStatus.Status = datadoghqv1alpha1.ExtendedDaemonSetStatus{
 			ActiveReplicaSet: "current",
-			Desired:          3,
+			Desired:          4,
 			Current:          3,
-			Available:        3,
 			Ready:            2,
+			Available:        1,
 			UpToDate:         3,
 			State:            "Running",
 		}
@@ -648,10 +651,10 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 			},
 			Status: &datadoghqv1alpha1.ExtendedDaemonSetStatus{
 				ActiveReplicaSet: "current",
-				Desired:          3,
+				Desired:          4,
 				Current:          3,
-				Available:        3,
 				Ready:            2,
+				Available:        1,
 				UpToDate:         3,
 				Canary: &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{
 					Nodes:      []string{"node1"},

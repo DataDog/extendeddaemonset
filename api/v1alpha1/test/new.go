@@ -22,12 +22,13 @@ var apiVersion = fmt.Sprintf("%s/%s", datadoghqv1alpha1.GroupVersion.Group, data
 
 // NewExtendedDaemonSetOptions set of option for the ExtendedDaemonset creation.
 type NewExtendedDaemonSetOptions struct {
-	CreationTime  *time.Time
-	Annotations   map[string]string
-	Labels        map[string]string
-	RollingUpdate *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate
-	Canary        *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary
-	Status        *datadoghqv1alpha1.ExtendedDaemonSetStatus
+	CreationTime    *time.Time
+	Annotations     map[string]string
+	Labels          map[string]string
+	RollingUpdate   *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate
+	Canary          *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary
+	Status          *datadoghqv1alpha1.ExtendedDaemonSetStatus
+	PodTemplateSpec *corev1.PodTemplateSpec
 }
 
 // NewExtendedDaemonSet return new ExtendedDDaemonset instance for test purpose.
@@ -66,6 +67,9 @@ func NewExtendedDaemonSet(ns, name string, options *NewExtendedDaemonSetOptions)
 		}
 		if options.Status != nil {
 			dd.Status = *options.Status
+		}
+		if options.PodTemplateSpec != nil {
+			dd.Spec.Template = *options.PodTemplateSpec
 		}
 	}
 
