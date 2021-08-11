@@ -58,7 +58,7 @@ var (
 	}
 )
 
-func newTestCanaryPod(name, hash string, status v1.PodStatus) *v1.Pod {
+func newTestPodOnNode(name, nodeName, hash string, status v1.PodStatus) *v1.Pod {
 	return &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
@@ -66,8 +66,15 @@ func newTestCanaryPod(name, hash string, status v1.PodStatus) *v1.Pod {
 				"extendeddaemonset.datadoghq.com/templatehash": hash,
 			},
 		},
+		Spec: v1.PodSpec{
+			NodeName: nodeName,
+		},
 		Status: status,
 	}
+}
+
+func newTestCanaryPod(name, hash string, status v1.PodStatus) *v1.Pod {
+	return newTestPodOnNode(name, "", hash, status)
 }
 
 func podTerminatedStatus(restartCount int32, reason string, time time.Time) v1.PodStatus {

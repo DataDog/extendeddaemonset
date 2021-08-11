@@ -97,7 +97,7 @@ func TestManageDeployment(t *testing.T) {
 					},
 				},
 				PodByNodeName: map[*NodeItem]*corev1.Pod{
-					testCanaryNodes["a"]: newTestCanaryPod("foo-a", "v1", readyPodStatus),
+					testCanaryNodes["a"]: newTestPodOnNode("foo-a", "a", "v1", readyPodStatus),
 					testCanaryNodes["b"]: nil,
 				},
 			},
@@ -148,7 +148,7 @@ func TestManageDeployment(t *testing.T) {
 					},
 				},
 				PodByNodeName: map[*NodeItem]*corev1.Pod{
-					testCanaryNodes["a"]: newTestCanaryPod("foo-a", "v1", readyPodStatus),
+					testCanaryNodes["a"]: newTestPodOnNode("foo-a", "a", "v1", readyPodStatus),
 					testCanaryNodes["b"]: nil,
 				},
 			},
@@ -202,7 +202,7 @@ func TestManageDeployment(t *testing.T) {
 					},
 				},
 				PodByNodeName: map[*NodeItem]*corev1.Pod{
-					testCanaryNodes["a"]: newTestCanaryPod("foo-a", "v2", readyPodStatus),
+					testCanaryNodes["a"]: newTestPodOnNode("foo-a", "a", "v2", readyPodStatus),
 					testCanaryNodes["b"]: nil,
 				},
 			},
@@ -256,7 +256,7 @@ func TestManageDeployment(t *testing.T) {
 					},
 				},
 				PodByNodeName: map[*NodeItem]*corev1.Pod{
-					testCanaryNodes["a"]: withDeletionTimestamp(newTestCanaryPod("foo-a", "v2", readyPodStatus)),
+					testCanaryNodes["a"]: withDeletionTimestamp(newTestPodOnNode("foo-a", "a", "v2", readyPodStatus)),
 					testCanaryNodes["b"]: nil,
 				},
 			},

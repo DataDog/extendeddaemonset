@@ -63,7 +63,7 @@ func ManageDeployment(client runtimeclient.Client, daemonset *datadoghqv1alpha1.
 		if pod == nil {
 			allPodToCreate = append(allPodToCreate, node)
 		} else {
-			if podutils.HasPodSchedulerIssue(pod) && int(nbIgnoredUnresponsiveNodes) < maxPodSchedulerFailure {
+			if podutils.HasPodSchedulerIssue(pod) {
 				nbIgnoredUnresponsiveNodes++
 
 				continue
@@ -109,17 +109,30 @@ func ManageDeployment(client runtimeclient.Client, daemonset *datadoghqv1alpha1.
 
 		return result, err
 	}
-	params.Logger.V(1).Info("Parameters", "nbNodes", nbNodes, "createdPods", createdPods, "allPods", allPods, "nbPodReady", readyPods, "availablePods", availablePods, "oldAvailablePods", oldAvailablePods, "maxPodsCreation", maxCreation, "maxUnavailable", maxUnavailable, "nbPodToCreate", len(allPodToCreate), "nbPodToDelete", len(allPodToDelete), "podsTerminating", podsTerminating)
+	params.Logger.V(1).Info("Parameters",
+		"nbNodes", nbNodes,
+		"createdPods", createdPods,
+		"allPods", allPods,
+		"nbPodReady", readyPods,
+		"availablePods", availablePods,
+		"oldAvailablePods", oldAvailablePods,
+		"maxPodsCreation", maxCreation,
+		"maxUnavailable", maxUnavailable,
+		"nbPodToCreate", len(allPodToCreate),
+		"nbPodToDelete", len(allPodToDelete),
+		"podsTerminating", podsTerminating)
 
 	limitParams := limits.Parameters{
 		NbNodes: nbNodes,
 
-		NbPods:             int(allPods),
-		NbAvailablesPod:    int(availablePods),
-		NbOldAvailablesPod: int(oldAvailablePods),
-		NbCreatedPod:       int(createdPods),
-		MaxUnavailablePod:  maxUnavailable,
-		MaxPodCreation:     maxCreation,
+		NbPods:              int(allPods),
+		NbAvailablesPod:     int(availablePods),
+		NbOldAvailablesPod:  int(oldAvailablePods),
+		NbCreatedPod:        int(createdPods),
+		NbUnresponsiveNodes: int(nbIgnoredUnresponsiveNodes),
+		MaxUnavailablePod:   maxUnavailable,
+		MaxPodCreation:      maxCreation,
+		MaxUnschedulablePod: maxPodSchedulerFailure,
 	}
 	nbPodToCreate, nbPodToDelete := limits.CalculatePodToCreateAndDelete(limitParams)
 	metrics.SetRollingUpdateStuckMetric(params.Replicaset.GetName(), params.Replicaset.GetNamespace(), nbPodToDelete == 0)
@@ -146,15 +159,13 @@ func ManageDeployment(client runtimeclient.Client, daemonset *datadoghqv1alpha1.
 		result.PodsToCreate = allPodToCreate[:nbPodToCreateWithConstraint]
 	}
 
-	{
-		result.NewStatus = params.NewStatus.DeepCopy()
-		result.NewStatus.Status = string(ReplicaSetStatusActive)
-		result.NewStatus.Desired = desiredPods
-		result.NewStatus.Ready = readyPods
-		result.NewStatus.Current = createdPods
-		result.NewStatus.Available = availablePods
-		result.NewStatus.IgnoredUnresponsiveNodes = nbIgnoredUnresponsiveNodes
-	}
+	result.NewStatus = params.NewStatus.DeepCopy()
+	result.NewStatus.Status = string(ReplicaSetStatusActive)
+	result.NewStatus.Desired = desiredPods
+	result.NewStatus.Ready = readyPods
+	result.NewStatus.Current = createdPods
+	result.NewStatus.Available = availablePods
+	result.NewStatus.IgnoredUnresponsiveNodes = nbIgnoredUnresponsiveNodes
 
 	// Populate list of unscheduled pods on nodes due to resource limitation
 	result.UnscheduledNodesDueToResourcesConstraints = manageUnscheduledPodNodes(params.UnscheduledPods)
