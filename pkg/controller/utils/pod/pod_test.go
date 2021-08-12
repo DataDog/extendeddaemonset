@@ -285,9 +285,9 @@ func TestHasPodSchedulerIssue(t *testing.T) {
 
 	// Has scheduler issue because pod deletion time was too long ago
 	pod3 := pod.DeepCopy()
-	deletionTs := metav1.NewTime(time.Now().Add(-100 * time.Second))
+	deletionTS := metav1.NewTime(time.Now().Add(-100 * time.Second))
 	gracePeriod := int64(10)
-	pod3.DeletionTimestamp = &deletionTs
+	pod3.DeletionTimestamp = &deletionTS
 	pod3.DeletionGracePeriodSeconds = &gracePeriod
 	hasIssue = HasPodSchedulerIssue(pod3)
 	assert.True(t, hasIssue)
