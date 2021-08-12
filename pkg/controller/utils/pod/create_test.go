@@ -8,12 +8,16 @@ package pod
 import (
 	"fmt"
 	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
+	datadoghqv1alpha1test "github.com/DataDog/extendeddaemonset/api/v1alpha1/test"
 	ctrltest "github.com/DataDog/extendeddaemonset/pkg/controller/test"
 )
 
@@ -128,4 +132,35 @@ func Test_overwriteResourcesFromNode(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_overwriteResourcesFromEdsNode(t *testing.T) {
+	templateOriginal := &corev1.PodTemplateSpec{
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{Name: "container1"},
+			},
+		},
+	}
+
+	templateCopy := templateOriginal.DeepCopy()
+	// nil case, no change to template
+	edsNode := &datadoghqv1alpha1.ExtendedDaemonsetSetting{}
+	overwriteResourcesFromEdsNode(templateOriginal, edsNode)
+	assert.Equal(t, templateCopy, templateOriginal)
+
+	resouresRef := corev1.ResourceList{
+		"cpu":    resource.MustParse("0.1"),
+		"memory": resource.MustParse("20M"),
+	}
+	edsNode = datadoghqv1alpha1test.NewExtendedDaemonsetSetting("foo", "bar", "reference", &datadoghqv1alpha1test.NewExtendedDaemonsetSettingOptions{
+		CreationTime: time.Now(),
+		Resources: map[string]corev1.ResourceRequirements{
+			"container1": {
+				Requests: resouresRef,
+			},
+		},
+	})
+	overwriteResourcesFromEdsNode(templateOriginal, edsNode)
+	assert.NotEqual(t, templateCopy, templateOriginal)
 }

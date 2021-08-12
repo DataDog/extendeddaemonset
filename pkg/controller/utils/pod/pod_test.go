@@ -18,7 +18,354 @@ import (
 	ctrltest "github.com/DataDog/extendeddaemonset/pkg/controller/test"
 )
 
-func Test_HighestPodRestartCount(t *testing.T) {
+func TestGetContainerStatus(t *testing.T) {
+	now := time.Now()
+	statuses := []v1.ContainerStatus{
+		{
+			Name:         "clb",
+			RestartCount: 10,
+			LastTerminationState: v1.ContainerState{
+				Terminated: &v1.ContainerStateTerminated{
+					Reason:     "CrashLoopBackOff",
+					FinishedAt: metav1.NewTime(now.Add(-time.Hour)),
+				},
+			},
+		},
+		{
+			Name:         "oom",
+			RestartCount: 1,
+			LastTerminationState: v1.ContainerState{
+				Terminated: &v1.ContainerStateTerminated{
+					Reason:     "OOMKilled",
+					FinishedAt: metav1.NewTime(now.Add(-2 * time.Hour)),
+				},
+			},
+		},
+	}
+
+	// Status exists and is found
+	name := "clb"
+	status, exists := GetContainerStatus(statuses, name)
+	assert.Equal(t, statuses[0], status)
+	assert.True(t, exists)
+
+	// Status does not exist
+	name = "cla"
+	status, exists = GetContainerStatus(statuses, name)
+	assert.Equal(t, v1.ContainerStatus{}, status)
+	assert.False(t, exists)
+}
+
+func TestGetExistingContainerStatus(t *testing.T) {
+	now := time.Now()
+	statuses := []v1.ContainerStatus{
+		{
+			Name:         "clb",
+			RestartCount: 10,
+			LastTerminationState: v1.ContainerState{
+				Terminated: &v1.ContainerStateTerminated{
+					Reason:     "CrashLoopBackOff",
+					FinishedAt: metav1.NewTime(now.Add(-time.Hour)),
+				},
+			},
+		},
+		{
+			Name:         "oom",
+			RestartCount: 1,
+			LastTerminationState: v1.ContainerState{
+				Terminated: &v1.ContainerStateTerminated{
+					Reason:     "OOMKilled",
+					FinishedAt: metav1.NewTime(now.Add(-2 * time.Hour)),
+				},
+			},
+		},
+	}
+
+	// Status exists
+	name := "clb"
+	status := GetExistingContainerStatus(statuses, name)
+	assert.Equal(t, statuses[0], status)
+
+	// Status does not exist
+	name = "cla"
+	status = GetExistingContainerStatus(statuses, name)
+	assert.Equal(t, v1.ContainerStatus{}, status)
+}
+
+func TestIsPodScheduled(t *testing.T) {
+	now := time.Now()
+	pod := ctrltest.NewPod("bar", "pod1", "node1", &ctrltest.NewPodOptions{
+		ContainerStatuses: []v1.ContainerStatus{
+			{
+				RestartCount: 10,
+				LastTerminationState: v1.ContainerState{
+					Terminated: &v1.ContainerStateTerminated{
+						Reason:     "CrashLoopBackOff",
+						FinishedAt: metav1.NewTime(now.Add(-time.Hour)),
+					},
+				},
+			},
+			{
+				RestartCount: 1,
+				LastTerminationState: v1.ContainerState{
+					Terminated: &v1.ContainerStateTerminated{
+						Reason:     "OOMKilled",
+						FinishedAt: metav1.NewTime(now.Add(-2 * time.Hour)),
+					},
+				},
+			},
+		},
+	},
+	)
+
+	want := "node1"
+	got, isScheduled := IsPodScheduled(pod)
+	assert.Equal(t, want, got)
+	assert.True(t, isScheduled)
+
+	pod2 := ctrltest.NewPod("bar", "pod2", "", &ctrltest.NewPodOptions{
+		ContainerStatuses: []v1.ContainerStatus{
+			{
+				RestartCount: 10,
+				LastTerminationState: v1.ContainerState{
+					Terminated: &v1.ContainerStateTerminated{
+						Reason:     "CrashLoopBackOff",
+						FinishedAt: metav1.NewTime(now.Add(-time.Hour)),
+					},
+				},
+			},
+			{
+				RestartCount: 1,
+				LastTerminationState: v1.ContainerState{
+					Terminated: &v1.ContainerStateTerminated{
+						Reason:     "OOMKilled",
+						FinishedAt: metav1.NewTime(now.Add(-2 * time.Hour)),
+					},
+				},
+			},
+		},
+	},
+	)
+	got, isScheduled = IsPodScheduled(pod2)
+	assert.Equal(t, "", got)
+	assert.False(t, isScheduled)
+}
+
+func TestGetNodeNameFromPod(t *testing.T) {
+	now := time.Now()
+	pod := ctrltest.NewPod("bar", "pod1", "node1", &ctrltest.NewPodOptions{
+		ContainerStatuses: []v1.ContainerStatus{
+			{
+				RestartCount: 10,
+				LastTerminationState: v1.ContainerState{
+					Terminated: &v1.ContainerStateTerminated{
+						Reason:     "CrashLoopBackOff",
+						FinishedAt: metav1.NewTime(now.Add(-time.Hour)),
+					},
+				},
+			},
+			{
+				RestartCount: 1,
+				LastTerminationState: v1.ContainerState{
+					Terminated: &v1.ContainerStateTerminated{
+						Reason:     "OOMKilled",
+						FinishedAt: metav1.NewTime(now.Add(-2 * time.Hour)),
+					},
+				},
+			},
+		},
+	},
+	)
+	want := "node1"
+	got, err := GetNodeNameFromPod(pod)
+	assert.Equal(t, want, got)
+	assert.Nil(t, err)
+
+	pod2 := ctrltest.NewPod("bar", "pod2", "", &ctrltest.NewPodOptions{
+		ContainerStatuses: []v1.ContainerStatus{
+			{
+				RestartCount: 1,
+				LastTerminationState: v1.ContainerState{
+					Terminated: &v1.ContainerStateTerminated{
+						Reason:     "OOMKilled",
+						FinishedAt: metav1.NewTime(now.Add(-2 * time.Hour)),
+					},
+				},
+			},
+		},
+	},
+	)
+	got, err = GetNodeNameFromPod(pod2)
+	assert.Equal(t, "", got)
+	assert.NotNil(t, err)
+}
+
+func TestIsPodReady(t *testing.T) {
+	pod := ctrltest.NewPod("bar", "pod1", "node1", &ctrltest.NewPodOptions{})
+	isReady := IsPodReady(pod)
+	assert.False(t, isReady)
+
+	pod2 := ctrltest.NewPod("bar", "pod2", "node1", &ctrltest.NewPodOptions{})
+	pod2.Status.Conditions = []v1.PodCondition{
+		{
+			Type:   v1.PodReady,
+			Status: v1.ConditionTrue,
+		},
+	}
+	isReady = IsPodReady(pod2)
+	assert.True(t, isReady)
+}
+
+func TestIsCannotStartReason(t *testing.T) {
+	reason := "ErrImagePull"
+	cannotStart := IsCannotStartReason(reason)
+	assert.True(t, cannotStart)
+
+	reason = "ICanStart"
+	cannotStart = IsCannotStartReason(reason)
+	assert.False(t, cannotStart)
+}
+
+func TestCannotStart(t *testing.T) {
+	now := metav1.Now()
+	pod := newPod(now, true, 5)
+	cannotStart, reason := CannotStart(pod)
+	assert.False(t, cannotStart)
+	assert.Equal(t, datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown, reason)
+
+	pod.Status.ContainerStatuses = []v1.ContainerStatus{
+		{
+
+			RestartCount: 10,
+			LastTerminationState: v1.ContainerState{
+				Terminated: &v1.ContainerStateTerminated{
+					Reason: "CrashLoopBackOff",
+				},
+			},
+			State: v1.ContainerState{
+				Waiting: &v1.ContainerStateWaiting{
+					Reason: "ErrImagePull",
+				},
+			},
+		},
+	}
+	cannotStart, reason = CannotStart(pod)
+	assert.True(t, cannotStart)
+	assert.Equal(t, datadoghqv1alpha1.ExtendedDaemonSetStatusReasonErrImagePull, reason)
+}
+
+func TestPendingCreate(t *testing.T) {
+	now := metav1.Now()
+	pod := newPod(now, true, 5)
+	isPendingCreate := PendingCreate(pod)
+	assert.False(t, isPendingCreate)
+
+	pod.Status.ContainerStatuses = []v1.ContainerStatus{
+		{
+			State: v1.ContainerState{
+				Waiting: &v1.ContainerStateWaiting{
+					Reason: "ContainerCreating",
+				},
+			},
+		},
+	}
+	isPendingCreate = PendingCreate(pod)
+	assert.True(t, isPendingCreate)
+}
+
+func TestHasPodSchedulerIssue(t *testing.T) {
+	pod := ctrltest.NewPod("bar", "pod1", "node1", &ctrltest.NewPodOptions{})
+	hasIssue := HasPodSchedulerIssue(pod)
+	assert.False(t, hasIssue)
+
+	// Has scheduler issue because pod creation time was too long ago
+	pod2 := ctrltest.NewPod("bar", "pod2", "", &ctrltest.NewPodOptions{})
+	hasIssue = HasPodSchedulerIssue(pod2)
+	assert.True(t, hasIssue)
+
+	// Has scheduler issue because pod deletion time was too long ago
+	pod3 := pod.DeepCopy()
+	deletionTs := metav1.NewTime(time.Now().Add(-100 * time.Second))
+	gracePeriod := int64(10)
+	pod3.DeletionTimestamp = &deletionTs
+	pod3.DeletionGracePeriodSeconds = &gracePeriod
+	hasIssue = HasPodSchedulerIssue(pod3)
+	assert.True(t, hasIssue)
+}
+
+func TestUpdatePodCondition(t *testing.T) {
+	status := &v1.PodStatus{
+		Conditions: []v1.PodCondition{
+			{
+				Type:   v1.PodReady,
+				Status: v1.ConditionTrue,
+			},
+		},
+	}
+	condition := &v1.PodCondition{
+		Type:   v1.PodReady,
+		Status: v1.ConditionTrue,
+	}
+	changed := UpdatePodCondition(status, condition)
+	// Condition did not change
+	assert.False(t, changed)
+
+	condition2 := &v1.PodCondition{
+		Type:   v1.PodReady,
+		Status: v1.ConditionFalse,
+	}
+	changed = UpdatePodCondition(status, condition2)
+	// Condition changed
+	assert.True(t, changed)
+}
+
+func TestIsEvicted(t *testing.T) {
+	status := &v1.PodStatus{
+		Conditions: []v1.PodCondition{
+			{
+				Type:   v1.PodReady,
+				Status: v1.ConditionTrue,
+			},
+		},
+	}
+	isEvicted := IsEvicted(status)
+	assert.False(t, isEvicted)
+
+	status2 := &v1.PodStatus{
+		Phase:  v1.PodFailed,
+		Reason: "Evicted",
+	}
+	isEvicted = IsEvicted(status2)
+	assert.True(t, isEvicted)
+}
+
+func TestSortPodByCreationTime(t *testing.T) {
+	time1 := time.Now()
+	time2 := time1.Add(10 * time.Second)
+	time3 := time2.Add(20 * time.Second)
+	pod1 := ctrltest.NewPod("bar", "pod1", "node1", &ctrltest.NewPodOptions{
+		CreationTimestamp: metav1.NewTime(time1),
+	})
+
+	pod2 := ctrltest.NewPod("bar", "pod2", "node1", &ctrltest.NewPodOptions{
+		CreationTimestamp: metav1.NewTime(time2),
+	})
+
+	pod3 := ctrltest.NewPod("bar", "pod3", "node1", &ctrltest.NewPodOptions{
+		CreationTimestamp: metav1.NewTime(time3),
+	})
+	pods := []*v1.Pod{
+		pod2,
+		pod3,
+		pod1,
+	}
+	podList := SortPodByCreationTime(pods)
+	assert.Equal(t, pod3, podList[0])
+	assert.Equal(t, pod2, podList[1])
+	assert.Equal(t, pod1, podList[2])
+}
+
+func Test_HighestRestartCount(t *testing.T) {
 	tests := []struct {
 		name             string
 		pod              *v1.Pod
