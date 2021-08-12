@@ -149,7 +149,7 @@ func Test_StringsContains(t *testing.T) {
 			want: false,
 		},
 		{
-			name: "a does not contain x v2",
+			name: "a does not contain x (but it is a substring of a string in a)",
 			a: []string{
 				"hello",
 				"goodbye",

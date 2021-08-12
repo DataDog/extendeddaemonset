@@ -217,12 +217,13 @@ func TestIsPodReady(t *testing.T) {
 }
 
 func TestIsCannotStartReason(t *testing.T) {
-	reason := "ErrImagePull"
-	cannotStart := IsCannotStartReason(reason)
-	assert.True(t, cannotStart)
+	for _, reason := range cannotStartReasons {
+		cannotStart := IsCannotStartReason(reason)
+		assert.True(t, cannotStart)
+	}
 
-	reason = "ICanStart"
-	cannotStart = IsCannotStartReason(reason)
+	reason := "ICanStart"
+	cannotStart := IsCannotStartReason(reason)
 	assert.False(t, cannotStart)
 }
 
@@ -360,9 +361,7 @@ func TestSortPodByCreationTime(t *testing.T) {
 		pod1,
 	}
 	podList := SortPodByCreationTime(pods)
-	assert.Equal(t, pod3, podList[0])
-	assert.Equal(t, pod2, podList[1])
-	assert.Equal(t, pod1, podList[2])
+	assert.Equal(t, []*v1.Pod{pod3, pod2, pod1}, podList)
 }
 
 func Test_HighestRestartCount(t *testing.T) {

@@ -142,14 +142,15 @@ func Test_overwriteResourcesFromEdsNode(t *testing.T) {
 			},
 		},
 	}
-
 	templateCopy := templateOriginal.DeepCopy()
+
 	// nil case, no change to template
 	edsNode := &datadoghqv1alpha1.ExtendedDaemonsetSetting{}
 	overwriteResourcesFromEdsNode(templateOriginal, edsNode)
 	assert.Equal(t, templateCopy, templateOriginal)
 
-	resouresRef := corev1.ResourceList{
+	// template changed
+	resourcesRef := corev1.ResourceList{
 		"cpu":    resource.MustParse("0.1"),
 		"memory": resource.MustParse("20M"),
 	}
@@ -157,10 +158,11 @@ func Test_overwriteResourcesFromEdsNode(t *testing.T) {
 		CreationTime: time.Now(),
 		Resources: map[string]corev1.ResourceRequirements{
 			"container1": {
-				Requests: resouresRef,
+				Requests: resourcesRef,
 			},
 		},
 	})
 	overwriteResourcesFromEdsNode(templateOriginal, edsNode)
 	assert.NotEqual(t, templateCopy, templateOriginal)
+	assert.Equal(t, resourcesRef, templateOriginal.Spec.Containers[0].Resources.Requests)
 }
