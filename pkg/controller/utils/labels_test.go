@@ -58,3 +58,35 @@ func TestBuildInfoLabels(t *testing.T) {
 		})
 	}
 }
+
+func Test_sanitizeLabelName(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{
+			name:  "no change",
+			input: "hello",
+			want:  "hello",
+		},
+		{
+			name:  "one invalid character",
+			input: "hello!",
+			want:  "hello_",
+		},
+		{
+			name:  "two invalid characters",
+			input: "h*ello!",
+			want:  "h_ello_",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := sanitizeLabelName(tt.input)
+			if got != tt.want {
+				t.Errorf("sanitizeLabelName() got = %#v, want %#v", got, tt.want)
+			}
+		})
+	}
+}

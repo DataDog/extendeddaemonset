@@ -8,6 +8,8 @@ package affinity
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	v1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 )
@@ -126,4 +128,37 @@ func TestReplaceNodeNameNodeAffinity(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetNodeNameFromAffinity(t *testing.T) {
+	// nil case
+	got := GetNodeNameFromAffinity(nil)
+	assert.Equal(t, got, "")
+
+	// empty case
+	affinity := &v1.Affinity{}
+	got = GetNodeNameFromAffinity(affinity)
+	assert.Equal(t, got, "")
+
+	// non-nil case
+	nodeName := "foo-node"
+	nodeNameSelReq := v1.NodeSelectorRequirement{
+		Key:      NodeFieldSelectorKeyNodeName,
+		Operator: v1.NodeSelectorOpIn,
+		Values:   []string{nodeName},
+	}
+
+	affinity = &v1.Affinity{
+		NodeAffinity: &v1.NodeAffinity{
+			RequiredDuringSchedulingIgnoredDuringExecution: &v1.NodeSelector{
+				NodeSelectorTerms: []v1.NodeSelectorTerm{
+					{
+						MatchFields: []v1.NodeSelectorRequirement{nodeNameSelReq},
+					},
+				},
+			},
+		},
+	}
+	got = GetNodeNameFromAffinity(affinity)
+	assert.Equal(t, got, "foo-node")
 }
