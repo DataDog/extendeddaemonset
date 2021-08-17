@@ -266,7 +266,7 @@ spec:
 
 ### Kubectl plugin
 
-To build the the kubectl ExtendedDaemonSet plugin, you can run the command: `make build-plugin`. This will create the `kubectl-eds` Go binary, corresponding to your local OS and architecture.
+To build the the kubectl ExtendedDaemonSet plugin, you can run the command: `make kubectl-eds`. This will create the `kubectl-eds` Go binary, corresponding to your local OS and architecture.
 Then, add or move this binary to the `PATH` and run the command `kubectl eds`:
 
 ```console
