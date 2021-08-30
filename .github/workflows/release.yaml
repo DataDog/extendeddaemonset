@@ -66,5 +66,6 @@ jobs:
       - 
         name: Update new plugin version in krew-index
         uses: rajatjindal/krew-release-bot@v0.0.40
+        continue-on-error: true
         with:
           krew_template_file: dist/eds-plugin.yaml
