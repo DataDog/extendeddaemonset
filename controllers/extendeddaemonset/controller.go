@@ -121,6 +121,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	for id, rs := range replicaSetList.Items {
 		podsCounter.Ready += rs.Status.Ready
 		podsCounter.Current += rs.Status.Current
+		podsCounter.Available += rs.Status.Available
 
 		// Check if ReplicaSet is currently active
 		if rs.Name == instance.Status.ActiveReplicaSet {
@@ -222,11 +223,11 @@ func (r *Reconciler) updateInstanceWithCurrentRS(logger logr.Logger, now time.Ti
 	newDaemonset := daemonset.DeepCopy()
 	newDaemonset.Status.Current = podsCounter.Current
 	newDaemonset.Status.Ready = podsCounter.Ready
+	newDaemonset.Status.Available = podsCounter.Available
 	if current != nil {
 		newDaemonset.Status.ActiveReplicaSet = current.Name
 		newDaemonset.Status.Desired = current.Status.Desired
 		newDaemonset.Status.UpToDate = current.Status.Current
-		newDaemonset.Status.Available = current.Status.Available
 		newDaemonset.Status.State = nonCanaryState(daemonset.GetAnnotations())
 		newDaemonset.Status.IgnoredUnresponsiveNodes = current.Status.IgnoredUnresponsiveNodes
 	}
@@ -480,8 +481,7 @@ func manageStatus(status *datadoghqv1alpha1.ExtendedDaemonSetStatus, upToDate *d
 			status.Canary = &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{}
 		}
 		status.Desired += upToDate.Status.Desired
-		status.UpToDate += upToDate.Status.Available
-		status.Available += upToDate.Status.Available
+		status.UpToDate = upToDate.Status.Current
 		status.IgnoredUnresponsiveNodes += upToDate.Status.IgnoredUnresponsiveNodes
 
 		if !isCanaryPaused {
@@ -612,6 +612,7 @@ func clearCanaryAnnotations(eds *datadoghqv1alpha1.ExtendedDaemonSet) bool {
 }
 
 type podsCounterType struct {
-	Current int32
-	Ready   int32
+	Current   int32
+	Ready     int32
+	Available int32
 }

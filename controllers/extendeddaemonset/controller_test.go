@@ -624,6 +624,8 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 	intString1 := intstr.FromInt(1)
 	daemonsetWithCanaryWithStatus := daemonsetWithStatus.DeepCopy()
 	{
+		// replicassetUpToDate defined above has no replicas so UpToDate should be 0
+		daemonsetWithCanaryWithStatus.Status.UpToDate = 0
 		daemonsetWithCanaryWithStatus.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanary
 		daemonsetWithCanaryWithStatus.Spec.Strategy.Canary = &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
 			Replicas: &intString1,
@@ -655,7 +657,7 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 				Current:          3,
 				Ready:            2,
 				Available:        1,
-				UpToDate:         3,
+				UpToDate:         0, // replicassetUpToDate defined above has no replicas so UpToDate should be 0
 				Canary: &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{
 					Nodes:      []string{"node1"},
 					ReplicaSet: "foo-1",
@@ -713,6 +715,9 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 
 	daemonsetWithCanaryFailedWithoutAnnotationsWanted := daemonsetWithCanaryFailedOldStatus.DeepCopy()
 	{
+		// When the canary fails, the number of "Updated" replicas should equal
+		// the number of current ones.
+		daemonsetWithCanaryFailedWithoutAnnotationsWanted.Status.UpToDate = replicassetCurrent.Status.Current
 		delete(daemonsetWithCanaryFailedWithoutAnnotationsWanted.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey)
 		delete(daemonsetWithCanaryFailedWithoutAnnotationsWanted.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedReasonAnnotationKey)
 		daemonsetWithCanaryFailedWithoutAnnotationsWanted.ResourceVersion = "3"
@@ -737,6 +742,9 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 			},
 		}
 	}
+
+	daemonsetWithStatusAndAvailable := daemonsetWithStatus.DeepCopy()
+	daemonsetWithStatusAndAvailable.Status.Available = 5
 
 	replicassetUpToDateWithFailedCondition := replicassetUpToDate.DeepCopy()
 	{
@@ -801,8 +809,9 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 				current:   replicassetCurrent,
 				upToDate:  replicassetCurrent,
 				podsCounter: podsCounterType{
-					Current: 3,
-					Ready:   2,
+					Current:   3,
+					Ready:     2,
+					Available: 1,
 				},
 			},
 			want:       daemonsetWithStatus,
@@ -822,8 +831,9 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 				current:   replicassetCurrent,
 				upToDate:  replicassetUpToDate,
 				podsCounter: podsCounterType{
-					Current: 3,
-					Ready:   2,
+					Current:   3,
+					Ready:     2,
+					Available: 1,
 				},
 			},
 			want:       daemonsetWithCanaryWithStatus,
@@ -843,8 +853,9 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 				current:   replicassetCurrent,
 				upToDate:  replicassetUpToDate,
 				podsCounter: podsCounterType{
-					Current: 3,
-					Ready:   2,
+					Current:   3,
+					Ready:     2,
+					Available: 1,
 				},
 			},
 			want:       daemonsetWithCanaryPausedWanted,
@@ -864,8 +875,9 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 				current:   replicassetCurrent,
 				upToDate:  replicassetUpToDateWithPauseCondition,
 				podsCounter: podsCounterType{
-					Current: 3,
-					Ready:   2,
+					Current:   3,
+					Ready:     2,
+					Available: 1,
 				},
 			},
 			want:       daemonsetWithCanaryPausedWithoutAnnotationsWanted,
@@ -885,8 +897,9 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 				current:   replicassetCurrent,
 				upToDate:  replicassetUpToDate,
 				podsCounter: podsCounterType{
-					Current: 3,
-					Ready:   2,
+					Current:   3,
+					Ready:     2,
+					Available: 1,
 				},
 			},
 			want:       daemonsetWithCanaryFailedWithoutAnnotationsWanted,
@@ -906,11 +919,38 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 				current:   replicassetCurrent,
 				upToDate:  replicassetUpToDateWithFailedCondition,
 				podsCounter: podsCounterType{
-					Current: 3,
-					Ready:   2,
+					Current:   3,
+					Ready:     2,
+					Available: 1,
 				},
 			},
 			want:       daemonsetWithCanaryFailedWithoutAnnotationsWanted,
+			wantResult: reconcile.Result{Requeue: false},
+			wantErr:    false,
+		},
+		{
+			now:  now,
+			name: "\"available\" correct when current == upToDate",
+			fields: fields{
+				client: fake.NewClientBuilder().WithObjects(daemonset, replicassetCurrent, replicassetUpToDate).Build(),
+				scheme: s,
+			},
+			args: args{
+				logger:    testLogger,
+				daemonset: daemonset,
+				current:   replicassetCurrent,
+				upToDate:  replicassetCurrent,
+				podsCounter: podsCounterType{
+					Current: 3,
+					Ready:   2,
+					// The purpose of this test is to check that the number of
+					// available replicas in the result is taken from
+					// podsCounter.Available (not from
+					// daemonset.Status.Available or other field)
+					Available: 5,
+				},
+			},
+			want:       daemonsetWithStatusAndAvailable, // Its "Available" field equals podsCounter.Available
 			wantResult: reconcile.Result{Requeue: false},
 			wantErr:    false,
 		},
