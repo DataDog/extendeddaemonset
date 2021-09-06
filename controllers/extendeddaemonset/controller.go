@@ -481,7 +481,7 @@ func manageStatus(status *datadoghqv1alpha1.ExtendedDaemonSetStatus, upToDate *d
 			status.Canary = &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{}
 		}
 		status.Desired += upToDate.Status.Desired
-		status.UpToDate += upToDate.Status.Available
+		status.UpToDate = upToDate.Status.Current
 		status.IgnoredUnresponsiveNodes += upToDate.Status.IgnoredUnresponsiveNodes
 
 		if !isCanaryPaused {

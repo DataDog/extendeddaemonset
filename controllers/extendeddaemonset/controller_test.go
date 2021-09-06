@@ -624,6 +624,8 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 	intString1 := intstr.FromInt(1)
 	daemonsetWithCanaryWithStatus := daemonsetWithStatus.DeepCopy()
 	{
+		// replicassetUpToDate defined above has no replicas so UpToDate should be 0
+		daemonsetWithCanaryWithStatus.Status.UpToDate = 0
 		daemonsetWithCanaryWithStatus.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanary
 		daemonsetWithCanaryWithStatus.Spec.Strategy.Canary = &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
 			Replicas: &intString1,
@@ -655,7 +657,7 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 				Current:          3,
 				Ready:            2,
 				Available:        1,
-				UpToDate:         3,
+				UpToDate:         0, // replicassetUpToDate defined above has no replicas so UpToDate should be 0
 				Canary: &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{
 					Nodes:      []string{"node1"},
 					ReplicaSet: "foo-1",
@@ -713,6 +715,9 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 
 	daemonsetWithCanaryFailedWithoutAnnotationsWanted := daemonsetWithCanaryFailedOldStatus.DeepCopy()
 	{
+		// When the canary fails, the number of "Updated" replicas should equal
+		// the number of current ones.
+		daemonsetWithCanaryFailedWithoutAnnotationsWanted.Status.UpToDate = replicassetCurrent.Status.Current
 		delete(daemonsetWithCanaryFailedWithoutAnnotationsWanted.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey)
 		delete(daemonsetWithCanaryFailedWithoutAnnotationsWanted.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedReasonAnnotationKey)
 		daemonsetWithCanaryFailedWithoutAnnotationsWanted.ResourceVersion = "3"
