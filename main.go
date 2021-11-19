@@ -16,6 +16,7 @@ import (
 	"github.com/blang/semver"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"gopkg.in/DataDog/dd-trace-go.v1/profiler"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	kversion "k8s.io/apimachinery/pkg/version"
@@ -61,26 +62,46 @@ func main() {
 	flag.StringVar(&leaderElectionResourceLock, "leader-election-resource", "configmaps", "determines which resource lock to use for leader election. option:[configmapsleases|endpointsleases|configmaps]")
 
 	// Custom flags
-	var printVersion, pprofActive bool
+	var printVersion, pprofActive, ddProfilingEnabled bool
 	var logEncoder string
 	flag.StringVar(&logEncoder, "logEncoder", "json", "log encoding ('json' or 'console')")
 	logLevel := zap.LevelFlag("loglevel", zapcore.InfoLevel, "Set log level")
 	flag.BoolVar(&printVersion, "version", false, "Print version and exit")
 	flag.BoolVar(&pprofActive, "pprof", false, "Enable pprof endpoint")
+	flag.BoolVar(&ddProfilingEnabled, "ddProfilingEnabled", false, "Enable the datadog profiler")
 
 	// Parsing flags
 	flag.Parse()
 
+	exitCode := 0
+	defer func() { os.Exit(exitCode) }()
+
+	if ddProfilingEnabled {
+		setupLog.Info("Starting datadog profiler")
+		if err := profiler.Start(
+			profiler.WithVersion(version.Version),
+			profiler.WithProfileTypes(profiler.CPUProfile, profiler.HeapProfile),
+		); err != nil {
+			setupLog.Error(err, "unable to start datadog profiler")
+		}
+
+		defer profiler.Stop()
+	}
+
 	// Logging setup
 	if err := customSetupLogging(*logLevel, logEncoder); err != nil {
 		setupLog.Error(err, "unable to setup the logger")
-		os.Exit(1)
+		exitCode = 1
+
+		return
 	}
 
 	// Print version information
 	if printVersion {
 		version.PrintVersionWriter(os.Stdout)
-		os.Exit(0)
+		exitCode = 1
+
+		return
 	}
 
 	version.PrintVersionLogs(setupLog)
@@ -96,7 +117,9 @@ func main() {
 	}))
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
-		os.Exit(1)
+		exitCode = 1
+
+		return
 	}
 
 	// Custom setup
@@ -116,14 +139,18 @@ func main() {
 		defaultValidationMode = datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryValidationModeManual
 	default:
 		setupLog.Error(fmt.Errorf("unable to parse %s env var: unknown validation mode: %s", config.ValidationModeEnvVar, validationModeEnvVar), "")
-		os.Exit(1)
+		exitCode = 1
+
+		return
 	}
 
 	// Setup controllers and start manager
 	err = controllers.SetupControllers(mgr, nodeAffinityMatchSupport, defaultValidationMode)
 	if err != nil {
 		setupLog.Error(err, "unable to setup controllers")
-		os.Exit(1)
+		exitCode = 1
+
+		return
 	}
 
 	// +kubebuilder:scaffold:builder
@@ -131,7 +158,9 @@ func main() {
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
-		os.Exit(1)
+		exitCode = 1
+
+		return
 	}
 }
 
