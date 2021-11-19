@@ -99,7 +99,7 @@ func main() {
 	// Print version information
 	if printVersion {
 		version.PrintVersionWriter(os.Stdout)
-		exitCode = 1
+		exitCode = 0
 
 		return
 	}
