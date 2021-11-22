@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"math/rand"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -539,8 +538,7 @@ func newReplicaSetFromInstance(daemonset *datadoghqv1alpha1.ExtendedDaemonSet) (
 }
 
 func (r *Reconciler) cleanupReplicaSet(logger logr.Logger, rsList *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetList, current, updatetodate *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) error {
-	var wg sync.WaitGroup
-	errsChan := make(chan error, len(rsList.Items))
+	var errs []error
 	for id, rs := range rsList.Items {
 		if current == nil {
 			continue
@@ -555,41 +553,27 @@ func (r *Reconciler) cleanupReplicaSet(logger logr.Logger, rsList *datadoghqv1al
 			// already deleted
 			continue
 		}
-		wg.Add(1)
-		func(obj *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) {
-			defer wg.Done()
 
-			// TODO check if pods is still not attached to this eds.
-			podList, err := getPodListFromReplicaSet(r.client, obj)
-			if err != nil {
-				errsChan <- err
-
-				return
+		ers := &rsList.Items[id]
+		if shouldDeleteERS(ers) {
+			logger.Info("Delete replicaset", "replicaset_name", ers.Name)
+			metrics.DeleteERSMetrics(ers.GetName(), ers.GetNamespace())
+			if err := r.client.Delete(context.TODO(), ers); err != nil {
+				errs = append(errs, err)
 			}
-			if podList == nil {
-				errsChan <- fmt.Errorf("unable to get podList from: %s", obj.Name)
-			} else if len(podList.Items) == 0 {
-				logger.Info("Delete replicaset", "replicaset_name", obj.Name)
-				metrics.DeleteERSMetrics(obj.GetName(), obj.GetNamespace())
-				err := r.client.Delete(context.TODO(), obj)
-				if err != nil {
-					errsChan <- err
-				}
-			}
-		}(&rsList.Items[id])
-	}
-	go func() {
-		wg.Wait()
-		close(errsChan)
-	}()
-	var errs []error
-	for err := range errsChan {
-		if err != nil {
-			errs = append(errs, err)
 		}
 	}
 
 	return utilserrors.NewAggregate(errs)
+}
+
+// shouldDeleteERS returns true if the ers is nil or has no pods attached based on its status.
+func shouldDeleteERS(ers *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) bool {
+	if ers == nil {
+		return true
+	}
+
+	return ers.Status.Available+ers.Status.Current+ers.Status.Desired+ers.Status.Ready == 0
 }
 
 func clearCanaryAnnotations(eds *datadoghqv1alpha1.ExtendedDaemonSet) bool {
