@@ -6,12 +6,7 @@
 package extendeddaemonset
 
 import (
-	"context"
 	"time"
-
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/conditions"
@@ -121,17 +116,4 @@ func IsCanaryDeploymentFailed(dsAnnotations map[string]string, ers *datadoghqv1a
 	}
 
 	return false
-}
-
-func getPodListFromReplicaSet(c client.Client, ds *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) (*corev1.PodList, error) {
-	podList := &corev1.PodList{}
-	podSelector := labels.Set{datadoghqv1alpha1.ExtendedDaemonSetReplicaSetNameLabelKey: ds.Name}
-	podListOptions := []client.ListOption{
-		&client.MatchingLabelsSelector{Selector: podSelector.AsSelectorPreValidated()},
-	}
-	if err := c.List(context.TODO(), podList, podListOptions...); err != nil {
-		return nil, err
-	}
-
-	return podList, nil
 }
