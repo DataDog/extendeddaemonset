@@ -217,7 +217,7 @@ func TestIsPodReady(t *testing.T) {
 }
 
 func TestIsCannotStartReason(t *testing.T) {
-	for _, reason := range cannotStartReasons {
+	for reason := range cannotStartReasons {
 		cannotStart := IsCannotStartReason(reason)
 		assert.True(t, cannotStart)
 	}
@@ -479,6 +479,24 @@ func Test_HighestRestartCount(t *testing.T) {
 			wantRestartCount: 10,
 			wantReason:       datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB,
 		},
+		{
+			name: "restarts with empty reason",
+			pod: ctrltest.NewPod("bar", "pod1", "node1", &ctrltest.NewPodOptions{
+				ContainerStatuses: []v1.ContainerStatus{
+					{
+						RestartCount: 10,
+						LastTerminationState: v1.ContainerState{
+							Terminated: &v1.ContainerStateTerminated{
+								Reason: "",
+							},
+						},
+					},
+				},
+			},
+			),
+			wantRestartCount: 10,
+			wantReason:       datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown,
+		},
 	}
 
 	for _, tt := range tests {
@@ -537,6 +555,25 @@ func Test_MostRecentRestart(t *testing.T) {
 			),
 			wantTime:   time.Time{},
 			wantReason: "",
+		},
+		{
+			name: "restarts with empty reason",
+			pod: ctrltest.NewPod("bar", "pod1", "node1", &ctrltest.NewPodOptions{
+				ContainerStatuses: []v1.ContainerStatus{
+					{
+						RestartCount: 10,
+						LastTerminationState: v1.ContainerState{
+							Terminated: &v1.ContainerStateTerminated{
+								Reason:     "",
+								FinishedAt: metav1.NewTime(now.Add(-time.Hour)),
+							},
+						},
+					},
+				},
+			},
+			),
+			wantTime:   now.Add(-time.Hour),
+			wantReason: datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown,
 		},
 	}
 

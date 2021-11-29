@@ -151,6 +151,14 @@ const (
 	ExtendedDaemonSetStatusReasonErrImagePull ExtendedDaemonSetStatusReason = "ErrImagePull"
 	// ExtendedDaemonSetStatusReasonImagePullBackOff represent ImagePullBackOff as the reason for the ExtendedDaemonSet status state.
 	ExtendedDaemonSetStatusReasonImagePullBackOff ExtendedDaemonSetStatusReason = "ImagePullBackOff"
+	// ExtendedDaemonSetStatusReasonImageInspectError represent ImageInspectError as the reason for the ExtendedDaemonSet status state.
+	ExtendedDaemonSetStatusReasonImageInspectError ExtendedDaemonSetStatusReason = "ImageInspectError"
+	// ExtendedDaemonSetStatusReasonErrImageNeverPull represent ErrImageNeverPull as the reason for the ExtendedDaemonSet status state.
+	ExtendedDaemonSetStatusReasonErrImageNeverPull ExtendedDaemonSetStatusReason = "ErrImageNeverPull"
+	// ExtendedDaemonSetStatusReasonRegistryUnavailable represent RegistryUnavailable as the reason for the ExtendedDaemonSet status state.
+	ExtendedDaemonSetStatusReasonRegistryUnavailable ExtendedDaemonSetStatusReason = "RegistryUnavailable"
+	// ExtendedDaemonSetStatusReasonInvalidImageName represent InvalidImageName as the reason for the ExtendedDaemonSet status state.
+	ExtendedDaemonSetStatusReasonInvalidImageName ExtendedDaemonSetStatusReason = "InvalidImageName"
 	// ExtendedDaemonSetStatusReasonCreateContainerConfigError represent CreateContainerConfigError as the reason for the ExtendedDaemonSet status state.
 	ExtendedDaemonSetStatusReasonCreateContainerConfigError ExtendedDaemonSetStatusReason = "CreateContainerConfigError"
 	// ExtendedDaemonSetStatusReasonCreateContainerError represent CreateContainerError as the reason for the ExtendedDaemonSet status state.
@@ -159,6 +167,8 @@ const (
 	ExtendedDaemonSetStatusReasonPreStartHookError ExtendedDaemonSetStatusReason = "PreStartHookError"
 	// ExtendedDaemonSetStatusReasonPostStartHookError represent PostStartHookError as the reason for the ExtendedDaemonSet status state.
 	ExtendedDaemonSetStatusReasonPostStartHookError ExtendedDaemonSetStatusReason = "PostStartHookError"
+	// ExtendedDaemonSetStatusReasonPreCreateHookError represent PreCreateHookError as the reason for the ExtendedDaemonSet status state.
+	ExtendedDaemonSetStatusReasonPreCreateHookError ExtendedDaemonSetStatusReason = "PreCreateHookError"
 	// ExtendedDaemonSetStatusReasonStartError represent StartError as the reason for the ExtendedDaemonSet status state.
 	ExtendedDaemonSetStatusReasonStartError ExtendedDaemonSetStatusReason = "StartError"
 	// ExtendedDaemonSetStatusReasonUnknown represents an Unknown reason for the status state.
