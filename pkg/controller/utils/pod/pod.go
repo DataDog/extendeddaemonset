@@ -142,7 +142,9 @@ func HighestRestartCount(pod *v1.Pod) (int, datadoghqv1alpha1.ExtendedDaemonSetS
 			restartCount = s.RestartCount
 			reason = datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown
 			if s.LastTerminationState != (v1.ContainerState{}) && *s.LastTerminationState.Terminated != (v1.ContainerStateTerminated{}) {
-				reason = datadoghqv1alpha1.ExtendedDaemonSetStatusReason(s.LastTerminationState.Terminated.Reason)
+				if s.LastTerminationState.Terminated.Reason != "" { // The Reason field is optional and can be empty
+					reason = datadoghqv1alpha1.ExtendedDaemonSetStatusReason(s.LastTerminationState.Terminated.Reason)
+				}
 			}
 		}
 	}
@@ -160,7 +162,10 @@ func MostRecentRestart(pod *v1.Pod) (time.Time, datadoghqv1alpha1.ExtendedDaemon
 		if s.RestartCount != 0 && s.LastTerminationState != (v1.ContainerState{}) && s.LastTerminationState.Terminated != (&v1.ContainerStateTerminated{}) {
 			if s.LastTerminationState.Terminated.FinishedAt.After(restartTime) {
 				restartTime = s.LastTerminationState.Terminated.FinishedAt.Time
-				reason = datadoghqv1alpha1.ExtendedDaemonSetStatusReason(s.LastTerminationState.Terminated.Reason)
+				reason = datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown
+				if s.LastTerminationState.Terminated.Reason != "" { // The Reason field is optional and can be empty
+					reason = datadoghqv1alpha1.ExtendedDaemonSetStatusReason(s.LastTerminationState.Terminated.Reason)
+				}
 			}
 		}
 	}
@@ -168,24 +173,25 @@ func MostRecentRestart(pod *v1.Pod) (time.Time, datadoghqv1alpha1.ExtendedDaemon
 	return restartTime, reason
 }
 
-var cannotStartReasons = []string{
-	"ErrImagePull",
-	"ImagePullBackOff",
-	"CreateContainerConfigError",
-	"CreateContainerError",
-	"PreStartHookError",
-	"PostStartHookError",
+var cannotStartReasons = map[string]struct{}{
+	"ErrImagePull":               {},
+	"ImagePullBackOff":           {},
+	"ImageInspectError":          {},
+	"ErrImageNeverPull":          {},
+	"RegistryUnavailable":        {},
+	"InvalidImageName":           {},
+	"CreateContainerConfigError": {},
+	"CreateContainerError":       {},
+	"PreStartHookError":          {},
+	"PostStartHookError":         {},
+	"PreCreateHookError":         {},
 }
 
 // IsCannotStartReason returns true for a reason that is considered an abnormal cannot start condition.
 func IsCannotStartReason(reason string) bool {
-	for _, cannot := range cannotStartReasons {
-		if cannot == reason {
-			return true
-		}
-	}
+	_, found := cannotStartReasons[reason]
 
-	return false
+	return found
 }
 
 // CannotStart returns true if the Pod is currently experiencing abnormal start condition.
@@ -208,10 +214,15 @@ func convertReasonToEDSStatusReason(reason string) datadoghqv1alpha1.ExtendedDae
 		datadoghqv1alpha1.ExtendedDaemonSetStatusSlowStartTimeoutExceeded,
 		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonErrImagePull,
 		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonImagePullBackOff,
+		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonImageInspectError,
+		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonErrImageNeverPull,
+		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonRegistryUnavailable,
+		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonInvalidImageName,
 		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCreateContainerConfigError,
 		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCreateContainerError,
 		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonPreStartHookError,
 		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonPostStartHookError,
+		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonPreCreateHookError,
 		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonStartError,
 		datadoghqv1alpha1.ExtendedDaemonSetStatusReasonUnknown:
 		return t
