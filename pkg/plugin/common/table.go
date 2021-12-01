@@ -14,7 +14,7 @@ import (
 // newPodsTable returns a table to print pods.
 func newPodsTable(out io.Writer) *tablewriter.Table {
 	table := tablewriter.NewWriter(out)
-	table.SetHeader([]string{"Pod", "Ready", "Phase", "Reason", "Not ready containers", "Restarts", "Node", "Node Ready"})
+	table.SetHeader([]string{"Pod", "Ready", "Phase", "Reason", "Not ready containers", "Restarts", "Node", "Node Ready", "Age"})
 	table.SetBorders(tablewriter.Border{Left: false, Top: false, Right: false, Bottom: false})
 	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
 	table.SetRowLine(false)

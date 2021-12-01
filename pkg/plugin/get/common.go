@@ -5,14 +5,7 @@
 
 package get
 
-import (
-	"time"
-
-	"github.com/hako/durafmt"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
-)
+import "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 
 func getCanaryRS(eds *v1alpha1.ExtendedDaemonSet) string {
 	if eds.Status.Canary != nil {
@@ -20,8 +13,4 @@ func getCanaryRS(eds *v1alpha1.ExtendedDaemonSet) string {
 	}
 
 	return "-"
-}
-
-func getDuration(obj *metav1.ObjectMeta) string {
-	return durafmt.ParseShort(time.Since(obj.CreationTimestamp.Time)).String()
 }

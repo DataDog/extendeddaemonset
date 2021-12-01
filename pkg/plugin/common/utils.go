@@ -10,14 +10,22 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/hako/durafmt"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // IntToString converts int32 into string.
 func IntToString(i int32) string {
 	return fmt.Sprintf("%d", i)
+}
+
+// GetDuration gets uptime duration of a resource.
+func GetDuration(obj *metav1.ObjectMeta) string {
+	return durafmt.ParseShort(time.Since(obj.CreationTimestamp.Time)).String()
 }
 
 // isPodNotReady returns whether the pod is ready, returns the the reason if not ready.
