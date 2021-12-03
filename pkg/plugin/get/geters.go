@@ -138,7 +138,7 @@ func (o *getERSOptions) run() error {
 
 	table := newGetERSTable(o.Out)
 	for _, item := range ersList.Items {
-		data := []string{item.Namespace, item.Name, common.IntToString(item.Status.Desired), common.IntToString(item.Status.Current), common.IntToString(item.Status.Ready), common.IntToString(item.Status.Available), common.IntToString(item.Status.IgnoredUnresponsiveNodes), item.Status.Status, getDuration(&item.ObjectMeta)}
+		data := []string{item.Namespace, item.Name, common.IntToString(item.Status.Desired), common.IntToString(item.Status.Current), common.IntToString(item.Status.Ready), common.IntToString(item.Status.Available), common.IntToString(item.Status.IgnoredUnresponsiveNodes), item.Status.Status, common.GetDuration(&item.ObjectMeta)}
 		table.Append(data)
 	}
 

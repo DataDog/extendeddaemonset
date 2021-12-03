@@ -77,7 +77,7 @@ func printPods(c client.Client, selector labels.Selector, out io.Writer, notRead
 			continue
 		}
 		ready, containers, restarts := containersInfo(&pod)
-		table.Append([]string{pod.Name, ready, string(pod.Status.Phase), reason, containers, restarts, pod.Spec.NodeName, getNodeReadiness(c, pod.Spec.NodeName)})
+		table.Append([]string{pod.Name, ready, string(pod.Status.Phase), reason, containers, restarts, pod.Spec.NodeName, getNodeReadiness(c, pod.Spec.NodeName), GetDuration(&pod.ObjectMeta)})
 	}
 
 	table.Render()

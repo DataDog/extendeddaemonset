@@ -138,7 +138,7 @@ func (o *getOptions) run() error {
 
 	table := newGetTable(o.Out)
 	for _, item := range edsList.Items {
-		data := []string{item.Namespace, item.Name, common.IntToString(item.Status.Desired), common.IntToString(item.Status.Current), common.IntToString(item.Status.Ready), common.IntToString(item.Status.UpToDate), common.IntToString(item.Status.Available), common.IntToString(item.Status.IgnoredUnresponsiveNodes), string(item.Status.State), string(item.Status.Reason), item.Status.ActiveReplicaSet, getCanaryRS(&item), getDuration(&item.ObjectMeta)}
+		data := []string{item.Namespace, item.Name, common.IntToString(item.Status.Desired), common.IntToString(item.Status.Current), common.IntToString(item.Status.Ready), common.IntToString(item.Status.UpToDate), common.IntToString(item.Status.Available), common.IntToString(item.Status.IgnoredUnresponsiveNodes), string(item.Status.State), string(item.Status.Reason), item.Status.ActiveReplicaSet, getCanaryRS(&item), common.GetDuration(&item.ObjectMeta)}
 		table.Append(data)
 	}
 
