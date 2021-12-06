@@ -76,6 +76,14 @@ func main() {
 	exitCode := 0
 	defer func() { os.Exit(exitCode) }()
 
+	// Logging setup
+	if err := customSetupLogging(*logLevel, logEncoder); err != nil {
+		setupLog.Error(err, "unable to setup the logger")
+		exitCode = 1
+
+		return
+	}
+
 	if ddProfilingEnabled {
 		setupLog.Info("Starting datadog profiler")
 		if err := profiler.Start(
@@ -86,14 +94,6 @@ func main() {
 		}
 
 		defer profiler.Stop()
-	}
-
-	// Logging setup
-	if err := customSetupLogging(*logLevel, logEncoder); err != nil {
-		setupLog.Error(err, "unable to setup the logger")
-		exitCode = 1
-
-		return
 	}
 
 	// Print version information
