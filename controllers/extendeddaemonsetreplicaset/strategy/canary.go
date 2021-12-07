@@ -49,7 +49,7 @@ func manageCanaryStatus(annotations map[string]string, params *Parameters, now t
 	result.NewStatus.Status = string(ReplicaSetStatusCanary)
 
 	result.IsFailed = eds.IsCanaryDeploymentFailed(annotations, params.Replicaset)
-	result.IsPaused, _ = eds.IsCanaryDeploymentPaused(annotations, params.Replicaset)
+	result.IsPaused, result.PausedReason = eds.IsCanaryDeploymentPaused(annotations, params.Replicaset)
 	result.IsUnpaused = eds.IsCanaryDeploymentUnpaused(annotations)
 
 	var (
