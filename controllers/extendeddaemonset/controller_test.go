@@ -426,6 +426,7 @@ func Test_selectCurrentReplicaSet(t *testing.T) {
 }
 
 func TestReconciler_cleanupReplicaSet(t *testing.T) {
+	now := time.Now()
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(t.Logf)
 
@@ -498,7 +499,7 @@ func TestReconciler_cleanupReplicaSet(t *testing.T) {
 				log:      testLogger,
 				recorder: eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: tt.name}),
 			}
-			if err := r.cleanupReplicaSet(reqLogger, tt.args.rsList, tt.args.current, tt.args.updatetodate); (err != nil) != tt.wantErr {
+			if err := r.cleanupReplicaSet(reqLogger, now, tt.args.rsList, tt.args.current, tt.args.updatetodate); (err != nil) != tt.wantErr {
 				t.Errorf("Reconciler.cleanupReplicaSet() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

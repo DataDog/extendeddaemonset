@@ -27,7 +27,7 @@ func NewExtendedDaemonSetReplicaSetCondition(conditionType datadoghqv1alpha1.Ext
 
 // UpdateExtendedDaemonSetReplicaSetStatusCondition used to update a specific ExtendedDaemonSetReplicaSetConditionType.
 func UpdateExtendedDaemonSetReplicaSetStatusCondition(status *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus, now metav1.Time, t datadoghqv1alpha1.ExtendedDaemonSetReplicaSetConditionType, conditionStatus corev1.ConditionStatus, reason, desc string, writeFalseIfNotExist, supportLastUpdate bool) {
-	idCondition := getIndexForConditionType(status, t)
+	idCondition := GetIndexForConditionType(status, t)
 	if idCondition >= 0 {
 		if status.Conditions[idCondition].Status != conditionStatus {
 			status.Conditions[idCondition].LastTransitionTime = now
@@ -56,7 +56,8 @@ func UpdateErrorCondition(status *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetS
 	}
 }
 
-func getIndexForConditionType(status *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus, t datadoghqv1alpha1.ExtendedDaemonSetReplicaSetConditionType) int {
+// GetIndexForConditionType is used to get the index of a specific condition type.
+func GetIndexForConditionType(status *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus, t datadoghqv1alpha1.ExtendedDaemonSetReplicaSetConditionType) int {
 	if status == nil {
 		return -1
 	}
@@ -72,7 +73,7 @@ func getIndexForConditionType(status *datadoghqv1alpha1.ExtendedDaemonSetReplica
 // GetExtendedDaemonSetReplicaSetStatusCondition return the condition struct corresponding to the ExtendedDaemonSetReplicaSetConditionType provided in argument.
 // return nil if not found.
 func GetExtendedDaemonSetReplicaSetStatusCondition(status *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus, t datadoghqv1alpha1.ExtendedDaemonSetReplicaSetConditionType) *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCondition {
-	idCondition := getIndexForConditionType(status, t)
+	idCondition := GetIndexForConditionType(status, t)
 	if idCondition == -1 {
 		return nil
 	}

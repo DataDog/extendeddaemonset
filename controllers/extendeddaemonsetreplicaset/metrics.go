@@ -10,6 +10,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
+	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/conditions"
 	"github.com/DataDog/extendeddaemonset/pkg/controller/metrics"
 	"github.com/DataDog/extendeddaemonset/pkg/controller/utils"
 )
@@ -21,6 +22,7 @@ const (
 	ersStatusReady                    = "ers_status_ready"
 	ersStatusAvailable                = "ers_status_available"
 	ersStatusIgnoredUnresponsiveNodes = "ers_status_ignored_unresponsive_nodes"
+	ersStatusCanaryFailed             = "ers_status_canary_failed"
 	ersLabels                         = "ers_labels"
 )
 
@@ -161,6 +163,30 @@ func generateMetricFamilies() []ksmetric.FamilyGenerator {
 					Metrics: []*ksmetric.Metric{
 						{
 							Value:       float64(ers.Status.IgnoredUnresponsiveNodes),
+							LabelKeys:   labelKeys,
+							LabelValues: labelValues,
+						},
+					},
+				}
+			},
+		},
+		{
+			Name: ersStatusCanaryFailed,
+			Type: ksmetric.Gauge,
+			Help: "The failed state of the canary deployment, set to 1 if failed, else 0",
+			GenerateFunc: func(obj interface{}) *ksmetric.Family {
+				ers := obj.(*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet)
+				labelKeys, labelValues := utils.GetLabelsValues(&ers.ObjectMeta)
+
+				val := float64(0)
+				if conditions.IsConditionTrue(&ers.Status, datadoghqv1alpha1.ConditionTypeCanaryFailed) {
+					val = 1
+				}
+
+				return &ksmetric.Family{
+					Metrics: []*ksmetric.Metric{
+						{
+							Value:       val,
 							LabelKeys:   labelKeys,
 							LabelValues: labelValues,
 						},

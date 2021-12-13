@@ -28,6 +28,7 @@ import (
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonset/conditions"
+	ersconditions "github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/conditions"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/scheduler"
 	"github.com/DataDog/extendeddaemonset/pkg/controller/metrics"
 	"github.com/DataDog/extendeddaemonset/pkg/controller/utils"
@@ -142,7 +143,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	currentRS, requeueAfter := selectCurrentReplicaSet(instance, activeRS, upToDateRS, now)
 
 	// Remove all ReplicaSets if not used anymore
-	if err = r.cleanupReplicaSet(reqLogger, replicaSetList, currentRS, upToDateRS); err != nil {
+	if err = r.cleanupReplicaSet(reqLogger, now, replicaSetList, currentRS, upToDateRS); err != nil {
 		return reconcile.Result{RequeueAfter: requeueAfter}, err
 	}
 
@@ -470,7 +471,7 @@ func manageStatus(status *datadoghqv1alpha1.ExtendedDaemonSetStatus, upToDate *d
 	switch {
 	case isCanaryFailed:
 		// Canary deployment is no longer needed because it was marked as failed
-		// This `if` block needs to be first to respect Failed Canary state until annotation is removed
+		// This block needs to be first to respect Failed Canary state until annotation is removed
 		status.Canary = nil
 		status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryFailed
 		status.Reason = ""
@@ -537,7 +538,7 @@ func newReplicaSetFromInstance(daemonset *datadoghqv1alpha1.ExtendedDaemonSet) (
 	return rs, err
 }
 
-func (r *Reconciler) cleanupReplicaSet(logger logr.Logger, rsList *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetList, current, updatetodate *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) error {
+func (r *Reconciler) cleanupReplicaSet(logger logr.Logger, now time.Time, rsList *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetList, current, updatetodate *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) error {
 	var errs []error
 	for id, rs := range rsList.Items {
 		if current == nil {
@@ -555,7 +556,7 @@ func (r *Reconciler) cleanupReplicaSet(logger logr.Logger, rsList *datadoghqv1al
 		}
 
 		ers := &rsList.Items[id]
-		if shouldDeleteERS(ers) {
+		if shouldDeleteERS(now, ers) {
 			logger.Info("Delete replicaset", "replicaset_name", ers.Name)
 			metrics.DeleteERSMetrics(ers.GetName(), ers.GetNamespace())
 			if err := r.client.Delete(context.TODO(), ers); err != nil {
@@ -568,9 +569,18 @@ func (r *Reconciler) cleanupReplicaSet(logger logr.Logger, rsList *datadoghqv1al
 }
 
 // shouldDeleteERS returns true if the ers is nil or has no pods attached based on its status.
-func shouldDeleteERS(ers *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) bool {
+func shouldDeleteERS(now time.Time, ers *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) bool {
 	if ers == nil {
 		return true
+	}
+
+	// If canary deploy has failed, delay ERS deletion for 5m so that failed metric reports
+	if ersconditions.IsConditionTrue(&ers.Status, datadoghqv1alpha1.ConditionTypeCanaryFailed) {
+		failedIdx := ersconditions.GetIndexForConditionType(&ers.Status, datadoghqv1alpha1.ConditionTypeCanaryFailed)
+		t := ers.Status.Conditions[failedIdx].LastTransitionTime.Add(time.Minute * 5)
+		if now.Before(t) {
+			return false
+		}
 	}
 
 	return ers.Status.Available+ers.Status.Current+ers.Status.Desired+ers.Status.Ready == 0

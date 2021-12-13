@@ -26,7 +26,6 @@ const (
 	extendeddaemonsetStatusCanaryActivated          = "eds_status_canary_activated"
 	extendeddaemonsetStatusCanaryNumberOfNodes      = "eds_status_canary_node_number"
 	extendeddaemonsetStatusCanaryPaused             = "eds_status_canary_paused"
-	extendeddaemonsetStatusCanaryFailed             = "eds_status_canary_failed"
 	extendeddaemonsetStatusRollingUpdatePaused      = "eds_status_rolling_update_paused"
 	extendeddaemonsetStatusRolloutFrozen            = "eds_status_rollout_frozen"
 	extendeddaemonsetLabels                         = "eds_labels"
@@ -244,30 +243,6 @@ func generateMetricFamilies() []ksmetric.FamilyGenerator {
 						labelKeys = append(labelKeys, "paused_reason")
 						labelValues = append(labelValues, cond.Reason)
 					}
-				}
-
-				return &ksmetric.Family{
-					Metrics: []*ksmetric.Metric{
-						{
-							Value:       val,
-							LabelKeys:   labelKeys,
-							LabelValues: labelValues,
-						},
-					},
-				}
-			},
-		},
-		{
-			Name: extendeddaemonsetStatusCanaryFailed,
-			Type: ksmetric.Gauge,
-			Help: "The failed state of the canary deployment, set to 1 if failed, else 0",
-			GenerateFunc: func(obj interface{}) *ksmetric.Family {
-				eds := obj.(*datadoghqv1alpha1.ExtendedDaemonSet)
-				labelKeys, labelValues := utils.GetLabelsValues(&eds.ObjectMeta)
-				val := float64(0)
-
-				if conditions.IsConditionTrue(&eds.Status, datadoghqv1alpha1.ConditionTypeEDSCanaryFailed) {
-					val = 1
 				}
 
 				return &ksmetric.Family{
