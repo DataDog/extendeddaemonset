@@ -140,11 +140,14 @@ func manageCanaryStatus(annotations map[string]string, params *Parameters, now t
 func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result, now time.Time) {
 	var (
 		canary               = params.Strategy.Canary
+		canaryDuration       = canary.Duration
 		autoPauseEnabled     = *canary.AutoPause.Enabled
 		autoPauseMaxRestarts = int(*canary.AutoPause.MaxRestarts)
 
-		autoFailEnabled     = *canary.AutoFail.Enabled
-		autoFailMaxRestarts = int(*canary.AutoFail.MaxRestarts)
+		autoFailEnabled             = *canary.AutoFail.Enabled
+		autoFailMaxRestarts         = int(*canary.AutoFail.MaxRestarts)
+		autoFailMaxRestartsDuration = canary.AutoFail.MaxRestartsDuration
+		autoFailMaxDuration         = canary.AutoFail.MaxDuration
 
 		newRestartTime      time.Time
 		restartingPodStatus string
@@ -153,6 +156,18 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 		cannotStartPodReason v1alpha1.ExtendedDaemonSetStatusReason
 		cannotStartPodStatus string
 	)
+
+	// autoFailMaxDuration must be greater than canaryDuration
+	if autoFailMaxDuration != nil && autoFailMaxDuration.Duration <= canaryDuration.Duration {
+		params.Logger.Info("Canary autoFail.maxDuration must be greater than the canary duration.")
+		if autoPauseEnabled {
+			params.Logger.Info("With AutoPause enabled, canary.autoFail.maxDuration >= 2*canary.duration is recommended.")
+		}
+		autoFailMaxDuration = nil
+	}
+
+	startCondition := conditions.GetExtendedDaemonSetReplicaSetStatusCondition(result.NewStatus, v1alpha1.ConditionTypeCanary)
+	restartCondition := conditions.GetExtendedDaemonSetReplicaSetStatusCondition(params.NewStatus, v1alpha1.ConditionTypePodRestarting)
 
 	// Note that we still need to evaluate restarts regardless of the enabled autoPause or autoFail
 	// since we maintain the restarting condition that can be checked by canary.noRestartsDuration
@@ -185,11 +200,13 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 			}
 		}
 
+		// If the Canary is already marked as failed on a previous iteration, continue
 		if result.IsFailed {
 			continue
 		}
 
 		switch {
+		// Autofail: restarts count exceeds maxRestarts
 		case autoFailEnabled && restartCount > autoFailMaxRestarts:
 			result.IsFailed = true
 			result.FailedReason = highRestartReason
@@ -198,6 +215,22 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 				"RestartCount", restartCount,
 				"MaxRestarts", autoFailMaxRestarts,
 				"Reason", highRestartReason,
+			)
+		// Autofail: restarts duration timeout
+		case autoFailEnabled && autoFailMaxRestartsDuration != nil && restartCondition != nil && restartCondition.LastUpdateTime.Sub(restartCondition.LastTransitionTime.Time) > autoFailMaxRestartsDuration.Duration:
+			result.IsFailed = true
+			result.FailedReason = v1alpha1.ExtendedDaemonSetStatusRestartsTimeoutExceeded
+			params.Logger.Info(
+				"AutoFailed",
+				"Reason", v1alpha1.ExtendedDaemonSetStatusRestartsTimeoutExceeded,
+			)
+		// Autofail: general timeout
+		case autoFailEnabled && startCondition != nil && autoFailMaxDuration != nil && now.Sub(startCondition.LastTransitionTime.Time) > autoFailMaxDuration.Duration:
+			result.IsFailed = true
+			result.FailedReason = v1alpha1.ExtendedDaemonSetStatusTimeoutExceeded
+			params.Logger.Info(
+				"AutoFailed",
+				"Reason", v1alpha1.ExtendedDaemonSetStatusTimeoutExceeded,
 			)
 		case result.IsUnpaused:
 			// Unpausing is a manual action and takes precedence
@@ -231,7 +264,6 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 	conditions.UpdateExtendedDaemonSetReplicaSetStatusCondition(result.NewStatus, metav1.NewTime(now), v1alpha1.ConditionTypeCanaryPaused, conditions.BoolToCondition(result.IsPaused), string(result.PausedReason), "", false, true)
 
 	var lastRestartTime time.Time
-	restartCondition := conditions.GetExtendedDaemonSetReplicaSetStatusCondition(params.NewStatus, v1alpha1.ConditionTypePodRestarting)
 	if restartCondition != nil {
 		lastRestartTime = restartCondition.LastUpdateTime.Time
 	}
@@ -271,16 +303,6 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 		false,
 		true,
 	)
-
-	if !result.IsFailed && autoFailEnabled && canary.AutoFail.MaxRestartsDuration != nil {
-		maxRestartsDuration := canary.AutoFail.MaxRestartsDuration.Duration
-		// Check if we are exceeding autoFail.maxRestartsDuration and need to auto-fail
-		restartCondition = conditions.GetExtendedDaemonSetReplicaSetStatusCondition(result.NewStatus, v1alpha1.ConditionTypePodRestarting)
-		if restartCondition != nil && restartCondition.LastUpdateTime.Sub(restartCondition.LastTransitionTime.Time) > maxRestartsDuration {
-			result.IsFailed = true
-			result.FailedReason = v1alpha1.ExtendedDaemonSetStatusRestartsTimeoutExceeded
-		}
-	}
 
 	if result.IsFailed {
 		result.NewStatus.Status = string(ReplicaSetStatusCanaryFailed)
