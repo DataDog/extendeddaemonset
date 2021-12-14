@@ -94,7 +94,9 @@ func podTerminatedStatus(restartCount int32, reason string, time time.Time) v1.P
 	}
 }
 
-func podWaitingStatus(reason, message string) v1.PodStatus {
+func podWaitingStatus(reason, message string, time time.Time) v1.PodStatus {
+	start := metav1.NewTime(time)
+
 	return v1.PodStatus{
 		ContainerStatuses: []v1.ContainerStatus{
 			{
@@ -108,7 +110,7 @@ func podWaitingStatus(reason, message string) v1.PodStatus {
 				},
 			},
 		},
-		StartTime: &metav1.Time{Time: time.Now()},
+		StartTime: &start,
 	}
 }
 
@@ -545,6 +547,7 @@ func TestManageCanaryStatus_LongRestartsDurationLeadingToFail(t *testing.T) {
 	restartedAt := now.Add(-time.Minute)
 
 	test := canaryStatusTest{
+		now: now,
 		params: &Parameters{
 			EDSName: "foo",
 			Strategy: &v1alpha1.ExtendedDaemonSetSpecStrategy{
@@ -600,10 +603,123 @@ func TestManageCanaryStatus_LongRestartsDurationLeadingToFail(t *testing.T) {
 						LastUpdateTime:     metav1.NewTime(restartedAt),
 						Message:            "Pod foo-a restarting with reason: CrashLoopBackOff",
 					},
+					{
+						Type:               v1alpha1.ConditionTypeCanaryFailed,
+						Status:             v1.ConditionTrue,
+						LastTransitionTime: metav1.NewTime(now),
+						LastUpdateTime:     metav1.NewTime(now),
+						Reason:             string(v1alpha1.ExtendedDaemonSetStatusRestartsTimeoutExceeded),
+						Message:            "",
+					},
 				},
 			},
 			IsFailed:     true,
 			FailedReason: v1alpha1.ExtendedDaemonSetStatusRestartsTimeoutExceeded,
+			Result:       reconcile.Result{},
+		},
+	}
+	test.Run(t)
+}
+
+func TestManageCanaryStatus_LongDurationLeadingToFail(t *testing.T) {
+	now := time.Now()
+	imageErrorStartedAt := now.Add(-time.Hour)
+	// restartsUpdatedAt := now.Add(-10 * time.Minute)
+	// restartedAt := now.Add(-time.Minute)
+
+	test := canaryStatusTest{
+		now: now,
+		params: &Parameters{
+			EDSName: "foo",
+			Strategy: &v1alpha1.ExtendedDaemonSetSpecStrategy{
+				Canary: &v1alpha1.ExtendedDaemonSetSpecStrategyCanary{
+					Duration: &metav1.Duration{Duration: 10 * time.Minute},
+					AutoPause: &v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoPause{
+						Enabled:     v1alpha1.NewBool(true),
+						MaxRestarts: v1alpha1.NewInt32(2),
+					},
+					AutoFail: &v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoFail{
+						Enabled:     v1alpha1.NewBool(true),
+						MaxRestarts: v1alpha1.NewInt32(5),
+						MaxDuration: &metav1.Duration{Duration: 20 * time.Minute},
+					},
+				},
+			},
+			Replicaset: &v1alpha1.ExtendedDaemonSetReplicaSet{
+				Spec: v1alpha1.ExtendedDaemonSetReplicaSetSpec{
+					TemplateGeneration: "v1",
+				},
+			},
+			NewStatus: &v1alpha1.ExtendedDaemonSetReplicaSetStatus{
+				Conditions: []v1alpha1.ExtendedDaemonSetReplicaSetCondition{
+					{
+						Type:               v1alpha1.ConditionTypeCanary,
+						Status:             v1.ConditionTrue,
+						LastTransitionTime: metav1.NewTime(imageErrorStartedAt),
+						LastUpdateTime:     metav1.NewTime(imageErrorStartedAt),
+						Message:            "",
+					},
+					{
+						Type:               v1alpha1.ConditionTypeCanaryPaused,
+						Status:             v1.ConditionTrue,
+						LastTransitionTime: metav1.NewTime(imageErrorStartedAt),
+						LastUpdateTime:     metav1.NewTime(imageErrorStartedAt),
+						Message:            "ImagePullBackOff",
+					},
+				},
+			},
+			CanaryNodes: testCanaryNodeNames,
+			NodeByName:  testCanaryNodes,
+			PodByNodeName: map[*NodeItem]*v1.Pod{
+				testCanaryNodes["a"]: newTestCanaryPod("foo-a", "v1", podWaitingStatus("ImagePullBackOff", `Back-off pulling image "gcr.io/missing"`, imageErrorStartedAt)),
+				testCanaryNodes["b"]: nil,
+				testCanaryNodes["c"]: nil,
+			},
+			Logger: testLogger,
+		},
+		result: &Result{
+			NewStatus: &v1alpha1.ExtendedDaemonSetReplicaSetStatus{
+				Status:    "canary-failed",
+				Desired:   3,
+				Current:   1,
+				Ready:     0,
+				Available: 0,
+				Conditions: []v1alpha1.ExtendedDaemonSetReplicaSetCondition{
+					{
+						Type:               v1alpha1.ConditionTypeCanary,
+						Status:             v1.ConditionTrue,
+						LastTransitionTime: metav1.NewTime(imageErrorStartedAt),
+						LastUpdateTime:     metav1.NewTime(imageErrorStartedAt),
+						Message:            "",
+					},
+					{
+						Type:               v1alpha1.ConditionTypeCanaryPaused,
+						Status:             v1.ConditionFalse,
+						LastTransitionTime: metav1.NewTime(now),
+						LastUpdateTime:     metav1.NewTime(now),
+						Reason:             "",
+						Message:            "ImagePullBackOff",
+					},
+					{
+						Type:               v1alpha1.ConditionTypeCanaryFailed,
+						Status:             v1.ConditionTrue,
+						LastTransitionTime: metav1.NewTime(now),
+						LastUpdateTime:     metav1.NewTime(now),
+						Reason:             string(v1alpha1.ExtendedDaemonSetStatusTimeoutExceeded),
+						Message:            "",
+					},
+					{
+						Type:               v1alpha1.ConditionTypePodCannotStart,
+						Status:             v1.ConditionTrue,
+						LastTransitionTime: metav1.NewTime(now),
+						LastUpdateTime:     metav1.NewTime(now),
+						Reason:             "ImagePullBackOff",
+						Message:            "Pod foo-a cannot start with reason: ImagePullBackOff",
+					},
+				},
+			},
+			IsFailed:     true,
+			FailedReason: v1alpha1.ExtendedDaemonSetStatusTimeoutExceeded,
 			Result:       reconcile.Result{},
 		},
 	}
@@ -636,7 +752,7 @@ func TestManageCanaryStatus_ImagePullErrorLeadingToPause(t *testing.T) {
 			CanaryNodes: testCanaryNodeNames,
 			NodeByName:  testCanaryNodes,
 			PodByNodeName: map[*NodeItem]*v1.Pod{
-				testCanaryNodes["a"]: newTestCanaryPod("foo-a", "v1", podWaitingStatus("ImagePullBackOff", `Back-off pulling image "gcr.io/missing"`)),
+				testCanaryNodes["a"]: newTestCanaryPod("foo-a", "v1", podWaitingStatus("ImagePullBackOff", `Back-off pulling image "gcr.io/missing"`, now)),
 				testCanaryNodes["b"]: nil,
 				testCanaryNodes["c"]: nil,
 			},
@@ -677,6 +793,7 @@ func TestManageCanaryStatus_ImagePullErrorLeadingToPause(t *testing.T) {
 }
 
 func TestManageCanaryStatus_AutoPausePendingCreate(t *testing.T) {
+	now := time.Now()
 	test := canaryStatusTest{
 		params: &Parameters{
 			EDSName: "foo",
@@ -703,7 +820,7 @@ func TestManageCanaryStatus_AutoPausePendingCreate(t *testing.T) {
 			NodeByName:  testCanaryNodes,
 			PodByNodeName: map[*NodeItem]*v1.Pod{
 				testCanaryNodes["a"]: newTestCanaryPod("foo-a", "v1", readyPodStatus),
-				testCanaryNodes["b"]: newTestCanaryPod("foo-b", "v1", podWaitingStatus("ContainerCreating", "Creating...")),
+				testCanaryNodes["b"]: newTestCanaryPod("foo-b", "v1", podWaitingStatus("ContainerCreating", "Creating...", now)),
 				testCanaryNodes["c"]: nil,
 			},
 			Logger: testLogger,
@@ -726,9 +843,10 @@ func TestManageCanaryStatus_AutoPausePendingCreate(t *testing.T) {
 }
 
 func TestManageCanaryStatus_AutoPauseWithMaxSlowStart(t *testing.T) {
-	now := time.Now().Add(2 * time.Minute)
+	now := time.Now()
+	afterNow := now.Add(2 * time.Minute)
 	test := canaryStatusTest{
-		now: now,
+		now: afterNow,
 		params: &Parameters{
 			EDSName: "foo",
 			Strategy: &v1alpha1.ExtendedDaemonSetSpecStrategy{
@@ -754,7 +872,7 @@ func TestManageCanaryStatus_AutoPauseWithMaxSlowStart(t *testing.T) {
 			NodeByName:  testCanaryNodes,
 			PodByNodeName: map[*NodeItem]*v1.Pod{
 				testCanaryNodes["a"]: newTestCanaryPod("foo-a", "v1", readyPodStatus),
-				testCanaryNodes["b"]: newTestCanaryPod("foo-b", "v1", podWaitingStatus("ContainerCreating", "Creating...")),
+				testCanaryNodes["b"]: newTestCanaryPod("foo-b", "v1", podWaitingStatus("ContainerCreating", "Creating...", now)),
 				testCanaryNodes["c"]: nil,
 			},
 			Logger: testLogger,
@@ -770,16 +888,16 @@ func TestManageCanaryStatus_AutoPauseWithMaxSlowStart(t *testing.T) {
 					{
 						Type:               v1alpha1.ConditionTypeCanaryPaused,
 						Status:             v1.ConditionTrue,
-						LastTransitionTime: metav1.NewTime(now),
-						LastUpdateTime:     metav1.NewTime(now),
+						LastTransitionTime: metav1.NewTime(afterNow),
+						LastUpdateTime:     metav1.NewTime(afterNow),
 						Reason:             "SlowStartTimeoutExceeded",
 						Message:            "",
 					},
 					{
 						Type:               v1alpha1.ConditionTypePodCannotStart,
 						Status:             v1.ConditionTrue,
-						LastTransitionTime: metav1.NewTime(now),
-						LastUpdateTime:     metav1.NewTime(now),
+						LastTransitionTime: metav1.NewTime(afterNow),
+						LastUpdateTime:     metav1.NewTime(afterNow),
 						Reason:             "SlowStartTimeoutExceeded",
 						Message:            "Pod foo-b cannot start with reason: SlowStartTimeoutExceeded",
 					},

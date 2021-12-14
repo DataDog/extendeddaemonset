@@ -146,8 +146,8 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 
 		autoFailEnabled             = *canary.AutoFail.Enabled
 		autoFailMaxRestarts         = int(*canary.AutoFail.MaxRestarts)
-		autoFailMaxRestartsDuration = canary.AutoFail.MaxRestartsDuration
-		autoFailMaxDuration         = canary.AutoFail.MaxDuration
+		autoFailMaxRestartsDuration *metav1.Duration
+		autoFailMaxDuration         *metav1.Duration
 
 		newRestartTime      time.Time
 		restartingPodStatus string
@@ -157,13 +157,21 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 		cannotStartPodStatus string
 	)
 
-	// autoFailMaxDuration must be greater than canaryDuration
-	if autoFailMaxDuration != nil && autoFailMaxDuration.Duration <= canaryDuration.Duration {
-		params.Logger.Info("Canary autoFail.maxDuration must be greater than the canary duration.")
-		if autoPauseEnabled {
-			params.Logger.Info("With AutoPause enabled, canary.autoFail.maxDuration >= 2*canary.duration is recommended.")
+	if canary.AutoFail.MaxRestartsDuration != nil {
+		autoFailMaxRestartsDuration = canary.AutoFail.MaxRestartsDuration
+	}
+
+	if canary.AutoFail.MaxDuration != nil {
+		autoFailMaxDuration = canary.AutoFail.MaxDuration
+
+		// autoFailMaxDuration must be greater than canaryDuration
+		if autoFailMaxDuration.Duration <= canaryDuration.Duration {
+			params.Logger.Info("Canary autoFail.maxDuration must be greater than the canary duration.")
+			if autoPauseEnabled {
+				params.Logger.Info("With AutoPause enabled, canary.autoFail.maxDuration >= 2*canary.duration is recommended.")
+			}
+			autoFailMaxDuration = nil
 		}
-		autoFailMaxDuration = nil
 	}
 
 	startCondition := conditions.GetExtendedDaemonSetReplicaSetStatusCondition(result.NewStatus, v1alpha1.ConditionTypeCanary)

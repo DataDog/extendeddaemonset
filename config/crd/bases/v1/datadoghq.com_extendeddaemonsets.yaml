@@ -127,17 +127,25 @@ spec:
                           the canary deployment AutoFail parameters of the ExtendedDaemonSet.
                         properties:
                           enabled:
+                            description: Enabled enables AutoFail. Default value is
+                              true.
                             type: boolean
+                          maxDuration:
+                            description: MaxDuration defines the maximum duration
+                              of a Canary after which the Canary deployment is autofailed.
+                              This is a safeguard against lengthy Canary pauses. There
+                              is no default value.
+                            type: string
                           maxRestarts:
                             description: MaxRestarts defines the number of tolerable
                               (per pod) Canary pod restarts after which the Canary
-                              deployment is autofailed.
+                              deployment is autofailed. Default value is 5.
                             format: int32
                             type: integer
                           maxRestartsDuration:
                             description: MaxRestartsDuration defines the maximum duration
                               of tolerable Canary pod restarts after which the Canary
-                              deployment is autofailed.
+                              deployment is autofailed. There is no default value.
                             type: string
                         type: object
                       autoPause:
@@ -146,17 +154,20 @@ spec:
                           ExtendedDaemonSet.
                         properties:
                           enabled:
+                            description: Enabled enables AutoPause. Default value
+                              is true.
                             type: boolean
                           maxRestarts:
                             description: MaxRestarts defines the number of tolerable
                               (per pod) Canary pod restarts after which the Canary
-                              deployment is autopaused.
+                              deployment is autopaused. Default value is 2.
                             format: int32
                             type: integer
                           maxSlowStartDuration:
                             description: MaxSlowStartDuration defines the maximum
                               slow start duration for a pod (stuck in Creating state)
-                              after which the. Canary deployment is autopaused
+                              after which the Canary deployment is autopaused. There
+                              is no default value.
                             type: string
                         type: object
                       duration:
