@@ -574,10 +574,10 @@ func shouldDeleteERS(now time.Time, ers *datadoghqv1alpha1.ExtendedDaemonSetRepl
 		return true
 	}
 
-	// If canary deploy has failed, delay ERS deletion for 5m so that failed metric reports
+	// If canary deploy has failed, delay ERS deletion for 2m so that failed metric reports
 	if ersconditions.IsConditionTrue(&ers.Status, datadoghqv1alpha1.ConditionTypeCanaryFailed) {
 		failedIdx := ersconditions.GetIndexForConditionType(&ers.Status, datadoghqv1alpha1.ConditionTypeCanaryFailed)
-		t := ers.Status.Conditions[failedIdx].LastTransitionTime.Add(time.Minute * 5)
+		t := ers.Status.Conditions[failedIdx].LastTransitionTime.Add(time.Minute * 2)
 		if now.Before(t) {
 			return false
 		}
