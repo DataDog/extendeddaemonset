@@ -425,20 +425,27 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanaryAutoFail(ref common
 				Properties: map[string]spec.Schema{
 					"enabled": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
+							Description: "Enabled enables AutoFail. Default value is true.",
+							Type:        []string{"boolean"},
+							Format:      "",
 						},
 					},
 					"maxRestarts": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MaxRestarts defines the number of tolerable (per pod) Canary pod restarts after which the Canary deployment is autofailed.",
+							Description: "MaxRestarts defines the number of tolerable (per pod) Canary pod restarts after which the Canary deployment is autofailed. Default value is 5.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"maxRestartsDuration": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MaxRestartsDuration defines the maximum duration of tolerable Canary pod restarts after which the Canary deployment is autofailed.",
+							Description: "MaxRestartsDuration defines the maximum duration of tolerable Canary pod restarts after which the Canary deployment is autofailed. There is no default value.",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
+						},
+					},
+					"canaryTimeout": {
+						SchemaProps: spec.SchemaProps{
+							Description: "CanaryTimeout defines the maximum duration of a Canary, after which the Canary deployment is autofailed. This is a safeguard against lengthy Canary pauses. There is no default value.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
@@ -459,20 +466,21 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanaryAutoPause(ref commo
 				Properties: map[string]spec.Schema{
 					"enabled": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
+							Description: "Enabled enables AutoPause. Default value is true.",
+							Type:        []string{"boolean"},
+							Format:      "",
 						},
 					},
 					"maxRestarts": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MaxRestarts defines the number of tolerable (per pod) Canary pod restarts after which the Canary deployment is autopaused.",
+							Description: "MaxRestarts defines the number of tolerable (per pod) Canary pod restarts after which the Canary deployment is autopaused. Default value is 2.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"maxSlowStartDuration": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MaxSlowStartDuration defines the maximum slow start duration for a pod (stuck in Creating state) after which the. Canary deployment is autopaused",
+							Description: "MaxSlowStartDuration defines the maximum slow start duration for a pod (stuck in Creating state) after which the Canary deployment is autopaused. There is no default value.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},

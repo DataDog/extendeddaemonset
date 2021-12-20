@@ -14,6 +14,8 @@ var (
 	ErrDurationWithManualValidationMode = errors.New("canary duration does not have effect with validationMode=manual")
 	// ErrNoRestartsDurationWithManualValidationMode is returned when validationMode=manual and noRestartsDuration is specified.
 	ErrNoRestartsDurationWithManualValidationMode = errors.New("canary noRestartsDuration does not have effect with validationMode=manual")
+	// ErrInvalidCanaryTimeout is returned when the autoFail canaryTimeout is invalid.
+	ErrInvalidCanaryTimeout = errors.New("canary autoFail.canaryTimeout must be greater than the canary duration")
 )
 
 // ValidateExtendedDaemonSetSpec validates an ExtendedDaemonSet spec
@@ -22,6 +24,10 @@ func ValidateExtendedDaemonSetSpec(spec *ExtendedDaemonSetSpec) error {
 	if canary := spec.Strategy.Canary; canary != nil {
 		if *canary.AutoFail.Enabled && *canary.AutoPause.Enabled && *canary.AutoFail.MaxRestarts < *canary.AutoPause.MaxRestarts {
 			return ErrInvalidAutoFailRestarts
+		}
+
+		if *canary.AutoFail.Enabled && canary.AutoFail.CanaryTimeout != nil && canary.AutoFail.CanaryTimeout.Duration <= canary.Duration.Duration {
+			return ErrInvalidCanaryTimeout
 		}
 
 		if canary.ValidationMode == ExtendedDaemonSetSpecStrategyCanaryValidationModeManual {
