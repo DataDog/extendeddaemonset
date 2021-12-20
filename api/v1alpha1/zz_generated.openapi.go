@@ -443,9 +443,9 @@ func schema__api_v1alpha1_ExtendedDaemonSetSpecStrategyCanaryAutoFail(ref common
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
-					"maxDuration": {
+					"canaryTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MaxDuration defines the maximum duration of a Canary after which the Canary deployment is autofailed. This is a safeguard against lengthy Canary pauses. There is no default value.",
+							Description: "CanaryTimeout defines the maximum duration of a Canary, after which the Canary deployment is autofailed. This is a safeguard against lengthy Canary pauses. There is no default value.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},

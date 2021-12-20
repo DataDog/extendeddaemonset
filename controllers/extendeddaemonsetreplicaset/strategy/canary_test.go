@@ -624,8 +624,6 @@ func TestManageCanaryStatus_LongRestartsDurationLeadingToFail(t *testing.T) {
 func TestManageCanaryStatus_LongDurationLeadingToFail(t *testing.T) {
 	now := time.Now()
 	imageErrorStartedAt := now.Add(-time.Hour)
-	// restartsUpdatedAt := now.Add(-10 * time.Minute)
-	// restartedAt := now.Add(-time.Minute)
 
 	test := canaryStatusTest{
 		now: now,
@@ -639,9 +637,9 @@ func TestManageCanaryStatus_LongDurationLeadingToFail(t *testing.T) {
 						MaxRestarts: v1alpha1.NewInt32(2),
 					},
 					AutoFail: &v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoFail{
-						Enabled:     v1alpha1.NewBool(true),
-						MaxRestarts: v1alpha1.NewInt32(5),
-						MaxDuration: &metav1.Duration{Duration: 20 * time.Minute},
+						Enabled:       v1alpha1.NewBool(true),
+						MaxRestarts:   v1alpha1.NewInt32(5),
+						CanaryTimeout: &metav1.Duration{Duration: 20 * time.Minute},
 					},
 				},
 			},

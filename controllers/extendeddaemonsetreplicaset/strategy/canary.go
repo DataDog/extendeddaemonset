@@ -140,14 +140,13 @@ func manageCanaryStatus(annotations map[string]string, params *Parameters, now t
 func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result, now time.Time) {
 	var (
 		canary               = params.Strategy.Canary
-		canaryDuration       = canary.Duration
 		autoPauseEnabled     = *canary.AutoPause.Enabled
 		autoPauseMaxRestarts = int(*canary.AutoPause.MaxRestarts)
 
 		autoFailEnabled             = *canary.AutoFail.Enabled
 		autoFailMaxRestarts         = int(*canary.AutoFail.MaxRestarts)
 		autoFailMaxRestartsDuration *metav1.Duration
-		autoFailMaxDuration         *metav1.Duration
+		autoFailCanaryTimeout       *metav1.Duration
 
 		newRestartTime      time.Time
 		restartingPodStatus string
@@ -161,17 +160,8 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 		autoFailMaxRestartsDuration = canary.AutoFail.MaxRestartsDuration
 	}
 
-	if canary.AutoFail.MaxDuration != nil {
-		autoFailMaxDuration = canary.AutoFail.MaxDuration
-
-		// autoFailMaxDuration must be greater than canaryDuration
-		if autoFailMaxDuration.Duration <= canaryDuration.Duration {
-			params.Logger.Info("Canary autoFail.maxDuration must be greater than the canary duration.")
-			if autoPauseEnabled {
-				params.Logger.Info("With AutoPause enabled, canary.autoFail.maxDuration >= 2*canary.duration is recommended.")
-			}
-			autoFailMaxDuration = nil
-		}
+	if canary.AutoFail.CanaryTimeout != nil {
+		autoFailCanaryTimeout = canary.AutoFail.CanaryTimeout
 	}
 
 	startCondition := conditions.GetExtendedDaemonSetReplicaSetStatusCondition(result.NewStatus, v1alpha1.ConditionTypeCanary)
@@ -233,7 +223,7 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 				"Reason", v1alpha1.ExtendedDaemonSetStatusRestartsTimeoutExceeded,
 			)
 		// Autofail: general timeout
-		case autoFailEnabled && startCondition != nil && autoFailMaxDuration != nil && now.Sub(startCondition.LastTransitionTime.Time) > autoFailMaxDuration.Duration:
+		case autoFailEnabled && startCondition != nil && autoFailCanaryTimeout != nil && now.Sub(startCondition.LastTransitionTime.Time) > autoFailCanaryTimeout.Duration:
 			result.IsFailed = true
 			result.FailedReason = v1alpha1.ExtendedDaemonSetStatusTimeoutExceeded
 			params.Logger.Info(

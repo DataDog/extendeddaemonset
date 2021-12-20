@@ -122,9 +122,9 @@ type ExtendedDaemonSetSpecStrategyCanaryAutoFail struct {
 	// MaxRestartsDuration defines the maximum duration of tolerable Canary pod restarts after which the Canary deployment is autofailed.
 	// There is no default value.
 	MaxRestartsDuration *metav1.Duration `json:"maxRestartsDuration,omitempty"`
-	// MaxDuration defines the maximum duration of a Canary after which the Canary deployment is autofailed. This is a safeguard against lengthy Canary pauses.
+	// CanaryTimeout defines the maximum duration of a Canary, after which the Canary deployment is autofailed. This is a safeguard against lengthy Canary pauses.
 	// There is no default value.
-	MaxDuration *metav1.Duration `json:"maxDuration,omitempty"`
+	CanaryTimeout *metav1.Duration `json:"canaryTimeout,omitempty"`
 }
 
 // ExtendedDaemonSetStatusState type representing the ExtendedDaemonSet state.

@@ -344,8 +344,8 @@ func (in *ExtendedDaemonSetSpecStrategyCanaryAutoFail) DeepCopyInto(out *Extende
 		*out = new(v1.Duration)
 		**out = **in
 	}
-	if in.MaxDuration != nil {
-		in, out := &in.MaxDuration, &out.MaxDuration
+	if in.CanaryTimeout != nil {
+		in, out := &in.CanaryTimeout, &out.CanaryTimeout
 		*out = new(v1.Duration)
 		**out = **in
 	}
