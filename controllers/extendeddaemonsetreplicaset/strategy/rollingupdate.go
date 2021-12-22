@@ -135,7 +135,7 @@ func ManageDeployment(client runtimeclient.Client, daemonset *datadoghqv1alpha1.
 		MaxUnschedulablePod: maxPodSchedulerFailure,
 	}
 	nbPodToCreate, nbPodToDelete := limits.CalculatePodToCreateAndDelete(limitParams)
-	metrics.SetRollingUpdateStuckMetric(params.Replicaset.GetName(), params.Replicaset.GetNamespace(), nbPodToDelete == 0)
+	metrics.SetRollingUpdateStuckMetric(params.Replicaset.GetName(), params.Replicaset.GetNamespace(), nbPodToDelete == 0 && len(allPodToDelete) > 0)
 	nbPodToDeleteWithConstraint := utils.MinInt(nbPodToDelete, len(allPodToDelete))
 	nbPodToCreateWithConstraint := utils.MinInt(nbPodToCreate, len(allPodToCreate))
 	params.Logger.V(1).Info(
