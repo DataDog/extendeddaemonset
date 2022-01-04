@@ -24,10 +24,6 @@ const (
 	ExtendedDaemonSetCanaryPausedReasonAnnotationKey = "extendeddaemonset.datadoghq.com/canary-paused-reason"
 	// ExtendedDaemonSetCanaryUnpausedAnnotationKey annotation key used on ExtendedDaemonset in order to detect if a canary deployment is manually unpaused.
 	ExtendedDaemonSetCanaryUnpausedAnnotationKey = "extendeddaemonset.datadoghq.com/canary-unpaused"
-	// ExtendedDaemonSetCanaryFailedAnnotationKey annotation key used on ExtendedDaemonset in order to detect if a canary deployment has failed.
-	ExtendedDaemonSetCanaryFailedAnnotationKey = "extendeddaemonset.datadoghq.com/canary-failed"
-	// ExtendedDaemonSetCanaryFailedReasonAnnotationKey annotation key used on ExtendedDaemonset in order to provide a reason that the a canary deployment is failed.
-	ExtendedDaemonSetCanaryFailedReasonAnnotationKey = "extendeddaemonset.datadoghq.com/canary-failed-reason"
 	// ExtendedDaemonSetOldDaemonsetAnnotationKey annotation key used on ExtendedDaemonset in order to inform the controller that old Daemonset's pod.
 	// should be taken into consideration during the initial rolling-update.
 	ExtendedDaemonSetOldDaemonsetAnnotationKey = "extendeddaemonset.datadoghq.com/old-daemonset"

@@ -104,15 +104,10 @@ func IsCanaryDeploymentValid(dsAnnotations map[string]string, rsName string) boo
 }
 
 // IsCanaryDeploymentFailed checks if the Canary deployment has been failed.
-func IsCanaryDeploymentFailed(dsAnnotations map[string]string, ers *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) bool {
+func IsCanaryDeploymentFailed(ers *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) bool {
 	// Check ERS status to detect if a Canary failed
 	if ers != nil && conditions.IsConditionTrue(&ers.Status, datadoghqv1alpha1.ConditionTypeCanaryFailed) {
 		return true
-	}
-
-	// Check also failed annotations if a user wanted to force a canary failure
-	if value, found := dsAnnotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey]; found {
-		return value == datadoghqv1alpha1.ValueStringTrue
 	}
 
 	return false

@@ -13,7 +13,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -104,98 +103,6 @@ func Test_compareWithExtendedDaemonsetSettingOverwrite(t *testing.T) {
 			if got := compareWithExtendedDaemonsetSettingOverwrite(tt.args.pod, tt.args.node); got != tt.want {
 				t.Errorf("compareWithExtendedDaemonsetSettingOverwrite() = %v, want %v", got, tt.want)
 			}
-		})
-	}
-}
-
-func Test_pauseCanaryDeployment(t *testing.T) {
-	s := scheme.Scheme
-	s.AddKnownTypes(datadoghqv1alpha1.GroupVersion, &datadoghqv1alpha1.ExtendedDaemonSet{})
-
-	daemonset := test.NewExtendedDaemonSet("test", "test", &test.NewExtendedDaemonSetOptions{})
-	reason := datadoghqv1alpha1.ExtendedDaemonSetStatusReasonCLB
-
-	daemonsetPaused := daemonset.DeepCopy()
-	daemonsetPaused.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey] = valueTrue
-
-	type args struct {
-		client client.Client
-		eds    *datadoghqv1alpha1.ExtendedDaemonSet
-		reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason
-	}
-
-	tests := []struct {
-		name    string
-		args    args
-		wantErr error
-	}{
-		{
-			name: "add paused annotation without issue",
-			args: args{
-				client: fake.NewClientBuilder().WithObjects(daemonset).Build(),
-				eds:    daemonset,
-				reason: reason,
-			},
-		},
-		{
-			name: "add paused annotation when it is already paused",
-			args: args{
-				client: fake.NewClientBuilder().WithObjects(daemonsetPaused).Build(),
-				eds:    daemonsetPaused,
-				reason: reason,
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := pauseCanaryDeployment(tt.args.client, tt.args.eds, tt.args.reason)
-			assert.Equal(t, tt.wantErr, err)
-		})
-	}
-}
-
-func Test_failCanaryDeployment(t *testing.T) {
-	s := scheme.Scheme
-	s.AddKnownTypes(datadoghqv1alpha1.GroupVersion, &datadoghqv1alpha1.ExtendedDaemonSet{})
-
-	daemonset := test.NewExtendedDaemonSet("test", "test", &test.NewExtendedDaemonSetOptions{})
-	reason := datadoghqv1alpha1.ExtendedDaemonSetStatusReasonOOM
-
-	daemonsetPaused := daemonset.DeepCopy()
-	daemonsetPaused.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey] = valueTrue
-
-	type args struct {
-		client client.Client
-		eds    *datadoghqv1alpha1.ExtendedDaemonSet
-		reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason
-	}
-
-	tests := []struct {
-		name    string
-		args    args
-		wantErr error
-	}{
-		{
-			name: "add dailed annotation without issue",
-			args: args{
-				client: fake.NewClientBuilder().WithObjects(daemonset).Build(),
-				eds:    daemonset,
-				reason: reason,
-			},
-		},
-		{
-			name: "add failed annotation when it is already paused",
-			args: args{
-				client: fake.NewClientBuilder().WithObjects(daemonsetPaused).Build(),
-				eds:    daemonsetPaused,
-				reason: reason,
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := failCanaryDeployment(tt.args.client, tt.args.eds, tt.args.reason)
-			assert.Equal(t, tt.wantErr, err)
 		})
 	}
 }

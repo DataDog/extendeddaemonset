@@ -12,6 +12,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
+	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/conditions"
 )
 
 func TestIsCanaryDeploymentPaused(t *testing.T) {
@@ -282,8 +283,10 @@ func TestIsCanaryDeploymentValid(t *testing.T) {
 }
 
 func TestIsCanaryDeploymentFailed(t *testing.T) {
+	now := time.Now()
+
 	type args struct {
-		dsAnnotations map[string]string
+		rs *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet
 	}
 
 	tests := []struct {
@@ -292,45 +295,56 @@ func TestIsCanaryDeploymentFailed(t *testing.T) {
 		want bool
 	}{
 		{
-			name: "annotation found - correct rs name",
+			name: "nil RS",
 			args: args{
-				dsAnnotations: map[string]string{
-					"extendeddaemonset.datadoghq.com/canary-failed": "true",
+				rs: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{},
+			},
+			want: false,
+		},
+		{
+			name: "rs not failed",
+			args: args{
+				rs: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{
+					ObjectMeta: metav1.ObjectMeta{
+						CreationTimestamp: metav1.NewTime(now.Add(-2 * time.Hour)),
+					},
+					Status: datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus{
+						Conditions: []datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCondition{
+							{
+								Type:           datadoghqv1alpha1.ConditionTypeCanaryFailed,
+								LastUpdateTime: metav1.NewTime(now.Add(-15 * time.Minute)),
+								Status:         conditions.BoolToCondition(false),
+							},
+						},
+					},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "rs failed",
+			args: args{
+				rs: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{
+					ObjectMeta: metav1.ObjectMeta{
+						CreationTimestamp: metav1.NewTime(now.Add(-2 * time.Hour)),
+					},
+					Status: datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus{
+						Conditions: []datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCondition{
+							{
+								Type:           datadoghqv1alpha1.ConditionTypeCanaryFailed,
+								LastUpdateTime: metav1.NewTime(now),
+								Status:         conditions.BoolToCondition(true),
+							},
+						},
+					},
 				},
 			},
 			want: true,
 		},
-		{
-			name: "annotation found - incorrect rs name",
-			args: args{
-				dsAnnotations: map[string]string{
-					"extendeddaemonset.datadoghq.com/canary-failed": "false",
-				},
-			},
-			want: false,
-		},
-		{
-			name: "annotation not found",
-			args: args{
-				dsAnnotations: map[string]string{
-					"extendeddaemonset.datadoghq.com/canary-failed": "random",
-				},
-			},
-			want: false,
-		},
-		{
-			name: "annotation not found",
-			args: args{
-				dsAnnotations: map[string]string{
-					"extendeddaemonset.datadoghq.com/canary-something-else": "true",
-				},
-			},
-			want: false,
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := IsCanaryDeploymentFailed(tt.args.dsAnnotations, nil); got != tt.want {
+			if got := IsCanaryDeploymentFailed(tt.args.rs); got != tt.want {
 				t.Errorf("IsCanaryDeploymentFailed() = %v, want %v", got, tt.want)
 			}
 		})
