@@ -238,7 +238,7 @@ func (r *Reconciler) updateInstanceWithCurrentRS(logger logr.Logger, now time.Ti
 	if daemonset.Spec.Strategy.Canary != nil {
 		metaNow := metav1.NewTime(now)
 		isCanaryPaused, pausedReason := IsCanaryDeploymentPaused(daemonset.GetAnnotations(), upToDate)
-		isCanaryFailed := IsCanaryDeploymentFailed(daemonset.GetAnnotations(), upToDate)
+		isCanaryFailed := IsCanaryDeploymentFailed(upToDate)
 		isCanaryActive := isCanaryActive(daemonset, current.GetName(), upToDate.GetName(), isCanaryFailed)
 		logger.V(1).Info("canary state", "isCanaryActive", isCanaryActive, "isCanaryFailed", isCanaryFailed, "isCanaryPaused", isCanaryPaused, "pausedReason", pausedReason)
 
@@ -538,7 +538,7 @@ func newReplicaSetFromInstance(daemonset *datadoghqv1alpha1.ExtendedDaemonSet) (
 	return rs, err
 }
 
-func (r *Reconciler) cleanupReplicaSet(logger logr.Logger, now time.Time, rsList *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetList, current, updatetodate *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) error {
+func (r *Reconciler) cleanupReplicaSet(logger logr.Logger, now time.Time, rsList *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetList, current, upToDate *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) error {
 	var errs []error
 	for id, rs := range rsList.Items {
 		if current == nil {
@@ -547,7 +547,7 @@ func (r *Reconciler) cleanupReplicaSet(logger logr.Logger, now time.Time, rsList
 		if rs.Name == current.Name {
 			continue
 		}
-		if updatetodate != nil && rs.Name == updatetodate.Name {
+		if upToDate != nil && rs.Name == upToDate.Name {
 			continue
 		}
 		if rs.DeletionTimestamp != nil {
@@ -591,8 +591,6 @@ func clearCanaryAnnotations(eds *datadoghqv1alpha1.ExtendedDaemonSet) bool {
 		datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey,
 		datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey,
 		datadoghqv1alpha1.ExtendedDaemonSetCanaryUnpausedAnnotationKey,
-		datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey,
-		datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedReasonAnnotationKey,
 	}
 	var updated bool
 	for _, key := range keysToDelete {

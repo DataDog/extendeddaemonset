@@ -221,11 +221,6 @@ var _ = Describe("ExtendedDaemonSet e2e updates and recovery", func() {
 			Eventually(withEDS(key, eds, func() bool {
 				return eds.Status.State == datadoghqv1alpha1.ExtendedDaemonSetStatusStateRunning
 			}), timeout, interval).Should(BeTrue())
-
-			Eventually(withEDS(key, eds, func() bool {
-				_, found := eds.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey]
-				return found
-			}), timeout, interval).Should(BeFalse())
 		})
 
 		It("Should delete EDS", func() {
@@ -798,8 +793,6 @@ func clearCanaryAnnotations(eds *datadoghqv1alpha1.ExtendedDaemonSet) bool {
 		datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey,
 		datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey,
 		datadoghqv1alpha1.ExtendedDaemonSetCanaryUnpausedAnnotationKey,
-		datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey,
-		datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedReasonAnnotationKey,
 	}
 	var updated bool
 	for _, key := range keysToDelete {

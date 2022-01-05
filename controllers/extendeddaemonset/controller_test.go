@@ -710,17 +710,11 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 		}
 	}
 	daemonsetWithCanaryFailedOldStatus := daemonsetWithCanaryFailedOldWithoutAnnotationsStatus.DeepCopy()
-	{
-		daemonsetWithCanaryFailedOldStatus.Annotations[datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey] = "true"
-	}
-
 	daemonsetWithCanaryFailedWithoutAnnotationsWanted := daemonsetWithCanaryFailedOldStatus.DeepCopy()
 	{
 		// When the canary fails, the number of "Updated" replicas should equal
 		// the number of current ones.
 		daemonsetWithCanaryFailedWithoutAnnotationsWanted.Status.UpToDate = replicassetCurrent.Status.Current
-		delete(daemonsetWithCanaryFailedWithoutAnnotationsWanted.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey)
-		delete(daemonsetWithCanaryFailedWithoutAnnotationsWanted.Annotations, datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedReasonAnnotationKey)
 		daemonsetWithCanaryFailedWithoutAnnotationsWanted.ResourceVersion = "3"
 		daemonsetWithCanaryFailedWithoutAnnotationsWanted.Status.Canary = nil
 		daemonsetWithCanaryFailedWithoutAnnotationsWanted.Status.State = datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryFailed
@@ -882,28 +876,6 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 				},
 			},
 			want:       daemonsetWithCanaryPausedWithoutAnnotationsWanted,
-			wantResult: reconcile.Result{Requeue: false},
-			wantErr:    false,
-		},
-		{
-			now:  now,
-			name: "canary failed => update",
-			fields: fields{
-				client: fake.NewClientBuilder().WithObjects(daemonsetWithCanaryFailedOldStatus, replicassetCurrent, replicassetUpToDate).Build(),
-				scheme: s,
-			},
-			args: args{
-				logger:    log,
-				daemonset: daemonsetWithCanaryFailedOldStatus,
-				current:   replicassetCurrent,
-				upToDate:  replicassetUpToDate,
-				podsCounter: podsCounterType{
-					Current:   3,
-					Ready:     2,
-					Available: 1,
-				},
-			},
-			want:       daemonsetWithCanaryFailedWithoutAnnotationsWanted,
 			wantResult: reconcile.Result{Requeue: false},
 			wantErr:    false,
 		},

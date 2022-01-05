@@ -11,10 +11,12 @@ import (
 
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
+	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/conditions"
 	"github.com/DataDog/extendeddaemonset/pkg/plugin/common"
 )
 
@@ -136,26 +138,33 @@ func (o *failOptions) run() error {
 		return fmt.Errorf("the ExtendedDaemonset does not have an active canary deployment")
 	}
 
-	newEds := eds.DeepCopy()
-	if newEds.Annotations == nil {
-		newEds.Annotations = make(map[string]string)
-	} else if isFailed, ok := newEds.Annotations[v1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey]; ok {
-		if o.failStatus && isFailed == v1alpha1.ValueStringTrue {
-			return fmt.Errorf("canary deployment already failed")
-		} else if !o.failStatus && isFailed == v1alpha1.ValueStringFalse {
-			return fmt.Errorf("canary deployment already reset")
-		}
+	// Get Canary ERS
+	canaryERSName := eds.Status.Canary.ReplicaSet
+	canaryERS := &v1alpha1.ExtendedDaemonSetReplicaSet{}
+	err = o.client.Get(context.TODO(), client.ObjectKey{Namespace: o.userNamespace, Name: canaryERSName}, canaryERS)
+	if err != nil && errors.IsNotFound(err) {
+		return fmt.Errorf("ERS %s/%s not found", o.userNamespace, canaryERSName)
+	} else if err != nil {
+		return fmt.Errorf("unable to get ERS, err: %w", err)
 	}
-	newEds.Annotations[v1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey] = fmt.Sprintf("%v", o.failStatus)
-	patch := client.MergeFrom(eds)
-	if err = o.client.Patch(context.TODO(), newEds, patch); err != nil {
-		return fmt.Errorf("unable to fail or reset ExtendedDaemonset deployment, err: %w", err)
+
+	newCanaryERS := canaryERS.DeepCopy()
+
+	newCanaryERS.Status.Conditions = append(
+		newCanaryERS.Status.Conditions,
+		conditions.NewExtendedDaemonSetReplicaSetCondition(
+			v1alpha1.ConditionTypeCanaryFailed,
+			conditions.BoolToCondition(true),
+			metav1.Now(),
+			"Manually failed",
+			"",
+			true),
+	)
+	if err = o.client.Status().Update(context.TODO(), newCanaryERS); err != nil {
+		return fmt.Errorf("unable to update ERS status, err: %w", err)
 	}
-	action := "set to failed"
-	if !o.failStatus {
-		action = "reset"
-	}
-	fmt.Fprintf(o.Out, "ExtendedDaemonset '%s/%s' canary deployment %s\n", o.userNamespace, o.userExtendedDaemonSetName, action)
+
+	fmt.Fprintf(o.Out, "ExtendedDaemonSetReplicaSet '%s/%s' canary deployment set to failed\n", o.userNamespace, o.userExtendedDaemonSetName)
 
 	return nil
 }
