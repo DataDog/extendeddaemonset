@@ -415,7 +415,9 @@ func (r *Reconciler) selectNodes(logger logr.Logger, daemonsetSpec *datadoghqv1a
 				antiAffinityKeysValues[antiAffinityKeysValue]++
 			}
 
-			currentNodes = append(currentNodes, node.Name)
+			if scheduler.CheckNodeFitness(logger, newPod, &node) {
+				currentNodes = append(currentNodes, node.Name)
+			}
 			// All nodes are found. We can exit now!
 			if len(currentNodes) == nbCanaryPod {
 				logger.V(1).Info("All nodes were found")

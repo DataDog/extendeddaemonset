@@ -7,6 +7,7 @@ package v1alpha1
 
 import (
 	"testing"
+	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -50,6 +51,13 @@ func TestValidateExtendedDaemonSetSpec(t *testing.T) {
 	*validAutoPauseNoAutoFail.Strategy.Canary.AutoFail.Enabled = false
 	*validAutoPauseNoAutoFail.Strategy.Canary.AutoFail.MaxRestarts = 1
 
+	invalidCanaryTimeout := validWithCanary.DeepCopy()
+	*invalidCanaryTimeout.Strategy.Canary.AutoPause.Enabled = true
+	*invalidCanaryTimeout.Strategy.Canary.AutoFail.Enabled = true
+	invalidCanaryTimeout.Strategy.Canary.AutoFail.CanaryTimeout = &metav1.Duration{
+		Duration: 1 * time.Minute,
+	}
+
 	validManualValidationMode := validWithCanaryManualValidationMode.DeepCopy()
 	validManualValidationMode.Strategy.Canary.ValidationMode = ExtendedDaemonSetSpecStrategyCanaryValidationModeManual
 
@@ -82,6 +90,11 @@ func TestValidateExtendedDaemonSetSpec(t *testing.T) {
 			name: "invalid autoFail maxRestarts",
 			spec: invalidAutoFail,
 			err:  ErrInvalidAutoFailRestarts,
+		},
+		{
+			name: "invalid autoFail canaryTimeout",
+			spec: invalidCanaryTimeout,
+			err:  ErrInvalidCanaryTimeout,
 		},
 		{
 			name: "valid autoFail no autoPause",
