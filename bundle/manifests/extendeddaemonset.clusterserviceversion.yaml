@@ -73,7 +73,7 @@ metadata:
     capabilities: Full Lifecycle
     operators.operatorframework.io/builder: operator-sdk-v1.4.0+git
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
-  name: extendeddaemonset.v0.8.0-rc.2
+  name: extendeddaemonset.v0.8.0-rc.3
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -327,4 +327,4 @@ spec:
   provider:
     name: Datadog
     url: https://github.com/DataDog/extendeddaemonset
-  version: 0.8.0-rc.2
+  version: 0.8.0-rc.3
