@@ -24,8 +24,6 @@ import (
 	podutils "github.com/DataDog/extendeddaemonset/pkg/controller/utils/pod"
 )
 
-const valueTrue = "true"
-
 func compareCurrentPodWithNewPod(params *Parameters, pod *corev1.Pod, node *NodeItem) bool {
 	// check that the pod corresponds to the replicaset. if not return false
 	if !compareSpecTemplateMD5Hash(params.Replicaset.Spec.TemplateGeneration, pod) {
@@ -144,48 +142,6 @@ func manageUnscheduledPodNodes(pods []*corev1.Pod) []string {
 	}
 
 	return output
-}
-
-// annotateCanaryDeploymentWithReason annotates the Canary deployment with a reason.
-func annotateCanaryDeploymentWithReason(c client.Client, eds *datadoghqv1alpha1.ExtendedDaemonSet, valueKey string, reasonKey string, reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason) error {
-	newEds := eds.DeepCopy()
-	if newEds.Annotations == nil {
-		newEds.Annotations = make(map[string]string)
-	}
-
-	if value, ok := newEds.Annotations[valueKey]; ok {
-		if value == valueTrue {
-			return nil
-		}
-	}
-
-	patch := client.MergeFrom(newEds.DeepCopy())
-	newEds.Annotations[valueKey] = valueTrue
-	newEds.Annotations[reasonKey] = string(reason)
-
-	return c.Patch(context.TODO(), newEds, patch)
-}
-
-// pauseCanaryDeployment updates two annotations so that the Canary deployment is marked as paused, along with a reason.
-func pauseCanaryDeployment(client client.Client, eds *datadoghqv1alpha1.ExtendedDaemonSet, reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason) error {
-	return annotateCanaryDeploymentWithReason(
-		client,
-		eds,
-		datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey,
-		datadoghqv1alpha1.ExtendedDaemonSetCanaryPausedReasonAnnotationKey,
-		reason,
-	)
-}
-
-// failCanaryDeployment updates two annotations so that the Canary deployment is marked as failed, along with a reason.
-func failCanaryDeployment(client client.Client, eds *datadoghqv1alpha1.ExtendedDaemonSet, reason datadoghqv1alpha1.ExtendedDaemonSetStatusReason) error {
-	return annotateCanaryDeploymentWithReason(
-		client,
-		eds,
-		datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedAnnotationKey,
-		datadoghqv1alpha1.ExtendedDaemonSetCanaryFailedReasonAnnotationKey,
-		reason,
-	)
 }
 
 // addPodLabel adds a given label to a pod, no-op if the pod is nil or if the label exists.

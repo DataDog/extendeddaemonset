@@ -165,6 +165,7 @@ func (o *pauseOptions) run() error {
 
 	newEds := eds.DeepCopy()
 
+	// TODO: update pause action to be less dependent on annotations as in the fail action
 	if newEds.Annotations == nil {
 		newEds.Annotations = make(map[string]string)
 	} else if isPaused, ok := newEds.Annotations[v1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]; ok {
