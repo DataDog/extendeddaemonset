@@ -11,7 +11,7 @@ builds:
   goarch:
   - amd64
   env:
-  - CGO_ENABLED=0
+  - CGO_ENABLED=1
   main: ./cmd/kubectl-eds/main.go
   ldflags: -w -X ${BUILDINFOPKG}.Commit=${GIT_COMMIT} -X ${BUILDINFOPKG}.Version=${VERSION} -X ${BUILDINFOPKG}.BuildTime=${DATE} -s
   binary: kubectl-eds
