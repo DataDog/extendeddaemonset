@@ -3,6 +3,7 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-2020 Datadog, Inc.
 
+//go:build e2e
 // +build e2e
 
 package controllers
@@ -15,7 +16,7 @@ import (
 func initTestConfig() *testConfigOptions {
 	return &testConfigOptions{
 		useExistingCluster: true,
-		crdVersion:         "v1beta1",
+		crdVersion:         "v1",
 		namespace:          fmt.Sprintf("eds-%d", time.Now().Unix()),
 	}
 }
