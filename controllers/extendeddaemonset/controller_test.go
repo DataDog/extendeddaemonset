@@ -610,7 +610,7 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 
 	daemonsetWithStatus := daemonset.DeepCopy()
 	{
-		daemonsetWithStatus.ResourceVersion = "1"
+		daemonsetWithStatus.ResourceVersion = "1000"
 		daemonsetWithStatus.Status = datadoghqv1alpha1.ExtendedDaemonSetStatus{
 			ActiveReplicaSet: "current",
 			Desired:          4,
@@ -668,9 +668,10 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 			},
 		},
 	)
+	daemonsetWithCanaryPaused.ResourceVersion = "999"
 	daemonsetWithCanaryPausedWanted := daemonsetWithCanaryPaused.DeepCopy()
 	{
-		daemonsetWithCanaryPausedWanted.ResourceVersion = "1"
+		daemonsetWithCanaryPausedWanted.ResourceVersion = "1000"
 		daemonsetWithCanaryPausedWanted.Status.Conditions = []datadoghqv1alpha1.ExtendedDaemonSetCondition{
 			{
 				Type:               datadoghqv1alpha1.ConditionTypeEDSCanaryPaused,

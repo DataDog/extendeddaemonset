@@ -3,6 +3,7 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-2019 Datadog, Inc.
 
+//go:build e2e
 // +build e2e
 
 package controllers
@@ -16,7 +17,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/types"
+	gomegatypes "github.com/onsi/gomega/types"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -342,7 +343,7 @@ var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition", func() {
 		Expect(cond).ShouldNot(BeNil())
 		Expect(cond.Status).Should(Equal(corev1.ConditionTrue))
 		pausedReason := cond.Reason
-		var matchers []GomegaMatcher
+		var matchers []gomegatypes.GomegaMatcher
 		for _, reason := range expectedReasons {
 			matchers = append(matchers, Equal(reason))
 		}
@@ -363,7 +364,7 @@ var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition", func() {
 
 		Expect(cannotStartCondition.Status).Should(Equal(corev1.ConditionTrue))
 
-		matchers = []GomegaMatcher{}
+		matchers = []gomegatypes.GomegaMatcher{}
 		for _, reason := range expectedReasons {
 			matchers = append(matchers, MatchRegexp(fmt.Sprintf("Pod eds-foo-.*? cannot start with reason: %s", reason)))
 		}
