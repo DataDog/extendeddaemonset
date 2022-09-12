@@ -1,0 +1,80 @@
+name: build-cgo
+
+on:
+  push:
+
+jobs:
+  build-linux-binary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: gcc install
+        run: sudo apt install gcc-aarch64-linux-gnu
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.17
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v3
+        with:
+          version: latest
+          args: release --skip-publish --config .goreleaser-for-linux.yaml
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: kubectl-eds-linux
+          path: |
+            dist/kubectl-eds_*.zip
+            dist/checksums.txt
+  build-darwin-binary:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.17
+      - name: Build
+        uses: goreleaser/goreleaser-action@v3
+        with:
+          args: release --skip-publish --config .goreleaser-for-darwin.yaml
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: kubectl-eds-darwin
+          path: |
+            dist/kubectl-eds_*.zip
+            dist/checksums.txt
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Make directories
+        run: |
+          mkdir -p ./dist/linux
+          mkdir -p ./dist/darwin
+      - name: Download linux binaries
+        uses: actions/download-artifact@v3
+        with:
+          name: kubectl-eds-linux
+          path: ./tmp-build/linux
+      - name: Download darwin binaries
+        uses: actions/download-artifact@v3
+        with:
+          name: kubectl-eds-darwin
+          path: ./tmp-build/darwin
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: kubectl-eds-final
+          path: |
+            ./tmp-build/*
+            ./LICENSE
