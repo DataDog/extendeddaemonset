@@ -49,6 +49,7 @@ jobs:
             dist/eds-plugin.yaml
             dist/*.zip
             dist/*.tar.gz
+            dist/checksums.txt
         env:
           COMMIT_TAG: ${{steps.tag.outputs.tag}}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
