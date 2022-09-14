@@ -202,7 +202,7 @@ bin/yq:
 	./hack/install-yq.sh 3.3.0
 
 bin/golangci-lint:
-	hack/golangci-lint.sh v1.38.0
+	hack/golangci-lint.sh v1.45.0
 
 bin/operator-sdk:
 	./hack/install-operator-sdk.sh v1.5.0
