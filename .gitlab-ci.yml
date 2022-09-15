@@ -1,4 +1,4 @@
-image: registry.ddbuild.io/golang:1.15-buster
+image: registry.ddbuild.io/images/mirror/golang:1.18
 variables:
   GO111MODULE: "on"
   PROJECTNAME: "extendeddaemonset"
