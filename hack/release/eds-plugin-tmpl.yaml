@@ -11,7 +11,7 @@ spec:
   homepage: https://github.com/DataDog/extendeddaemonset
   platforms:
   - uri: https://github.com/DataDog/extendeddaemonset/releases/download/PLACEHOLDER_TAG/kubectl-eds_PLACEHOLDER_VERSION_darwin_amd64.zip
-    sha256: "PLACEHOLDER_SHA_DARWIN"
+    sha256: "PLACEHOLDER_SHA_DARWIN_AMD64"
     bin: kubectl-eds
     files:
     - from: kubectl-eds
@@ -22,6 +22,18 @@ spec:
       matchLabels:
         os: darwin
         arch: amd64
+  - uri: https://github.com/DataDog/extendeddaemonset/releases/download/PLACEHOLDER_TAG/kubectl-eds_PLACEHOLDER_VERSION_darwin_arm64.zip
+    sha256: "PLACEHOLDER_SHA_DARWIN_ARM64"
+    bin: kubectl-eds
+    files:
+    - from: kubectl-eds
+      to: .
+    - from: LICENSE
+      to: .
+    selector:
+      matchLabels:
+        os: darwin
+        arch: arm64
   - uri: https://github.com/DataDog/extendeddaemonset/releases/download/PLACEHOLDER_TAG/kubectl-eds_PLACEHOLDER_VERSION_linux_amd64.zip
     sha256: "PLACEHOLDER_SHA_LINUX"
     bin: kubectl-eds
