@@ -21,12 +21,16 @@ TARBALL_NAME="$PLUGIN_NAME_$VERSION.tar.gz"
 DARWIN_AMD64=$(grep $PLUGIN_NAME $OUTPUT_FOLDER/checksums.txt  | grep "darwin_amd64" | awk '{print $1}')
 DARWIN_ARM64=$(grep $PLUGIN_NAME $OUTPUT_FOLDER/checksums.txt  | grep "darwin_arm64" | awk '{print $1}')
 WINDOWS_AMD64=$(grep $PLUGIN_NAME $OUTPUT_FOLDER/checksums.txt  | grep "windows_amd64" | awk '{print $1}')
+WINDOWS_ARM64=$(grep $PLUGIN_NAME $OUTPUT_FOLDER/checksums.txt  | grep "windows_arm64" | awk '{print $1}')
 LINUX_AMD64=$(grep $PLUGIN_NAME $OUTPUT_FOLDER/checksums.txt  | grep "linux_amd64" | awk '{print $1}')
+LINUX_ARM64=$(grep $PLUGIN_NAME $OUTPUT_FOLDER/checksums.txt  | grep "linux_arm64" | awk '{print $1}')
 
 echo "DARWIN_AMD64=$DARWIN_AMD64"
 echo "DARWIN_ARM64=$DARWIN_ARM64"
 echo "WINDOWS_AMD64=$WINDOWS_AMD64"
+echo "WINDOWS_ARM64=$WINDOWS_ARM64"
 echo "LINUX_AMD64=$LINUX_AMD64"
+echo "LINUX_ARM64=$LINUX_ARM64"
 
 cp $GIT_ROOT/hack/release/eds-plugin-tmpl.yaml $OUTPUT_FOLDER/eds-plugin.yaml
 
@@ -34,5 +38,7 @@ $SED "s/PLACEHOLDER_TAG/$TAG/g" $OUTPUT_FOLDER/eds-plugin.yaml
 $SED "s/PLACEHOLDER_VERSION/$VERSION/g" $OUTPUT_FOLDER/eds-plugin.yaml
 $SED "s/PLACEHOLDER_SHA_DARWIN_AMD64/$DARWIN_AMD64/g" $OUTPUT_FOLDER/eds-plugin.yaml
 $SED "s/PLACEHOLDER_SHA_DARWIN_ARM64/$DARWIN_ARM64/g" $OUTPUT_FOLDER/eds-plugin.yaml
-$SED "s/PLACEHOLDER_SHA_LINUX/$LINUX_AMD64/g" $OUTPUT_FOLDER/eds-plugin.yaml
-$SED "s/PLACEHOLDER_SHA_WINDOWS/$WINDOWS_AMD64/g" $OUTPUT_FOLDER/eds-plugin.yaml
+$SED "s/PLACEHOLDER_SHA_LINUX_AMD64/$LINUX_AMD64/g" $OUTPUT_FOLDER/eds-plugin.yaml
+$SED "s/PLACEHOLDER_SHA_LINUX_ARM64/$LINUX_ARM64/g" $OUTPUT_FOLDER/eds-plugin.yaml
+$SED "s/PLACEHOLDER_SHA_WINDOWS_AMD64/$WINDOWS_AMD64/g" $OUTPUT_FOLDER/eds-plugin.yaml
+$SED "s/PLACEHOLDER_SHA_WINDOWS_ARM64/$WINDOWS_ARM64/g" $OUTPUT_FOLDER/eds-plugin.yaml

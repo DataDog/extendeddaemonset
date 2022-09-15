@@ -35,7 +35,7 @@ spec:
         os: darwin
         arch: arm64
   - uri: https://github.com/DataDog/extendeddaemonset/releases/download/PLACEHOLDER_TAG/kubectl-eds_PLACEHOLDER_VERSION_linux_amd64.zip
-    sha256: "PLACEHOLDER_SHA_LINUX"
+    sha256: "PLACEHOLDER_SHA_LINUX_AMD64"
     bin: kubectl-eds
     files:
     - from: kubectl-eds
@@ -46,8 +46,20 @@ spec:
       matchLabels:
         os: linux
         arch: amd64
+  - uri: https://github.com/DataDog/extendeddaemonset/releases/download/PLACEHOLDER_TAG/kubectl-eds_PLACEHOLDER_VERSION_linux_arm64.zip
+    sha256: "PLACEHOLDER_SHA_LINUX_ARM64"
+    bin: kubectl-eds
+    files:
+    - from: kubectl-eds
+      to: .
+    - from: LICENSE
+      to: .
+    selector:
+      matchLabels:
+        os: linux
+        arch: arm64
   - uri: https://github.com/DataDog/extendeddaemonset/releases/download/PLACEHOLDER_TAG/kubectl-eds_PLACEHOLDER_VERSION_windows_amd64.zip
-    sha256: "PLACEHOLDER_SHA_WINDOWS"
+    sha256: "PLACEHOLDER_SHA_WINDOWS_AMD64"
     bin: kubectl-eds.exe
     files:
     - from: kubectl-eds.exe
@@ -58,3 +70,15 @@ spec:
       matchLabels:
         os: windows
         arch: amd64
+  - uri: https://github.com/DataDog/extendeddaemonset/releases/download/PLACEHOLDER_TAG/kubectl-eds_PLACEHOLDER_VERSION_windows_arm64.zip
+    sha256: "PLACEHOLDER_SHA_WINDOWS_ARM64"
+    bin: kubectl-eds.exe
+    files:
+    - from: kubectl-eds.exe
+      to: .
+    - from: LICENSE
+      to: .
+    selector:
+      matchLabels:
+        os: windows
+        arch: arm64
