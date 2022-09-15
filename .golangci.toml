@@ -56,6 +56,20 @@
     "gci",
     "wsl",
     "godox",
+    "godot",
+    "nlreturn",
+    "varnamelen",
+    "tagliatelle",
+    "containedctx",
+    "contextcheck",
+    "nilnil",
+    "ireturn",
+    "maintidx",
+    "ifshort",
+    "gocritic",
+    "errchkjson",
+    "gofumpt",
+    "golint"
   ]
 
 [issues]
