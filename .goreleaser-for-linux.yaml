@@ -6,13 +6,16 @@ builds:
 - id: kubectl-eds
   goos:
   - linux
-  - darwin
-  - windows
   goarch:
   - amd64
   - arm64
   env:
-  - CGO_ENABLED=0
+  - CGO_ENABLED=1
+  overrides:
+  - goos: linux
+    goarch: arm64
+    env:
+      - CC=aarch64-linux-gnu-gcc
   main: ./cmd/kubectl-eds/main.go
   ldflags: -w -X ${BUILDINFOPKG}.Commit=${GIT_COMMIT} -X ${BUILDINFOPKG}.Version=${VERSION} -X ${BUILDINFOPKG}.BuildTime=${DATE} -s
   binary: kubectl-eds
@@ -26,7 +29,7 @@ archives:
   files:
   - LICENSE
 checksum:
-  name_template: 'checksums.txt'
+  name_template: "checksums.txt"
 snapshot:
   name_template: "{{ .Tag }}-next"
 changelog:
