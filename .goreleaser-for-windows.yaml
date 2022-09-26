@@ -5,8 +5,6 @@ before:
 builds:
 - id: kubectl-eds
   goos:
-  - linux
-  - darwin
   - windows
   goarch:
   - amd64
