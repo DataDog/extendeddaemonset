@@ -30,7 +30,12 @@
 [linters]
   enable-all = true
   disable = [
+    "exhaustruct",
+    "nosnakecase",
+    "logrlint",
+    "nonamedreturns",
     "maligned",
+    "revive",
     "lll",
     "gas",
     "dupl",
