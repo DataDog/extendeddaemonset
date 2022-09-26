@@ -47,7 +47,7 @@ gotest:
 e2e: build manifests verify-license goe2e
 
 # Runs e2e tests (expects a configured cluster)
-goe2e:
+goe2e: bin/kubebuilder-tools
 	go test --tags=e2e ./controllers -ginkgo.progress -ginkgo.v -test.v
 
 # Build manager binary
@@ -143,7 +143,7 @@ bundle-build:
 # Datadog Custom part
 #
 .PHONY: install-tools
-install-tools: bin/golangci-lint bin/operator-sdk bin/yq bin/kubebuilder
+install-tools: bin/golangci-lint bin/operator-sdk bin/yq bin/kubebuilder bin/kubebuilder-tools
 
 .PHONY: generate-openapi
 generate-openapi: bin/openapi-gen
@@ -181,6 +181,9 @@ check-eds: fmt vet lint
 
 bin/kubebuilder:
 	./hack/install-kubebuilder.sh 2.3.2 ./bin
+
+bin/kubebuilder-tools:
+	./hack/install-kubebuilder-tools.sh 1.24.1
 
 bin/openapi-gen:
 	go build -o ./bin/openapi-gen k8s.io/kube-openapi/cmd/openapi-gen

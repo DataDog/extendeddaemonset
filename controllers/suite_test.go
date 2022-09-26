@@ -11,9 +11,11 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gexec"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -69,7 +71,7 @@ var _ = BeforeSuite(func(done Done) {
 		CRDDirectoryPaths:  []string{filepath.Join("..", "config", "crd", "bases", testConfig.crdVersion)},
 	}
 	// Not present in envtest.Environment
-	err = os.Setenv("KUBEBUILDER_ASSETS", filepath.Join("..", "bin", "kubebuilder"))
+	err = os.Setenv("KUBEBUILDER_ASSETS", filepath.Join("..", "bin", "kubebuilder-tools", "bin"))
 	Expect(err).ToNot(HaveOccurred())
 
 	cfg, err = testEnv.Start()
@@ -115,6 +117,14 @@ var _ = BeforeSuite(func(done Done) {
 		defer GinkgoRecover()
 		err = mgr.Start(ctrl.SetupSignalHandler())
 		Expect(err).ToNot(HaveOccurred())
+
+		gexec.KillAndWait(10 * time.Second)
+
+		// Teardown the test environment once controller is finished.
+		// Otherwise from Kubernetes 1.21+, teardon timeouts waiting on
+		// kube-apiserver to return
+		err := testEnv.Stop()
+		Expect(err).ToNot(HaveOccurred())
 	}()
 
 	close(done)
@@ -122,7 +132,7 @@ var _ = BeforeSuite(func(done Done) {
 
 var _ = AfterSuite(func() {
 	By("tearing down the test environment")
-	if testConfig.namespace != defaultNamespace {
+	/*if testConfig.namespace != defaultNamespace {
 		ns := &corev1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: testConfig.namespace,
@@ -131,5 +141,5 @@ var _ = AfterSuite(func() {
 		Expect(k8sClient.Delete(context.Background(), ns)).Should(Succeed())
 	}
 	err := testEnv.Stop()
-	Expect(err).ToNot(HaveOccurred())
+	Expect(err).ToNot(HaveOccurred())*/
 })

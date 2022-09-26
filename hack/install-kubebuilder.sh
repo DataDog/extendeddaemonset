@@ -19,6 +19,11 @@ then
   exit 1
 fi
 
+os=$(go env GOOS)
+arch=$(go env GOARCH)
+
 # download kubebuilder and extract it to tmp
+curl -L https://github.com/kubernetes-sigs/kubebuilder/releases/download/v${VERSION}/kubebuilder_${VERSION}_${os}_${arch}.tar.gz | tar -xz -C $WORK_DIR
+
 rm -rf "$ROOT/bin/kubebuilder"
-curl -L -o kubebuilder https://go.kubebuilder.io/dl/latest/$(go env GOOS)/$(go env GOARCH) > "$ROOT/bin/kubebuilder"
+mv "$WORK_DIR/kubebuilder_${VERSION}_${os}_${arch}/bin" "$ROOT/bin/kubebuilder"

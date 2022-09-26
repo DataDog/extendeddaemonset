@@ -95,6 +95,8 @@ core,"github.com/onsi/ginkgo/reporters/stenographer/support/go-isatty",MIT
 core,"github.com/onsi/ginkgo/types",MIT
 core,"github.com/onsi/gomega",MIT
 core,"github.com/onsi/gomega/format",MIT
+core,"github.com/onsi/gomega/gbytes",MIT
+core,"github.com/onsi/gomega/gexec",MIT
 core,"github.com/onsi/gomega/internal",MIT
 core,"github.com/onsi/gomega/matchers",MIT
 core,"github.com/onsi/gomega/matchers/support/goraph/bipartitegraph",MIT
