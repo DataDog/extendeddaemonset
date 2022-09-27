@@ -10,6 +10,7 @@ GIT_COMMIT?=$(shell git rev-parse HEAD)
 DATE=$(shell date +%Y-%m-%d/%H:%M:%S )
 LDFLAGS=-w -s -X ${BUILDINFOPKG}.Commit=${GIT_COMMIT} -X ${BUILDINFOPKG}.Version=${VERSION} -X ${BUILDINFOPKG}.BuildTime=${DATE}
 GOARCH?=amd64
+ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # Default bundle image tag
 BUNDLE_IMG ?= controller-bundle:$(BUNDLE_VERSION)
@@ -46,7 +47,7 @@ gotest:
 e2e: build manifests verify-license goe2e
 
 # Runs e2e tests (expects a configured cluster)
-goe2e:
+goe2e: bin/kubebuilder-tools
 	go test --tags=e2e ./controllers -ginkgo.progress -ginkgo.v -test.v
 
 # Build manager binary
@@ -59,16 +60,16 @@ run: generate lint manifests
 
 # Install CRDs into a cluster
 install: manifests kustomize
-	$(KUSTOMIZE) build config/crd | kubectl apply -f -
+	./bin/kustomize build config/crd | kubectl apply -f -
 
 # Uninstall CRDs from a cluster
 uninstall: manifests kustomize
-	$(KUSTOMIZE) build config/crd | kubectl delete -f -
+	./bin/kustomize build config/crd | kubectl delete -f -
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: manifests kustomize
-	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
+	cd config/manager && $(ROOT_DIR)/bin/kustomize edit set image controller=${IMG}
+	./bin/kustomize build config/default | kubectl apply -f -
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: generate-manifests patch-crds
@@ -124,27 +125,13 @@ else
 CONTROLLER_GEN=$(shell which controller-gen)
 endif
 
-kustomize:
-ifeq (, $(shell which kustomize))
-	@{ \
-	set -e ;\
-	KUSTOMIZE_GEN_TMP_DIR=$$(mktemp -d) ;\
-	cd $$KUSTOMIZE_GEN_TMP_DIR ;\
-	go mod init tmp ;\
-	go get sigs.k8s.io/kustomize/kustomize/v3@v3.5.4 ;\
-	rm -rf $$KUSTOMIZE_GEN_TMP_DIR ;\
-	}
-KUSTOMIZE=$(GOBIN)/kustomize
-else
-KUSTOMIZE=$(shell which kustomize)
-endif
 
 # Generate bundle manifests and metadata, then validate generated files.
 .PHONY: bundle
-bundle: manifests
+bundle: manifests bin/kustomize
 	./bin/operator-sdk generate kustomize manifests -q
-	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
-	$(KUSTOMIZE) build config/manifests | ./bin/operator-sdk generate bundle -q --overwrite --version $(BUNDLE_VERSION) $(BUNDLE_METADATA_OPTS)
+	cd config/manager && $(ROOT_DIR)/bin/kustomize edit set image controller=$(IMG)
+	./bin/kustomize build config/manifests | ./bin/operator-sdk generate bundle -q --overwrite --version $(BUNDLE_VERSION) $(BUNDLE_METADATA_OPTS)
 	./bin/operator-sdk bundle validate ./bundle
 
 # Build the bundle image.
@@ -156,7 +143,7 @@ bundle-build:
 # Datadog Custom part
 #
 .PHONY: install-tools
-install-tools: bin/golangci-lint bin/operator-sdk bin/yq bin/kubebuilder
+install-tools: bin/golangci-lint bin/operator-sdk bin/yq bin/kubebuilder bin/kubebuilder-tools
 
 .PHONY: generate-openapi
 generate-openapi: bin/openapi-gen
@@ -193,7 +180,10 @@ check-eds: fmt vet lint
 	go build -ldflags '${LDFLAGS}' -o bin/check-eds ./cmd/check-eds/main.go
 
 bin/kubebuilder:
-	./hack/install-kubebuilder.sh 2.3.2
+	./hack/install-kubebuilder.sh 2.3.2 ./bin
+
+bin/kubebuilder-tools:
+	./hack/install-kubebuilder-tools.sh 1.24.1
 
 bin/openapi-gen:
 	go build -o ./bin/openapi-gen k8s.io/kube-openapi/cmd/openapi-gen
@@ -202,10 +192,13 @@ bin/yq:
 	./hack/install-yq.sh 3.3.0
 
 bin/golangci-lint:
-	hack/golangci-lint.sh v1.45.0
+	hack/golangci-lint.sh v1.49.0
 
 bin/operator-sdk:
 	./hack/install-operator-sdk.sh v1.5.0
 
 bin/wwhrd:
 	./hack/install-wwhrd.sh 0.2.4
+
+bin/kustomize:
+	./hack/install_kustomize.sh 4.5.7 ./bin
