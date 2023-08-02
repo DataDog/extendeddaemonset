@@ -13,3 +13,9 @@ jobs:
       with:
         github-token: '${{ secrets.GITHUB_TOKEN }}'
         valid-labels: 'bug, enhancement, documentation, tooling'
+  check-milestone:
+    name: Check Milestone
+    runs-on: ubuntu-latest
+    steps:
+      - if: github.event.pull_request.milestone == null && !contains(toJson(github.event.pull_request.labels.*.name), 'qa/skip-qa')
+        run: echo "::error::Missing milestone or \`qa/skip-qa\` label" && exit 1
