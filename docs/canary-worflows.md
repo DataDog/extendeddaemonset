@@ -6,7 +6,7 @@ The ExtendedDaemonset controller is composed with 3 different reconcile loops; O
 * ExtendedDaemonsetReplicaset
 * ExtendedDaemonsetSettings
 
-The differents reconcile loops need some time to interact together. To do so, some of them are watching events happening on the other CRDs, But only the CRD managed by the reconcile loop can modify the CRD. All the other CRDs could be read but never updated.
+The different reconcile loops need some time to interact together. To do so, some of them are watching events happening on the other CRDs, But only the CRD managed by the reconcile loop can modify the CRD. All the other CRDs could be read but never updated.
 
 The following sections explain these interactions depending on the cases.
 
