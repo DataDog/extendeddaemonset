@@ -11,6 +11,7 @@ DATE=$(shell date +%Y-%m-%d/%H:%M:%S )
 LDFLAGS=-w -s -X ${BUILDINFOPKG}.Commit=${GIT_COMMIT} -X ${BUILDINFOPKG}.Version=${VERSION} -X ${BUILDINFOPKG}.BuildTime=${DATE}
 GOARCH?=amd64
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+KUSTOMIZE = bin/kustomize
 
 # Default bundle image tag
 BUNDLE_IMG ?= controller-bundle:$(BUNDLE_VERSION)
@@ -59,17 +60,17 @@ run: generate lint manifests
 	go run ./main.go
 
 # Install CRDs into a cluster
-install: manifests kustomize
-	./bin/kustomize build config/crd | kubectl apply -f -
+install: manifests $(KUSTOMIZE)
+	$(KUSTOMIZE) build config/crd | kubectl apply -f -
 
 # Uninstall CRDs from a cluster
-uninstall: manifests kustomize
-	./bin/kustomize build config/crd | kubectl delete -f -
+uninstall: manifests $(KUSTOMIZE)
+	$(KUSTOMIZE) build config/crd | kubectl delete -f -
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
-deploy: manifests kustomize
+deploy: manifests $(KUSTOMIZE)
 	cd config/manager && $(ROOT_DIR)/bin/kustomize edit set image controller=${IMG}
-	./bin/kustomize build config/default | kubectl apply -f -
+	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: generate-manifests patch-crds
@@ -180,7 +181,7 @@ check-eds: fmt vet lint
 	go build -ldflags '${LDFLAGS}' -o bin/check-eds ./cmd/check-eds/main.go
 
 bin/kubebuilder:
-	./hack/install-kubebuilder.sh 2.3.2 ./bin
+	./hack/install-kubebuilder.sh 3.4.0 ./bin
 
 bin/kubebuilder-tools:
 	./hack/install-kubebuilder-tools.sh 1.24.1
@@ -192,7 +193,7 @@ bin/yq:
 	./hack/install-yq.sh 3.3.0
 
 bin/golangci-lint:
-	hack/golangci-lint.sh v1.49.0
+	hack/install-golangci-lint.sh v1.52.2
 
 bin/operator-sdk:
 	./hack/install-operator-sdk.sh v1.5.0
@@ -201,4 +202,4 @@ bin/wwhrd:
 	./hack/install-wwhrd.sh 0.2.4
 
 bin/kustomize:
-	./hack/install_kustomize.sh 4.5.7 ./bin
+	./hack/install-kustomize.sh ./bin

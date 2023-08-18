@@ -7,6 +7,9 @@ spec:
     canary:
       replicas: 1
       duration: 5m
+      autoFail:
+        enabled: true
+        canaryTimeout: 10m
       autoPause:
         enabled: true
         maxRestarts: 5
