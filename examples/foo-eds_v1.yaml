@@ -10,6 +10,9 @@ spec:
       autoFail:
         enabled: true
         canaryTimeout: 10m
+      autoPause:
+        enabled: true
+        maxRestarts: 5
     rollingUpdate:
       maxParallelPodCreation: 1
       maxUnavailable: 2

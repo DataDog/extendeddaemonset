@@ -5,11 +5,6 @@ set -o nounset
 set -o pipefail
 
 ROOT=$(git rev-parse --show-toplevel)
-WORK_DIR=$(mktemp -d)
-cleanup() {
-  rm -rf "$WORK_DIR"
-}
-trap "cleanup" EXIT SIGINT
 
 VERSION=$1
 
@@ -23,7 +18,4 @@ os=$(go env GOOS)
 arch=$(go env GOARCH)
 
 # download kubebuilder and extract it to tmp
-curl -L https://github.com/kubernetes-sigs/kubebuilder/releases/download/v${VERSION}/kubebuilder_${VERSION}_${os}_${arch}.tar.gz | tar -xz -C $WORK_DIR
-
-rm -rf "$ROOT/bin/kubebuilder"
-mv "$WORK_DIR/kubebuilder_${VERSION}_${os}_${arch}/bin" "$ROOT/bin/kubebuilder"
+curl -L https://github.com/kubernetes-sigs/kubebuilder/releases/download/v${VERSION}/kubebuilder_${os}_${arch} --output $ROOT/bin/kubebuilder

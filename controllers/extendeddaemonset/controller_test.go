@@ -1380,7 +1380,7 @@ func Test_manageStatus(t *testing.T) {
 			want: &statusEDSFrozen,
 		},
 		{
-			// A frozen state includes the the paused state
+			// A frozen state includes the paused state
 			// The EDS must be considered frozen in this case
 			name: "No canary, EDS frozen and paused at the same time",
 			args: args{

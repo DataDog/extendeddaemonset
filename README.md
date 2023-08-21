@@ -63,9 +63,6 @@ Creating cluster "kind" ...
  ✓ Installing StorageClass 💾
  ✓ Joining worker nodes 🚜
 Cluster creation complete. You can now use the cluster with:
-
-$ export KUBECONFIG="$(kind get kubeconfig-path --name="kind")"
-
 ```
 
 #### ExtendedDaemonSet controller deployment

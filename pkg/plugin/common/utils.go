@@ -28,7 +28,7 @@ func GetDuration(obj *metav1.ObjectMeta) string {
 	return durafmt.ParseShort(time.Since(obj.CreationTimestamp.Time)).String()
 }
 
-// isPodNotReady returns whether the pod is ready, returns the the reason if not ready.
+// isPodNotReady returns whether the pod is ready, returns the reason if not ready.
 func isPodNotReady(pod *corev1.Pod) (bool, string) {
 	if pod.Status.Phase != corev1.PodRunning {
 		return true, pod.Status.Reason
