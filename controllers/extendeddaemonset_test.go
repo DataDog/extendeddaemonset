@@ -59,7 +59,7 @@ var _ = Describe("ExtendedDaemonSet Controller", func() {
 				},
 				ReconcileFrequency: reconcileFrequency,
 			}
-			eds := testutils.NewExtendedDaemonset(namespace, name, "k8s.gcr.io/pause:latest", edsOptions)
+			eds := testutils.NewExtendedDaemonset(namespace, name, "registry.k8s.io/pause:latest", edsOptions)
 			Expect(k8sClient.Create(ctx, eds)).Should(Succeed())
 
 			eds = &datadoghqv1alpha1.ExtendedDaemonSet{}
@@ -122,7 +122,7 @@ var _ = Describe("ExtendedDaemonSet Rolling Update Pause", func() {
 				},
 				ReconcileFrequency: reconcileFrequency,
 			}
-			eds := testutils.NewExtendedDaemonset(namespace, name, "k8s.gcr.io/pause:latest", edsOptions)
+			eds := testutils.NewExtendedDaemonset(namespace, name, "registry.k8s.io/pause:latest", edsOptions)
 			Expect(k8sClient.Create(ctx, eds)).Should(Succeed())
 
 			eds = &datadoghqv1alpha1.ExtendedDaemonSet{}
@@ -157,7 +157,7 @@ var _ = Describe("ExtendedDaemonSet Rolling Update Pause", func() {
 		It("Should not deploy with paused EDS", func() {
 			eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
 			Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
-			eds.Spec.Template.Spec.Containers[0].Image = "k8s.gcr.io/pause:3.0" // Trigger a new ERS
+			eds.Spec.Template.Spec.Containers[0].Image = "registry.k8s.io/pause:3.0" // Trigger a new ERS
 			if eds.Annotations == nil {
 				eds.Annotations = make(map[string]string)
 			}
@@ -321,7 +321,7 @@ var _ = Describe("ExtendedDaemonSet Rollout Freeze", func() {
 				ReconcileFrequency: reconcileFrequency,
 				ExtraAnnotations:   map[string]string{"extendeddaemonset.datadoghq.com/rollout-frozen": "true"},
 			}
-			eds := testutils.NewExtendedDaemonset(namespace, name, "k8s.gcr.io/pause:latest", edsOptions)
+			eds := testutils.NewExtendedDaemonset(namespace, name, "registry.k8s.io/pause:latest", edsOptions)
 			Expect(k8sClient.Create(ctx, eds)).Should(Succeed())
 
 			eds = &datadoghqv1alpha1.ExtendedDaemonSet{}

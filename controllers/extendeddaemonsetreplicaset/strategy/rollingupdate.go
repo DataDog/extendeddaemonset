@@ -8,6 +8,7 @@ package strategy
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -109,6 +110,19 @@ func ManageDeployment(client runtimeclient.Client, daemonset *datadoghqv1alpha1.
 
 		return result, err
 	}
+
+	unreadyPodsAnnotation, found := params.Replicaset.Annotations[datadoghqv1alpha1.ExtendedDaemonSetReplicaSetUnreadyPodsAnnotationKey]
+
+	if !found {
+		unreadyPodsAnnotation = "0"
+	}
+
+	nbUnreadyPods, err := strconv.Atoi(unreadyPodsAnnotation)
+	if err != nil {
+		params.Logger.Error(err, "error during parsing number of unready pods from ERS annotations")
+		return result, err
+	}
+
 	params.Logger.V(1).Info("Parameters",
 		"nbNodes", nbNodes,
 		"createdPods", createdPods,
@@ -117,6 +131,7 @@ func ManageDeployment(client runtimeclient.Client, daemonset *datadoghqv1alpha1.
 		"availablePods", availablePods,
 		"oldAvailablePods", oldAvailablePods,
 		"maxPodsCreation", maxCreation,
+		"nbUnreadyPods", nbUnreadyPods,
 		"maxUnavailable", maxUnavailable,
 		"nbPodToCreate", len(allPodToCreate),
 		"nbPodToDelete", len(allPodToDelete),
@@ -130,6 +145,7 @@ func ManageDeployment(client runtimeclient.Client, daemonset *datadoghqv1alpha1.
 		NbOldAvailablesPod:  int(oldAvailablePods),
 		NbCreatedPod:        int(createdPods),
 		NbUnresponsiveNodes: int(nbIgnoredUnresponsiveNodes),
+		NbUnreadyPods:       nbUnreadyPods,
 		MaxUnavailablePod:   maxUnavailable,
 		MaxPodCreation:      maxCreation,
 		MaxUnschedulablePod: maxPodSchedulerFailure,

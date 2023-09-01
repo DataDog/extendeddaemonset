@@ -211,6 +211,23 @@ func TestCalculatePodToCreateAndDelete(t *testing.T) {
 			wantNbCreation: 17,
 			wantNbDeletion: 2,
 		},
+		{
+			name: "10 nodes, 10 pods exist and 7 ready, 3 initially unready pods, maxPodCreation=5,MaxUnavailablePod=3",
+			args: args{
+				params: Parameters{
+					NbNodes: 10,
+					NbPods:  10,
+
+					NbUnreadyPods:     3,
+					NbAvailablesPod:   7,
+					NbCreatedPod:      10,
+					MaxUnavailablePod: 3,
+					MaxPodCreation:    5,
+				},
+			},
+			wantNbCreation: 0,
+			wantNbDeletion: 3,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -14,6 +14,8 @@ const (
 	ExtendedDaemonSetReplicaSetCanaryLabelKey = "extendeddaemonsetreplicaset.datadoghq.com/canary"
 	// ExtendedDaemonSetReplicaSetCanaryLabelValue label value used to identify canary Pods.
 	ExtendedDaemonSetReplicaSetCanaryLabelValue = "true"
+	// ExtendedDaemonSetReplicaSetUnreadyPodsAnnotationKey annotation key used on ExtendedDaemonSetReplicaSet to detect the number of unready pods at the moment of creation of the ExtendedDaemonSetReplicaSet
+	ExtendedDaemonSetReplicaSetUnreadyPodsAnnotationKey = "extendeddaemonsetreplicaset.datadoghq.com/unready-pods"
 	// MD5ExtendedDaemonSetAnnotationKey annotation key use on Pods in order to identify which PodTemplateSpec have been used to generate it.
 	MD5ExtendedDaemonSetAnnotationKey = "extendeddaemonset.datadoghq.com/templatehash"
 	// ExtendedDaemonSetCanaryValidAnnotationKey annotation key used on Pods in order to detect if a canary deployment is considered valid.

@@ -22,8 +22,8 @@ spec:
   template:
     spec:
       containers:
-      - name: daemon
-        image: k8s.gcr.io/pause:3.1
-        command: ["does", "-not", "-exist"]
+        - name: daemon
+          image: registry.k8s.io/pause:3.1
+          command: ["does", "-not", "-exist"]
       tolerations:
-      - operator: Exists
+        - operator: Exists

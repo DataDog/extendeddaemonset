@@ -22,7 +22,7 @@ spec:
   template:
     spec:
       containers:
-      - name: daemon
-        image: k8s.gcr.io/missing
+        - name: daemon
+          image: registry.k8s.io/missing
       tolerations:
-      - operator: Exists
+        - operator: Exists
