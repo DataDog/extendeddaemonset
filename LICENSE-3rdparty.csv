@@ -23,6 +23,7 @@ core,"github.com/emicklei/go-restful/log",MIT
 core,"github.com/evanphx/json-patch",NewBSD
 core,"github.com/form3tech-oss/jwt-go",MIT
 core,"github.com/fsnotify/fsnotify",NewBSD
+core,"github.com/ghodss/yaml",MIT
 core,"github.com/go-logr/logr",Apache-2.0
 core,"github.com/go-logr/zapr",Apache-2.0
 core,"github.com/go-openapi/jsonpointer",Apache-2.0
