@@ -59,7 +59,7 @@ func NewCmdDiff(streams genericclioptions.IOStreams) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:          "diff [ExtendedDaemonSet name]",
-		Short:        "diff between the canary and the active rollout of the ExtendedDaemonSet",
+		Short:        "diff between the canary and the active ExtendedReplicaSet of the ExtendedDaemonSet",
 		Example:      fmt.Sprintf(diffExample, "diff"),
 		SilenceUsage: true,
 		RunE: func(c *cobra.Command, args []string) error {
