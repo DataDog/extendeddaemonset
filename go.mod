@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/davecgh/go-spew v1.1.1
+	github.com/ghodss/yaml v1.0.0
 	github.com/go-logr/logr v1.2.0
 	github.com/google/go-cmp v0.5.5
 	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
