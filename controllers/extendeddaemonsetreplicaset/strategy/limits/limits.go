@@ -14,6 +14,7 @@ type Parameters struct {
 	NbOldAvailablesPod  int
 	NbCreatedPod        int
 	NbUnresponsiveNodes int
+	NbUnreadyPods       int
 
 	MaxPodCreation      int
 	MaxUnavailablePod   int
@@ -37,7 +38,12 @@ func CalculatePodToCreateAndDelete(params Parameters) (nbCreation, nbDeletion in
 		effectiveUnresponsive = params.MaxUnschedulablePod
 	}
 
-	nbDeletion = params.MaxUnavailablePod - (params.NbNodes - effectiveUnresponsive - params.NbAvailablesPod - params.NbOldAvailablesPod)
+	nbDeletion = params.MaxUnavailablePod - (params.NbNodes - effectiveUnresponsive - params.NbAvailablesPod - params.NbOldAvailablesPod) + params.NbUnreadyPods
+
+	if nbDeletion > params.MaxUnavailablePod {
+		nbDeletion = params.MaxUnavailablePod
+	}
+
 	if nbDeletion < 0 {
 		nbDeletion = 0
 	}

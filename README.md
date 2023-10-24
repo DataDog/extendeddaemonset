@@ -83,7 +83,7 @@ extendeddaemonset-855cd7c679-gpmql   1/1     Running   0          2m11s
 
 #### `foo` ExtendedDaemonSet deployment
 
-Create the `foo` app with the ExtendedDaemonSet. For demo purposes, we'll use the `k8s.gcr.io/pause` Docker image, which is only awaiting a terminating signal. You can look at the `foo` application definition in the file `examples/foo-eds_v1.yaml`.
+Create the `foo` app with the ExtendedDaemonSet. For demo purposes, we'll use the `registry.k8s.io/pause` Docker image, which is only awaiting a terminating signal. You can look at the `foo` application definition in the file `examples/foo-eds_v1.yaml`.
 
 ```console
 $ kubectl apply -f examples/foo-eds_v1.yaml
@@ -111,9 +111,9 @@ Now we can try to update the ExtendedDaemonSet `foo`. The only difference betwee
 ```console
 $ diff examples/foo-eds_v1.yaml examples/foo-eds_v2.yaml
 17c17
-<         image: k8s.gcr.io/pause:3.0
+<         image: registry.k8s.io/pause:3.0
 ---
->         image: k8s.gcr.io/pause:3.1
+>         image: registry.k8s.io/pause:3.1
 
 $ kubectl apply -f examples/foo-eds_v2.yaml
 extendeddaemonset.datadoghq.com/foo configured

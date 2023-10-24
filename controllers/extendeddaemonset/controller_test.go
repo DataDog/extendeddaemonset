@@ -554,7 +554,11 @@ func TestReconciler_createNewReplicaSet(t *testing.T) {
 				log:      testLogger,
 				recorder: eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "TestReconciler_cleanupReplicaSet"}),
 			}
-			got, err := r.createNewReplicaSet(tt.args.logger, tt.args.daemonset)
+			got, err := r.createNewReplicaSet(tt.args.logger, tt.args.daemonset, podsCounterType{
+				Current:   3,
+				Ready:     2,
+				Available: 1,
+			})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Reconciler.createNewReplicaSet() error = %v, wantErr %v", err, tt.wantErr)
 

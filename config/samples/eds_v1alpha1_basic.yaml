@@ -11,7 +11,7 @@ spec:
       maxParallelPodCreation: 10
       slowStartIntervalDuration: 2m
   template:
-    spec: 
+    spec:
       containers:
-      - name: daemon
-        image: k8s.gcr.io/pause:3.0
+        - name: daemon
+          image: registry.k8s.io/pause:3.0

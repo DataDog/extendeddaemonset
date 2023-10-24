@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"strconv"
 	"strings"
 	"time"
 
@@ -136,7 +137,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 
 	if upToDateRS == nil {
 		// If there is no ReplicaSet that matches the EDS Spec, create a new one and return to apply the reconcile loop again
-		return r.createNewReplicaSet(reqLogger, instance)
+		return r.createNewReplicaSet(reqLogger, instance, podsCounter)
 	}
 
 	// Select the ReplicaSet that should be current
@@ -153,7 +154,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	return result, err
 }
 
-func (r *Reconciler) createNewReplicaSet(logger logr.Logger, daemonset *datadoghqv1alpha1.ExtendedDaemonSet) (reconcile.Result, error) {
+func (r *Reconciler) createNewReplicaSet(logger logr.Logger, daemonset *datadoghqv1alpha1.ExtendedDaemonSet, podsCounter podsCounterType) (reconcile.Result, error) {
 	var err error
 	// replicaSet up to date didn't exist yet, new to create one
 	var newRS *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet
@@ -164,6 +165,11 @@ func (r *Reconciler) createNewReplicaSet(logger logr.Logger, daemonset *datadogh
 	if err = controllerutil.SetControllerReference(daemonset, newRS, r.scheme); err != nil {
 		return reconcile.Result{}, err
 	}
+	if newRS.Annotations == nil {
+		newRS.Annotations = make(map[string]string)
+	}
+	newRS.Annotations[datadoghqv1alpha1.ExtendedDaemonSetReplicaSetUnreadyPodsAnnotationKey] = strconv.Itoa(int(podsCounter.Current - podsCounter.Ready))
+
 	logger.Info("Creating a new ReplicaSet", "replicaSet.Namespace", newRS.Namespace, "replicaSet.Name", newRS.Name)
 
 	err = r.client.Create(context.TODO(), newRS)

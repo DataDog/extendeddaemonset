@@ -48,6 +48,11 @@ func TestManageDeployment(t *testing.T) {
 					RollingUpdate: *defaultRollingUpdate,
 				},
 				Replicaset: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							datadoghqv1alpha1.ExtendedDaemonSetReplicaSetUnreadyPodsAnnotationKey: "0",
+						},
+					},
 					Status: datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus{
 						Conditions: []datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCondition{
 							{
@@ -86,6 +91,11 @@ func TestManageDeployment(t *testing.T) {
 					RollingUpdate: *defaultRollingUpdate,
 				},
 				Replicaset: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							datadoghqv1alpha1.ExtendedDaemonSetReplicaSetUnreadyPodsAnnotationKey: "0",
+						},
+					},
 					Status: datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus{
 						Conditions: []datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCondition{
 							{
@@ -134,6 +144,11 @@ func TestManageDeployment(t *testing.T) {
 					RollingUpdate: *defaultRollingUpdate,
 				},
 				Replicaset: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							datadoghqv1alpha1.ExtendedDaemonSetReplicaSetUnreadyPodsAnnotationKey: "0",
+						},
+					},
 					Status: datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus{
 						Conditions: []datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCondition{
 							{
@@ -188,6 +203,11 @@ func TestManageDeployment(t *testing.T) {
 					RollingUpdate: *defaultRollingUpdate,
 				},
 				Replicaset: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							datadoghqv1alpha1.ExtendedDaemonSetReplicaSetUnreadyPodsAnnotationKey: "0",
+						},
+					},
 					Status: datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus{
 						Conditions: []datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCondition{
 							{
@@ -242,6 +262,11 @@ func TestManageDeployment(t *testing.T) {
 					RollingUpdate: *defaultRollingUpdate,
 				},
 				Replicaset: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							datadoghqv1alpha1.ExtendedDaemonSetReplicaSetUnreadyPodsAnnotationKey: "0",
+						},
+					},
 					Status: datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus{
 						Conditions: []datadoghqv1alpha1.ExtendedDaemonSetReplicaSetCondition{
 							{
