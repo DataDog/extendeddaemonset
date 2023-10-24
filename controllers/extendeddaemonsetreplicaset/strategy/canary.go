@@ -182,7 +182,11 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 
 		var cannotStartReason v1alpha1.ExtendedDaemonSetStatusReason
 		cannotStart, cannotStartReason = podUtils.CannotStart(pod)
-		if cannotStart {
+		// We do not want to raise an error yet if MaxSlowStartDuration is specified and not exceeded
+		if cannotStart && params.Strategy.Canary.AutoPause.MaxSlowStartDuration != nil && !now.After(pod.Status.StartTime.Time.Add(params.Strategy.Canary.AutoPause.MaxSlowStartDuration.Duration)) {
+			cannotStart = false
+			cannotStartReason = v1alpha1.ExtendedDaemonSetStatusReasonUnknown
+		} else if cannotStart {
 			cannotStartPodStatus = fmt.Sprintf("Pod %s cannot start with reason: %s", pod.ObjectMeta.Name, string(cannotStartReason))
 			cannotStartPodReason = cannotStartReason
 		} else if autoPauseEnabled && podUtils.PendingCreate(pod) && params.Strategy.Canary.AutoPause.MaxSlowStartDuration != nil {
