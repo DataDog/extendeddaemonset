@@ -955,3 +955,100 @@ func updateEDS(k8sclient client.Client, key types.NamespacedName, updateFunc fun
 		return true
 	}
 }
+
+var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition within max ss", func() {
+	var (
+		name string
+		key  types.NamespacedName
+	)
+
+	BeforeEach(func() {
+		name = fmt.Sprintf("eds-foo-%d", time.Now().Unix())
+		key = types.NamespacedName{
+			Namespace: namespace,
+			Name:      name,
+		}
+
+		info("BeforeEach: Creating EDS %s\n", name)
+
+		edsOptions := &testutils.NewExtendedDaemonsetOptions{
+			CanaryStrategy: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
+				Duration: &metav1.Duration{Duration: 1 * time.Minute},
+				Replicas: &intString2,
+				AutoPause: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoPause{
+					Enabled:              datadoghqv1alpha1.NewBool(true),
+					MaxSlowStartDuration: &metav1.Duration{Duration: 30 * time.Minute},
+				},
+			},
+			RollingUpdate: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate{
+				MaxUnavailable:         &intString10,
+				MaxParallelPodCreation: datadoghqv1alpha1.NewInt32(20),
+			},
+		}
+
+		eds := testutils.NewExtendedDaemonset(namespace, name, "k8s.gcr.io/pause:latest", edsOptions)
+		Expect(k8sClient.Create(ctx, eds)).Should(Succeed())
+
+		eds = &datadoghqv1alpha1.ExtendedDaemonSet{}
+		Eventually(withEDS(key, eds, func() bool {
+			return eds.Status.ActiveReplicaSet != ""
+		}), timeout, interval).Should(BeTrue())
+
+		info("BeforeEach: Done creating EDS %s - active replicaset: %s\n", name, eds.Status.ActiveReplicaSet)
+	})
+
+	restartOnPodStartFailureWithinMaxSlowStartDuration := func(configureEDS func(eds *datadoghqv1alpha1.ExtendedDaemonSet), expectedReasons ...string) {
+		eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
+		info("EDS status:\n%s\n", spew.Sdump(eds.Status))
+		Eventually(withEDS(key, eds, func() bool {
+			return eds.Status.ActiveReplicaSet != ""
+		}), timeout, interval).Should(BeTrue())
+
+		eds = &datadoghqv1alpha1.ExtendedDaemonSet{}
+		Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
+		info("%s: %s - active replicaset: %s\n",
+			CurrentGinkgoTestDescription().TestText,
+			name, eds.Status.ActiveReplicaSet,
+		)
+
+		info("EDS %s - waiting for canary to restart\n", name)
+		eds = &datadoghqv1alpha1.ExtendedDaemonSet{}
+
+		info("EDS status:\n%s\n", spew.Sdump(eds.Status))
+	}
+	Context("When pod has container config error", func() {
+		nodeList := &corev1.NodeList{}
+
+		It("Should not auto-pause canary", func() {
+			restartOnPodStartFailureWithinMaxSlowStartDuration(func(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
+				eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("gcr.io/google-containers/alpine-with-bash:1.0")
+				eds.Spec.Template.Spec.Containers[0].Command = []string{
+					"tail", "-f", "/dev/null",
+				}
+				eds.Spec.Template.Spec.Containers[0].Env = []corev1.EnvVar{
+					{
+						Name: "missing",
+						ValueFrom: &corev1.EnvVarSource{
+							ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "missing",
+								},
+								Key: "missing",
+							},
+						},
+					},
+				}
+			}, "CreateContainerConfigError")
+
+			eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
+			ers := &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{}
+			ersKey := types.NamespacedName{
+				Namespace: namespace,
+				Name:      eds.Status.ActiveReplicaSet,
+			}
+			Eventually(withERS(ersKey, ers, func() bool {
+				return ers.Status.Status == "active" && int(ers.Status.Available) == len(nodeList.Items)
+			}), timeout, interval).Should(BeTrue())
+		})
+	})
+})
