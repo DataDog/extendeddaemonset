@@ -998,27 +998,52 @@ var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition within max ss",
 	})
 
 	restartOnPodStartFailureWithinMaxSlowStartDuration := func(configureEDS func(eds *datadoghqv1alpha1.ExtendedDaemonSet), expectedReasons ...string) {
-		eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
-		info("EDS status:\n%s\n", spew.Sdump(eds.Status))
-		Eventually(withEDS(key, eds, func() bool {
-			return eds.Status.ActiveReplicaSet != ""
-		}), timeout, interval).Should(BeTrue())
+		Eventually(updateEDS(k8sClient, key, configureEDS), timeout, interval).Should(
+			BeTrue(),
+			func() string { return "Unable to update the EDS" },
+		)
 
-		eds = &datadoghqv1alpha1.ExtendedDaemonSet{}
+		eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
 		Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
 		info("%s: %s - active replicaset: %s\n",
 			CurrentGinkgoTestDescription().TestText,
 			name, eds.Status.ActiveReplicaSet,
 		)
 
-		info("EDS %s - waiting for canary to restart\n", name)
+		info("EDS status:\n%s\n", spew.Sdump(eds.Status))
 		eds = &datadoghqv1alpha1.ExtendedDaemonSet{}
 
-		info("EDS status:\n%s\n", spew.Sdump(eds.Status))
-	}
-	Context("When pod has container config error", func() {
-		nodeList := &corev1.NodeList{}
+		cond := edsconditions.GetExtendedDaemonSetStatusCondition(&eds.Status, datadoghqv1alpha1.ConditionTypeEDSCanaryPaused)
+		Expect(cond).Should(BeNil())
 
+		updateFunc := func(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
+			eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("k8s.gcr.io/pause:3.1")
+		}
+		Eventually(updateEDS(k8sClient, key, updateFunc), timeout, interval).Should(
+			BeTrue(),
+			func() string { return "Unable to update the EDS" },
+		)
+
+		eds = &datadoghqv1alpha1.ExtendedDaemonSet{}
+		Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
+		info("EDS status:\n%s\n", spew.Sdump(eds.Status))
+
+		Eventually(withEDS(key, eds, func() bool {
+			return eds.Status.State == datadoghqv1alpha1.ExtendedDaemonSetStatusStateRunning
+		}), timeout, interval).Should(BeTrue())
+
+		nodeList := &corev1.NodeList{}
+		ers := &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{}
+		ersKey := types.NamespacedName{
+			Namespace: namespace,
+			Name:      eds.Status.ActiveReplicaSet,
+		}
+		Eventually(withERS(ersKey, ers, func() bool {
+			return ers.Status.Status == "active" && int(ers.Status.Available) == len(nodeList.Items)
+		}), timeout, interval).Should(BeTrue())
+	}
+
+	Context("When pod has container config error", func() {
 		It("Should not auto-pause canary", func() {
 			restartOnPodStartFailureWithinMaxSlowStartDuration(func(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
 				eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("gcr.io/google-containers/alpine-with-bash:1.0")
@@ -1039,16 +1064,6 @@ var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition within max ss",
 					},
 				}
 			}, "CreateContainerConfigError")
-
-			eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
-			ers := &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{}
-			ersKey := types.NamespacedName{
-				Namespace: namespace,
-				Name:      eds.Status.ActiveReplicaSet,
-			}
-			Eventually(withERS(ersKey, ers, func() bool {
-				return ers.Status.Status == "active" && int(ers.Status.Available) == len(nodeList.Items)
-			}), timeout, interval).Should(BeTrue())
 		})
 	})
 })
