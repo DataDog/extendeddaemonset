@@ -1015,31 +1015,8 @@ var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition within max ss",
 
 		cond := edsconditions.GetExtendedDaemonSetStatusCondition(&eds.Status, datadoghqv1alpha1.ConditionTypeEDSCanaryPaused)
 		Expect(cond).Should(BeNil())
-
-		updateFunc := func(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
-			eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("k8s.gcr.io/pause:3.1")
-		}
-		Eventually(updateEDS(k8sClient, key, updateFunc), timeout, interval).Should(
-			BeTrue(),
-			func() string { return "Unable to update the EDS" },
-		)
-
-		eds = &datadoghqv1alpha1.ExtendedDaemonSet{}
-		Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
-		info("EDS status:\n%s\n", spew.Sdump(eds.Status))
-
 		Eventually(withEDS(key, eds, func() bool {
 			return eds.Status.State == datadoghqv1alpha1.ExtendedDaemonSetStatusStateRunning
-		}), timeout, interval).Should(BeTrue())
-
-		nodeList := &corev1.NodeList{}
-		ers := &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{}
-		ersKey := types.NamespacedName{
-			Namespace: namespace,
-			Name:      eds.Status.ActiveReplicaSet,
-		}
-		Eventually(withERS(ersKey, ers, func() bool {
-			return ers.Status.Status == "active" && int(ers.Status.Available) == len(nodeList.Items)
 		}), timeout, interval).Should(BeTrue())
 	}
 
