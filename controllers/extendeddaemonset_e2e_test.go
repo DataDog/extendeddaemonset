@@ -956,7 +956,7 @@ func updateEDS(k8sclient client.Client, key types.NamespacedName, updateFunc fun
 	}
 }
 
-var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition within max ss", func() {
+var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition within MaxSlowStartDuration", func() {
 	var (
 		name string
 		key  types.NamespacedName
@@ -1021,7 +1021,7 @@ var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition within max ss",
 	}
 
 	Context("When pod has container config error", func() {
-		It("Should not auto-pause canary", func() {
+		It("Should not auto-pause canary if error occurs within MaxSlowStartDuration", func() {
 			restartOnPodStartFailureWithinMaxSlowStartDuration(func(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
 				eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("gcr.io/google-containers/alpine-with-bash:1.0")
 				eds.Spec.Template.Spec.Containers[0].Command = []string{
