@@ -997,6 +997,42 @@ var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition within MaxSlowS
 		info("BeforeEach: Done creating EDS %s - active replicaset: %s\n", name, eds.Status.ActiveReplicaSet)
 	})
 
+	AfterEach(func() {
+		info("AfterEach: Destroying EDS %s\n", name)
+		eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
+		Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
+		info("AfterEach: Destroying EDS %s - canary replicaset: %s\n", name, eds.Status.Canary.ReplicaSet)
+		info("AfterEach: Destroying EDS %s - active replicaset: %s\n", name, eds.Status.ActiveReplicaSet)
+
+		Eventually(deleteEDS(k8sClient, key), timeout, interval).Should(BeTrue(), "EDS should be deleted")
+
+		pods := &corev1.PodList{}
+		listOptions := []client.ListOption{
+			client.InNamespace(namespace),
+			client.MatchingLabels{
+				datadoghqv1alpha1.ExtendedDaemonSetNameLabelKey: name,
+			},
+		}
+		Eventually(withList(listOptions, pods, "EDS pods", func() bool {
+			return len(pods.Items) == 0
+		}), longTimeout, interval).Should(BeTrue(), "All EDS pods should be destroyed")
+
+		erslist := &datadoghqv1alpha1.ExtendedDaemonSetReplicaSetList{}
+		Eventually(withList(listOptions, erslist, "ERS instances", func() bool {
+			return len(erslist.Items) == 0
+		}), timeout, interval).Should(BeTrue(), "All ERS instances should be destroyed")
+
+		info("AfterEach: Done destroying EDS %s\n", name)
+	})
+
+	JustAfterEach(func() {
+		if CurrentGinkgoTestDescription().Failed {
+			eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
+			Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
+			warn("%s - FAILED: EDS status:\n%s\n\n", CurrentGinkgoTestDescription().TestText, spew.Sdump(eds.Status))
+		}
+	})
+
 	restartOnPodStartFailureWithinMaxSlowStartDuration := func(configureEDS func(eds *datadoghqv1alpha1.ExtendedDaemonSet), expectedReasons ...string) {
 		Eventually(updateEDS(k8sClient, key, configureEDS), timeout, interval).Should(
 			BeTrue(),
