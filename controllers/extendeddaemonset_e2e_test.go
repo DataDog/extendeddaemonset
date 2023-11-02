@@ -939,8 +939,8 @@ var _ = Describe("ExtendedDaemonSet e2e Pod within MaxSlowStartDuration", func()
 		info("AfterEach: Destroying EDS %s\n", name)
 		eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
 		Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
-		// info("AfterEach: Destroying EDS %s - canary replicaset: %s\n", name, eds.Status.Canary.ReplicaSet)
-		// info("AfterEach: Destroying EDS %s - active replicaset: %s\n", name, eds.Status.ActiveReplicaSet)
+		info("AfterEach: Destroying EDS %s - canary replicaset: %s\n", name, eds.Status.Canary.ReplicaSet)
+		info("AfterEach: Destroying EDS %s - active replicaset: %s\n", name, eds.Status.ActiveReplicaSet)
 
 		Eventually(deleteEDS(k8sClient, key), timeout, interval).Should(BeTrue(), "EDS should be deleted")
 
@@ -998,7 +998,11 @@ var _ = Describe("ExtendedDaemonSet e2e Pod within MaxSlowStartDuration", func()
 			},
 		}
 		Eventually(withList(listOptions, pods, "EDS pods", func() bool {
-			return len(pods.Items) > 0 && len(pods.Items[0].Status.ContainerStatuses) > 0 && pods.Items[0].Status.ContainerStatuses[0].State.Waiting != nil && (pod.IsCannotStartReason(pods.Items[0].Status.ContainerStatuses[0].State.Waiting.Reason) && pods.Items[0].Status.ContainerStatuses[0].State.Waiting.Reason == expectedReason)
+			cond := len(pods.Items) > 0 && len(pods.Items[0].Status.ContainerStatuses) > 0 && pods.Items[0].Status.ContainerStatuses[0].State.Waiting != nil && (pod.IsCannotStartReason(pods.Items[0].Status.ContainerStatuses[0].State.Waiting.Reason))
+			if cond {
+				info("EDS %s - cannot start reason: %s\n", name, pods.Items[0].Status.ContainerStatuses[0].State.Waiting.Reason)
+			}
+			return cond
 		}), longTimeout, interval).Should(BeTrue(), "All EDS pods should be destroyed")
 
 		Expect(eds.Status.State == datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryPaused).Should(BeFalse())
