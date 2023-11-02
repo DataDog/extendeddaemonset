@@ -1000,8 +1000,12 @@ var _ = Describe("ExtendedDaemonSet e2e Pod within MaxSlowStartDuration", func()
 		Eventually(withList(listOptions, pods, "EDS pods", func() bool {
 			if len(pods.Items) > 0 {
 				for _, item := range pods.Items {
-					if len(item.Status.ContainerStatuses) > 0 && item.Status.ContainerStatuses[0].State.Waiting != nil && (pod.IsCannotStartReason(item.Status.ContainerStatuses[0].State.Waiting.Reason)) && pods.Items[0].Status.ContainerStatuses[0].State.Waiting.Reason == expectedReason {
-						return true
+					if len(item.Status.ContainerStatuses) > 0 {
+						for _, status := range item.Status.ContainerStatuses {
+							if status.State.Waiting != nil && (pod.IsCannotStartReason(status.State.Waiting.Reason)) && status.State.Waiting.Reason == expectedReason {
+								return true
+							}
+						}
 					}
 				}
 			}
