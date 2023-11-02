@@ -30,6 +30,7 @@ import (
 	edsconditions "github.com/DataDog/extendeddaemonset/controllers/extendeddaemonset/conditions"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/conditions"
 	"github.com/DataDog/extendeddaemonset/controllers/testutils"
+	"github.com/DataDog/extendeddaemonset/pkg/controller/utils/pod"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -893,7 +894,7 @@ var _ = Describe("ExtendedDaemonSet e2e rollout not blocked due to already faili
 	})
 })
 
-var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition", func() {
+var _ = Describe("ExtendedDaemonSet e2e Pod within MaxSlowStartDuration", func() {
 	var (
 		name string
 		key  types.NamespacedName
@@ -986,13 +987,23 @@ var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition", func() {
 		info("EDS %s - waiting for canary to not be paused\n", name)
 		eds = &datadoghqv1alpha1.ExtendedDaemonSet{}
 		Eventually(withEDS(key, eds, func() bool {
-			return eds.Status.State == datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryPaused
-		}), timeout, interval).Should(BeFalse())
+			return eds.Status.Canary != nil
+		}), longTimeout, interval).Should(BeTrue())
+
+		pods := &corev1.PodList{}
+		listOptions := []client.ListOption{
+			client.InNamespace(namespace),
+			client.MatchingLabels{
+				datadoghqv1alpha1.ExtendedDaemonSetNameLabelKey: name,
+			},
+		}
+		Eventually(withList(listOptions, pods, "EDS pods", func() bool {
+			return len(pods.Items) > 0 && len(pods.Items[0].Status.ContainerStatuses) > 0 && pods.Items[0].Status.ContainerStatuses[0].State.Waiting != nil && (pod.IsCannotStartReason(pods.Items[0].Status.ContainerStatuses[0].State.Waiting.Reason) && pods.Items[0].Status.ContainerStatuses[0].State.Waiting.Reason == "CreateContainerConfigError")
+		}), longTimeout, interval).Should(BeTrue(), "All EDS pods should be destroyed")
+
+		Expect(eds.Status.State == datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryPaused).Should(BeFalse())
 
 		info("EDS status:\n%s\n", spew.Sdump(eds.Status))
-
-		cond := edsconditions.GetExtendedDaemonSetStatusCondition(&eds.Status, datadoghqv1alpha1.ConditionTypeEDSCanaryPaused)
-		Expect(cond).Should(BeNil())
 	}
 
 	Context("When pod has container config error", func() {
