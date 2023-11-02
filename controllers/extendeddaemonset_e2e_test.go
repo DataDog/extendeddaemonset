@@ -998,12 +998,15 @@ var _ = Describe("ExtendedDaemonSet e2e Pod within MaxSlowStartDuration", func()
 			},
 		}
 		Eventually(withList(listOptions, pods, "EDS pods", func() bool {
-			cond := len(pods.Items) > 0 && len(pods.Items[0].Status.ContainerStatuses) > 0 && pods.Items[0].Status.ContainerStatuses[0].State.Waiting != nil && (pod.IsCannotStartReason(pods.Items[0].Status.ContainerStatuses[0].State.Waiting.Reason))
-			if cond {
-				info("EDS %s - cannot start reason: %s\n", name, pods.Items[0].Status.ContainerStatuses[0].State.Waiting.Reason)
+			if len(pods.Items) > 0 {
+				for _, item := range pods.Items {
+					if len(item.Status.ContainerStatuses) > 0 && item.Status.ContainerStatuses[0].State.Waiting != nil && (pod.IsCannotStartReason(item.Status.ContainerStatuses[0].State.Waiting.Reason)) && pods.Items[0].Status.ContainerStatuses[0].State.Waiting.Reason == expectedReason {
+						return true
+					}
+				}
 			}
-			return cond
-		}), longTimeout, interval).Should(BeTrue(), "All EDS pods should be destroyed")
+			return false
+		}), longTimeout, interval).Should(BeTrue(), "EDS pod did not hit cannot start state")
 
 		Expect(eds.Status.State == datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryPaused).Should(BeFalse())
 
