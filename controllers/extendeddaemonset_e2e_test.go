@@ -998,7 +998,7 @@ var _ = Describe("ExtendedDaemonSet e2e Pod within MaxSlowStartDuration", func()
 			},
 		}
 		Eventually(withList(listOptions, pods, "EDS pods", func() bool {
-			if len(pods.Items) < 0 {
+			if len(pods.Items) == 0 {
 				return false
 			}
 			for _, item := range pods.Items {
