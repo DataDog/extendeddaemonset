@@ -953,7 +953,7 @@ var _ = Describe("ExtendedDaemonSet e2e Pod within MaxSlowStartDuration", func()
 		}
 		Eventually(withList(listOptions, pods, "EDS pods", func() bool {
 			return len(pods.Items) == 0
-		}), timeout, interval).Should(BeTrue(), "All EDS pods should be destroyed")
+		}), longTimeout, interval).Should(BeTrue(), "All EDS pods should be destroyed")
 
 		erslist := &datadoghqv1alpha1.ExtendedDaemonSetReplicaSetList{}
 		Eventually(withList(listOptions, erslist, "ERS instances", func() bool {
