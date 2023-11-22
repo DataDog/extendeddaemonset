@@ -158,8 +158,27 @@ func (o *Options) Run() error {
 			return false, fmt.Errorf("unable to get ExtendedDaemonSet, err: %w", err)
 		}
 
-		if eds.Status.State == v1alpha1.ExtendedDaemonSetStatusStateCanaryFailed {
-			return false, fmt.Errorf("canary marked as failed")
+		// We need to look at the activeReplicaSet of the current ExtendedDaemonSet object, and look at the creationTimestamp of
+		// that replicaset. If the creationTimestamp is older than the last occurrance of the "CanaryFailed" condition of the ExtendedDaemonSet,
+		// it is safe to assume that the canary failed and we should fail this check.
+		var canaryFailedConditionPresent bool
+		var canaryFailedCondition v1alpha1.ExtendedDaemonSetCondition
+		for _, condition := range eds.Status.Conditions {
+			if condition.Type == v1alpha1.ConditionTypeEDSCanaryFailed {
+				canaryFailedConditionPresent = true
+				canaryFailedCondition = condition
+				break
+			}
+		}
+
+		if canaryFailedConditionPresent {
+			ers := &v1alpha1.ExtendedDaemonSetReplicaSet{}
+			err = o.client.Get(context.TODO(), client.ObjectKey{Namespace: o.userNamespace, Name: eds.Status.ActiveReplicaSet}, ers)
+			if err == nil {
+				if ers.CreationTimestamp.Before(&canaryFailedCondition.LastTransitionTime) {
+					return false, fmt.Errorf("active canary has a creation timestamp before the last CanaryFailed condition, meaning the deployment failed")
+				}
+			}
 		}
 
 		if eds.Status.Canary != nil {
