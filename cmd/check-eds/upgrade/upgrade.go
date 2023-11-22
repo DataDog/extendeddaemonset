@@ -165,7 +165,7 @@ func (o *Options) Run() error {
 		}
 
 		// We need to look at the activeReplicaSet of the current ExtendedDaemonSet object, and look at the creationTimestamp of
-		// that replicaset. If the creationTimestamp is older than the last occurrance of the "CanaryFailed" condition of the ExtendedDaemonSet,
+		// that replicaset. If the creationTimestamp is older than the last occurrence of the "CanaryFailed" condition of the ExtendedDaemonSet,
 		// it is safe to assume that the canary failed and we should fail this check.
 		var canaryFailedConditionPresent bool
 		var canaryFailedCondition v1alpha1.ExtendedDaemonSetCondition
