@@ -158,6 +158,10 @@ func (o *Options) Run() error {
 			return false, fmt.Errorf("unable to get ExtendedDaemonSet, err: %w", err)
 		}
 
+		if eds.Status.State == v1alpha1.ExtendedDaemonSetStatusStateCanaryFailed {
+			return false, fmt.Errorf("canary marked as failed")
+		}
+
 		if eds.Status.Canary != nil {
 			o.printOutf("canary running")
 
