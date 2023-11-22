@@ -158,6 +158,12 @@ func (o *Options) Run() error {
 			return false, fmt.Errorf("unable to get ExtendedDaemonSet, err: %w", err)
 		}
 
+		if eds.Status.Canary != nil {
+			o.printOutf("canary running")
+
+			return false, nil
+		}
+
 		// We need to look at the activeReplicaSet of the current ExtendedDaemonSet object, and look at the creationTimestamp of
 		// that replicaset. If the creationTimestamp is older than the last occurrance of the "CanaryFailed" condition of the ExtendedDaemonSet,
 		// it is safe to assume that the canary failed and we should fail this check.
@@ -179,12 +185,6 @@ func (o *Options) Run() error {
 					return false, fmt.Errorf("active canary has a creation timestamp before the last CanaryFailed condition, meaning the deployment failed")
 				}
 			}
-		}
-
-		if eds.Status.Canary != nil {
-			o.printOutf("canary running")
-
-			return false, nil
 		}
 
 		if float64(eds.Status.UpToDate) > float64(eds.Status.Current)*o.nodeCompletionPct ||
