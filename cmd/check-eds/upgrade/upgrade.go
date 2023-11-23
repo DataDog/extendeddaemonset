@@ -173,6 +173,7 @@ func (o *Options) Run() error {
 			if condition.Type == v1alpha1.ConditionTypeEDSCanaryFailed {
 				canaryFailedConditionPresent = true
 				canaryFailedCondition = condition
+				o.printOutf("CanaryFailed condition found")
 				break
 			}
 		}
@@ -181,9 +182,12 @@ func (o *Options) Run() error {
 			ers := &v1alpha1.ExtendedDaemonSetReplicaSet{}
 			err = o.client.Get(context.TODO(), client.ObjectKey{Namespace: o.userNamespace, Name: eds.Status.ActiveReplicaSet}, ers)
 			if err == nil {
+				o.printOutf("active canary creation timestamp: %s; failed canary timestamp: %s", ers.CreationTimestamp.String(), canaryFailedCondition.LastTransitionTime.String())
 				if ers.CreationTimestamp.Before(&canaryFailedCondition.LastTransitionTime) {
 					return false, fmt.Errorf("active canary has a creation timestamp before the last CanaryFailed condition, meaning the deployment failed")
 				}
+			} else {
+				o.printOutf("error getting replicaset %s: %s", eds.Status.ActiveReplicaSet, err.Error())
 			}
 		}
 
