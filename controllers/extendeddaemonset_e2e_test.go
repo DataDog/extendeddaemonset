@@ -30,6 +30,7 @@ import (
 	edsconditions "github.com/DataDog/extendeddaemonset/controllers/extendeddaemonset/conditions"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/conditions"
 	"github.com/DataDog/extendeddaemonset/controllers/testutils"
+	"github.com/DataDog/extendeddaemonset/pkg/controller/utils/pod"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -889,6 +890,160 @@ var _ = Describe("ExtendedDaemonSet e2e rollout not blocked due to already faili
 			Eventually(withList(listOptions, pods, "EDS pods", func() bool {
 				return len(pods.Items) == 0
 			}), longTimeout, interval).Should(BeTrue(), "All EDS pods should be destroyed")
+		})
+	})
+})
+
+var _ = Describe("ExtendedDaemonSet e2e Pod within MaxSlowStartDuration", func() {
+	var (
+		name string
+		key  types.NamespacedName
+	)
+
+	BeforeEach(func() {
+		name = fmt.Sprintf("eds-foo-max-slow-%d", time.Now().Unix())
+		key = types.NamespacedName{
+			Namespace: namespace,
+			Name:      name,
+		}
+
+		info("BeforeEach: Creating EDS %s\n", name)
+
+		edsOptions := &testutils.NewExtendedDaemonsetOptions{
+			CanaryStrategy: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
+				Duration: &metav1.Duration{Duration: 7 * time.Minute},
+				Replicas: &intString2,
+				AutoPause: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoPause{
+					Enabled:              datadoghqv1alpha1.NewBool(true),
+					MaxSlowStartDuration: &metav1.Duration{Duration: 30 * time.Minute},
+				},
+			},
+			RollingUpdate: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate{
+				MaxUnavailable:         &intString10,
+				MaxParallelPodCreation: datadoghqv1alpha1.NewInt32(20),
+			},
+		}
+
+		eds := testutils.NewExtendedDaemonset(namespace, name, "registry.k8s.io/pause:3.0", edsOptions)
+		Expect(k8sClient.Create(ctx, eds)).Should(Succeed())
+
+		eds = &datadoghqv1alpha1.ExtendedDaemonSet{}
+		Eventually(withEDS(key, eds, func() bool {
+			return eds.Status.ActiveReplicaSet != ""
+		}), timeout, interval).Should(BeTrue())
+
+		info("BeforeEach: Done creating EDS %s - active replicaset: %s\n", name, eds.Status.ActiveReplicaSet)
+	})
+
+	AfterEach(func() {
+		info("AfterEach: Destroying EDS %s\n", name)
+		eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
+		Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
+		info("AfterEach: Destroying EDS %s - canary replicaset: %s\n", name, eds.Status.Canary.ReplicaSet)
+		info("AfterEach: Destroying EDS %s - active replicaset: %s\n", name, eds.Status.ActiveReplicaSet)
+
+		Eventually(deleteEDS(k8sClient, key), timeout, interval).Should(BeTrue(), "EDS should be deleted")
+
+		pods := &corev1.PodList{}
+		listOptions := []client.ListOption{
+			client.InNamespace(namespace),
+			client.MatchingLabels{
+				datadoghqv1alpha1.ExtendedDaemonSetNameLabelKey: name,
+			},
+		}
+		Eventually(withList(listOptions, pods, "EDS pods", func() bool {
+			return len(pods.Items) == 0
+		}), longTimeout, interval).Should(BeTrue(), "All EDS pods should be destroyed")
+
+		erslist := &datadoghqv1alpha1.ExtendedDaemonSetReplicaSetList{}
+		Eventually(withList(listOptions, erslist, "ERS instances", func() bool {
+			return len(erslist.Items) == 0
+		}), timeout, interval).Should(BeTrue(), "All ERS instances should be destroyed")
+
+		info("AfterEach: Done destroying EDS %s\n", name)
+	})
+
+	JustAfterEach(func() {
+		if CurrentGinkgoTestDescription().Failed {
+			eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
+			Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
+			warn("%s - FAILED: EDS status:\n%s\n\n", CurrentGinkgoTestDescription().TestText, spew.Sdump(eds.Status))
+		}
+	})
+
+	restartOnCannotStartWithinMaxSlowStart := func(configureEDS func(eds *datadoghqv1alpha1.ExtendedDaemonSet), expectedReason string) {
+		Eventually(updateEDS(k8sClient, key, configureEDS), timeout, interval).Should(
+			BeTrue(),
+			func() string { return "Unable to update the EDS" },
+		)
+
+		eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
+		Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
+		info("%s: %s - active replicaset: %s\n",
+			CurrentGinkgoTestDescription().TestText,
+			name, eds.Status.ActiveReplicaSet,
+		)
+
+		info("EDS %s - waiting for canary to not be paused\n", name)
+		eds = &datadoghqv1alpha1.ExtendedDaemonSet{}
+		Eventually(withEDS(key, eds, func() bool {
+			return eds.Status.Canary != nil
+		}), longTimeout, interval).Should(BeTrue())
+
+		pods := &corev1.PodList{}
+		listOptions := []client.ListOption{
+			client.InNamespace(namespace),
+			client.MatchingLabels{
+				datadoghqv1alpha1.ExtendedDaemonSetNameLabelKey: name,
+			},
+		}
+		Eventually(withList(listOptions, pods, "EDS pods", func() bool {
+			if len(pods.Items) == 0 {
+				return false
+			}
+			for _, item := range pods.Items {
+				if len(item.Status.ContainerStatuses) == 0 {
+					continue
+				}
+				for _, status := range item.Status.ContainerStatuses {
+					if status.State.Waiting == nil {
+						continue
+					}
+					info("EDS %s - pod %s is in state %s\n", name, item.Name, status.State.Waiting.Reason)
+					if (pod.IsCannotStartReason(status.State.Waiting.Reason)) && status.State.Waiting.Reason == expectedReason {
+						return true
+					}
+				}
+			}
+			return false
+		}), longTimeout, interval).Should(BeTrue(), "EDS pod did not hit cannot start state")
+
+		Expect(eds.Status.State == datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryPaused).Should(BeFalse())
+
+		info("EDS status:\n%s\n", spew.Sdump(eds.Status))
+	}
+
+	Context("When pod has container config error", func() {
+		It("Should not promptly auto-pause canary", func() {
+			restartOnCannotStartWithinMaxSlowStart(func(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
+				eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("gcr.io/google-containers/alpine-with-bash:1.0")
+				eds.Spec.Template.Spec.Containers[0].Command = []string{
+					"tail", "-f", "/dev/null",
+				}
+				eds.Spec.Template.Spec.Containers[0].Env = []corev1.EnvVar{
+					{
+						Name: "missing",
+						ValueFrom: &corev1.EnvVarSource{
+							ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "missing",
+								},
+								Key: "missing",
+							},
+						},
+					},
+				}
+			}, "CreateContainerConfigError")
 		})
 	})
 })

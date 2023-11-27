@@ -1007,3 +1007,125 @@ func Test_ensureCanaryPodLabels(t *testing.T) {
 		}
 	})
 }
+
+func TestCreateContainerConfigError_ExceedsMaxSlowStartCondition(t *testing.T) {
+	now := time.Now()
+	afterNow := now.Add(2 * time.Minute)
+	test := canaryStatusTest{
+		now: afterNow,
+		params: &Parameters{
+			EDSName: "foo",
+			Strategy: &v1alpha1.ExtendedDaemonSetSpecStrategy{
+				Canary: &v1alpha1.ExtendedDaemonSetSpecStrategyCanary{
+					AutoPause: &v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoPause{
+						Enabled:              v1alpha1.NewBool(true),
+						MaxRestarts:          v1alpha1.NewInt32(2),
+						MaxSlowStartDuration: &metav1.Duration{Duration: 1 * time.Minute},
+					},
+					AutoFail: &v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoFail{
+						Enabled:     v1alpha1.NewBool(true),
+						MaxRestarts: v1alpha1.NewInt32(5),
+					},
+				},
+			},
+			Replicaset: &v1alpha1.ExtendedDaemonSetReplicaSet{
+				Spec: v1alpha1.ExtendedDaemonSetReplicaSetSpec{
+					TemplateGeneration: "v1",
+				},
+			},
+			NewStatus:   &v1alpha1.ExtendedDaemonSetReplicaSetStatus{},
+			CanaryNodes: testCanaryNodeNames,
+			NodeByName:  testCanaryNodes,
+			PodByNodeName: map[*NodeItem]*v1.Pod{
+				testCanaryNodes["a"]: newTestCanaryPod("foo-a", "v1", podWaitingStatus("CreateContainerConfigError", `Error creating container CreateContainerConfigError"`, now)),
+				testCanaryNodes["b"]: nil,
+				testCanaryNodes["c"]: nil,
+			},
+			Logger: testLogger,
+		},
+		result: &Result{
+			NewStatus: &v1alpha1.ExtendedDaemonSetReplicaSetStatus{
+				Status:    "canary",
+				Desired:   3,
+				Current:   1,
+				Ready:     0,
+				Available: 0,
+				Conditions: []v1alpha1.ExtendedDaemonSetReplicaSetCondition{
+					{
+						Type:               v1alpha1.ConditionTypeCanaryPaused,
+						Status:             v1.ConditionTrue,
+						LastTransitionTime: metav1.NewTime(afterNow),
+						LastUpdateTime:     metav1.NewTime(afterNow),
+						Reason:             "CreateContainerConfigError",
+						Message:            "",
+					},
+					{
+						Type:               v1alpha1.ConditionTypePodCannotStart,
+						Status:             v1.ConditionTrue,
+						LastTransitionTime: metav1.NewTime(afterNow),
+						LastUpdateTime:     metav1.NewTime(afterNow),
+						Reason:             "CreateContainerConfigError",
+						Message:            "Pod foo-a cannot start with reason: CreateContainerConfigError",
+					},
+				},
+			},
+			IsPaused:     true,
+			PausedReason: v1alpha1.ExtendedDaemonSetStatusReason("CreateContainerConfigError"),
+			Result:       reconcile.Result{},
+		},
+	}
+	test.Run(t)
+}
+
+func TestCreateContainerConfigError_WithinMaxSlowStartDuration(t *testing.T) {
+	now := time.Now()
+	afterNow := now.Add(2 * time.Minute)
+	test := canaryStatusTest{
+		now: afterNow,
+		params: &Parameters{
+			EDSName: "foo",
+			Strategy: &v1alpha1.ExtendedDaemonSetSpecStrategy{
+				Canary: &v1alpha1.ExtendedDaemonSetSpecStrategyCanary{
+					AutoPause: &v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoPause{
+						Enabled:              v1alpha1.NewBool(true),
+						MaxRestarts:          v1alpha1.NewInt32(2),
+						MaxSlowStartDuration: &metav1.Duration{Duration: 5 * time.Minute},
+					},
+					AutoFail: &v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoFail{
+						Enabled:     v1alpha1.NewBool(true),
+						MaxRestarts: v1alpha1.NewInt32(5),
+					},
+				},
+			},
+			Replicaset: &v1alpha1.ExtendedDaemonSetReplicaSet{
+				Spec: v1alpha1.ExtendedDaemonSetReplicaSetSpec{
+					TemplateGeneration: "v1",
+				},
+			},
+			NewStatus:   &v1alpha1.ExtendedDaemonSetReplicaSetStatus{},
+			CanaryNodes: testCanaryNodeNames,
+			NodeByName:  testCanaryNodes,
+			PodByNodeName: map[*NodeItem]*v1.Pod{
+				testCanaryNodes["a"]: newTestCanaryPod("foo-a", "v1", podWaitingStatus("CreateContainerConfigError", `Error creating container CreateContainerConfigError"`, now)),
+				testCanaryNodes["b"]: nil,
+				testCanaryNodes["c"]: nil,
+			},
+			Logger: testLogger,
+		},
+		result: &Result{
+			PodsToCreate: []*NodeItem{
+				testCanaryNodes["b"],
+				testCanaryNodes["c"],
+			},
+			NewStatus: &v1alpha1.ExtendedDaemonSetReplicaSetStatus{
+				Status:    "canary",
+				Desired:   3,
+				Current:   1,
+				Ready:     0,
+				Available: 0,
+			},
+			Result: requeuePromptly(),
+		},
+	}
+	test.Run(t)
+}
