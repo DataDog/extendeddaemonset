@@ -174,17 +174,16 @@ func MostRecentRestart(pod *v1.Pod) (time.Time, datadoghqv1alpha1.ExtendedDaemon
 }
 
 var cannotStartReasons = map[string]struct{}{
-	"ErrImagePull":               {},
-	"ImagePullBackOff":           {},
-	"ImageInspectError":          {},
-	"ErrImageNeverPull":          {},
-	"RegistryUnavailable":        {},
-	"InvalidImageName":           {},
-	"CreateContainerConfigError": {},
-	"CreateContainerError":       {},
-	"PreStartHookError":          {},
-	"PostStartHookError":         {},
-	"PreCreateHookError":         {},
+	"ErrImagePull":         {},
+	"ImagePullBackOff":     {},
+	"ImageInspectError":    {},
+	"ErrImageNeverPull":    {},
+	"RegistryUnavailable":  {},
+	"InvalidImageName":     {},
+	"CreateContainerError": {},
+	"PreStartHookError":    {},
+	"PostStartHookError":   {},
+	"PreCreateHookError":   {},
 }
 
 // IsCannotStartReason returns true for a reason that is considered an abnormal cannot start condition.

@@ -1008,7 +1008,7 @@ func Test_ensureCanaryPodLabels(t *testing.T) {
 	})
 }
 
-func TestCreateContainerConfigError_ExceedsMaxSlowStartCondition(t *testing.T) {
+func TestImagePullBackoff_ExceedsMaxSlowStartCondition(t *testing.T) {
 	now := time.Now()
 	afterNow := now.Add(2 * time.Minute)
 	test := canaryStatusTest{
@@ -1037,7 +1037,7 @@ func TestCreateContainerConfigError_ExceedsMaxSlowStartCondition(t *testing.T) {
 			CanaryNodes: testCanaryNodeNames,
 			NodeByName:  testCanaryNodes,
 			PodByNodeName: map[*NodeItem]*v1.Pod{
-				testCanaryNodes["a"]: newTestCanaryPod("foo-a", "v1", podWaitingStatus("CreateContainerConfigError", `Error creating container CreateContainerConfigError"`, now)),
+				testCanaryNodes["a"]: newTestCanaryPod("foo-a", "v1", podWaitingStatus("ImagePullBackOff", `Error creating container ImagePullBackOff"`, now)),
 				testCanaryNodes["b"]: nil,
 				testCanaryNodes["c"]: nil,
 			},
@@ -1056,7 +1056,7 @@ func TestCreateContainerConfigError_ExceedsMaxSlowStartCondition(t *testing.T) {
 						Status:             v1.ConditionTrue,
 						LastTransitionTime: metav1.NewTime(afterNow),
 						LastUpdateTime:     metav1.NewTime(afterNow),
-						Reason:             "CreateContainerConfigError",
+						Reason:             "ImagePullBackOff",
 						Message:            "",
 					},
 					{
@@ -1064,20 +1064,20 @@ func TestCreateContainerConfigError_ExceedsMaxSlowStartCondition(t *testing.T) {
 						Status:             v1.ConditionTrue,
 						LastTransitionTime: metav1.NewTime(afterNow),
 						LastUpdateTime:     metav1.NewTime(afterNow),
-						Reason:             "CreateContainerConfigError",
-						Message:            "Pod foo-a cannot start with reason: CreateContainerConfigError",
+						Reason:             "ImagePullBackOff",
+						Message:            "Pod foo-a cannot start with reason: ImagePullBackOff",
 					},
 				},
 			},
 			IsPaused:     true,
-			PausedReason: v1alpha1.ExtendedDaemonSetStatusReason("CreateContainerConfigError"),
+			PausedReason: v1alpha1.ExtendedDaemonSetStatusReason("ImagePullBackOff"),
 			Result:       reconcile.Result{},
 		},
 	}
 	test.Run(t)
 }
 
-func TestCreateContainerConfigError_WithinMaxSlowStartDuration(t *testing.T) {
+func TestImagePullBackoff_WithinMaxSlowStartDuration(t *testing.T) {
 	now := time.Now()
 	afterNow := now.Add(2 * time.Minute)
 	test := canaryStatusTest{
@@ -1106,7 +1106,7 @@ func TestCreateContainerConfigError_WithinMaxSlowStartDuration(t *testing.T) {
 			CanaryNodes: testCanaryNodeNames,
 			NodeByName:  testCanaryNodes,
 			PodByNodeName: map[*NodeItem]*v1.Pod{
-				testCanaryNodes["a"]: newTestCanaryPod("foo-a", "v1", podWaitingStatus("CreateContainerConfigError", `Error creating container CreateContainerConfigError"`, now)),
+				testCanaryNodes["a"]: newTestCanaryPod("foo-a", "v1", podWaitingStatus("ImagePullBackOff", `Error creating container ImagePullBackOff"`, now)),
 				testCanaryNodes["b"]: nil,
 				testCanaryNodes["c"]: nil,
 			},

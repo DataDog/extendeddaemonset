@@ -388,30 +388,6 @@ var _ = Describe("ExtendedDaemonSet e2e PodCannotStart condition", func() {
 		})
 	})
 
-	Context("When pod has container config error", func() {
-		It("Should promptly auto-pause canary", func() {
-			pauseOnCannotStart(func(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
-				eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("gcr.io/google-containers/alpine-with-bash:1.0")
-				eds.Spec.Template.Spec.Containers[0].Command = []string{
-					"tail", "-f", "/dev/null",
-				}
-				eds.Spec.Template.Spec.Containers[0].Env = []corev1.EnvVar{
-					{
-						Name: "missing",
-						ValueFrom: &corev1.EnvVarSource{
-							ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
-								LocalObjectReference: corev1.LocalObjectReference{
-									Name: "missing",
-								},
-								Key: "missing",
-							},
-						},
-					},
-				}
-			}, "CreateContainerConfigError")
-		})
-	})
-
 	Context("When pod has missing volume", func() {
 		It("Should promptly auto-pause canary", func() {
 			pauseOnCannotStart(func(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
@@ -1023,27 +999,14 @@ var _ = Describe("ExtendedDaemonSet e2e Pod within MaxSlowStartDuration", func()
 		info("EDS status:\n%s\n", spew.Sdump(eds.Status))
 	}
 
-	Context("When pod has container config error", func() {
-		It("Should not promptly auto-pause canary", func() {
+	Context("When pod has image pull backoff", func() {
+		It("Should not auto-pause canary", func() {
 			restartOnCannotStartWithinMaxSlowStart(func(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
-				eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("gcr.io/google-containers/alpine-with-bash:1.0")
+				eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("gcr.io/missing")
 				eds.Spec.Template.Spec.Containers[0].Command = []string{
-					"tail", "-f", "/dev/null",
+					"does-not-matter",
 				}
-				eds.Spec.Template.Spec.Containers[0].Env = []corev1.EnvVar{
-					{
-						Name: "missing",
-						ValueFrom: &corev1.EnvVarSource{
-							ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
-								LocalObjectReference: corev1.LocalObjectReference{
-									Name: "missing",
-								},
-								Key: "missing",
-							},
-						},
-					},
-				}
-			}, "CreateContainerConfigError")
+			}, "ImagePullBackOff")
 		})
 	})
 })
