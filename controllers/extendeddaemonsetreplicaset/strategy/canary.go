@@ -166,6 +166,13 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 	}
 
 	startCondition := conditions.GetExtendedDaemonSetReplicaSetStatusCondition(result.NewStatus, v1alpha1.ConditionTypeCanary)
+	params.Logger.Info(
+		"START CONDITION",
+		"condition", startCondition,
+		"autofail duration", autoFailCanaryTimeout,
+		"start time", startCondition.LastTransitionTime.Time,
+		"diff start time", now.Sub(startCondition.LastTransitionTime.Time),
+	)
 	restartCondition := conditions.GetExtendedDaemonSetReplicaSetStatusCondition(params.NewStatus, v1alpha1.ConditionTypePodRestarting)
 
 	// Note that we still need to evaluate restarts regardless of the enabled autoPause or autoFail

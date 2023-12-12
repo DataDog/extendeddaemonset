@@ -81,7 +81,7 @@ func GetExtendedDaemonSetReplicaSetStatusCondition(status *datadoghqv1alpha1.Ext
 	return &status.Conditions[idCondition]
 }
 
-// IsConditionTrue check if a condition is True. It not set return False.
+// IsConditionTrue check if a condition is True. If not set return False.
 func IsConditionTrue(status *datadoghqv1alpha1.ExtendedDaemonSetReplicaSetStatus, t datadoghqv1alpha1.ExtendedDaemonSetReplicaSetConditionType) bool {
 	cond := GetExtendedDaemonSetReplicaSetStatusCondition(status, t)
 	if cond != nil && cond.Status == corev1.ConditionTrue {
