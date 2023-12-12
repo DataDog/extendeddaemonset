@@ -1028,7 +1028,7 @@ var _ = Describe("ExtendedDaemonSet e2e Pod CreateContainerConfigError", func() 
 
 		edsOptions := &testutils.NewExtendedDaemonsetOptions{
 			CanaryStrategy: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
-				Duration: &metav1.Duration{Duration: 1 * time.Minute},
+				// Duration: &metav1.Duration{Duration: 1 * time.Minute},
 				Replicas: &intString2,
 				AutoPause: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoPause{
 					Enabled: datadoghqv1alpha1.NewBool(true),
@@ -1103,8 +1103,8 @@ var _ = Describe("ExtendedDaemonSet e2e Pod CreateContainerConfigError", func() 
 				return true
 			}
 			return false
-		}), longTimeout, interval).ShouldNot(
-			BeNil(),
+		}), longTimeout, interval).Should(
+			BeTrue(),
 			func() string {
 				return fmt.Sprintf(
 					"EDS canary failure should be present in the EDS.Status.Conditions: %v",
