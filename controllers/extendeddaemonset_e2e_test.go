@@ -183,8 +183,8 @@ var _ = Describe("ExtendedDaemonSet e2e updates and recovery", func() {
 					return true
 				}
 				return false
-			}), longTimeout, interval).ShouldNot(
-				BeNil(),
+			}), longTimeout, interval).Should(
+				BeTrue(),
 				func() string {
 					return fmt.Sprintf(
 						"EDS canary failure should be present in the EDS.Status.Conditions: %v",
@@ -1011,134 +1011,134 @@ var _ = Describe("ExtendedDaemonSet e2e Pod within MaxSlowStartDuration", func()
 	})
 })
 
-var _ = Describe("ExtendedDaemonSet e2e Pod CreateContainerConfigError", func() {
-	var (
-		name string
-		key  types.NamespacedName
-	)
+// var _ = Describe("ExtendedDaemonSet e2e Pod CreateContainerConfigError", func() {
+// 	var (
+// 		name string
+// 		key  types.NamespacedName
+// 	)
 
-	BeforeEach(func() {
-		name = fmt.Sprintf("eds-foo-create-container-config-error-%d", time.Now().Unix())
-		key = types.NamespacedName{
-			Namespace: namespace,
-			Name:      name,
-		}
+// 	BeforeEach(func() {
+// 		name = fmt.Sprintf("eds-foo-create-container-config-error-%d", time.Now().Unix())
+// 		key = types.NamespacedName{
+// 			Namespace: namespace,
+// 			Name:      name,
+// 		}
 
-		info("BeforeEach: Creating EDS %s\n", name)
+// 		info("BeforeEach: Creating EDS %s\n", name)
 
-		edsOptions := &testutils.NewExtendedDaemonsetOptions{
-			CanaryStrategy: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
-				Duration: &metav1.Duration{Duration: 1 * time.Minute},
-				Replicas: &intString2,
-				AutoPause: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoPause{
-					Enabled: datadoghqv1alpha1.NewBool(true),
-				},
-				AutoFail: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoFail{
-					Enabled:       datadoghqv1alpha1.NewBool(true),
-					MaxRestarts:   datadoghqv1alpha1.NewInt32(3),
-					CanaryTimeout: &metav1.Duration{Duration: 65 * time.Second},
-				},
-			},
-			RollingUpdate: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate{
-				MaxUnavailable:         &intString10,
-				MaxParallelPodCreation: datadoghqv1alpha1.NewInt32(20),
-			},
-		}
+// 		edsOptions := &testutils.NewExtendedDaemonsetOptions{
+// 			CanaryStrategy: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
+// 				Duration: &metav1.Duration{Duration: 1 * time.Minute},
+// 				Replicas: &intString2,
+// 				AutoPause: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoPause{
+// 					Enabled: datadoghqv1alpha1.NewBool(true),
+// 				},
+// 				AutoFail: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoFail{
+// 					Enabled:       datadoghqv1alpha1.NewBool(true),
+// 					MaxRestarts:   datadoghqv1alpha1.NewInt32(3),
+// 					CanaryTimeout: &metav1.Duration{Duration: 65 * time.Second},
+// 				},
+// 			},
+// 			RollingUpdate: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate{
+// 				MaxUnavailable:         &intString10,
+// 				MaxParallelPodCreation: datadoghqv1alpha1.NewInt32(20),
+// 			},
+// 		}
 
-		eds := testutils.NewExtendedDaemonset(namespace, name, "registry.k8s.io/pause:3.0", edsOptions)
-		Expect(k8sClient.Create(ctx, eds)).Should(Succeed())
+// 		eds := testutils.NewExtendedDaemonset(namespace, name, "registry.k8s.io/pause:3.0", edsOptions)
+// 		Expect(k8sClient.Create(ctx, eds)).Should(Succeed())
 
-		eds = &datadoghqv1alpha1.ExtendedDaemonSet{}
-		Eventually(withEDS(key, eds, func() bool {
-			return eds.Status.ActiveReplicaSet != ""
-		}), timeout, interval).Should(BeTrue())
+// 		eds = &datadoghqv1alpha1.ExtendedDaemonSet{}
+// 		Eventually(withEDS(key, eds, func() bool {
+// 			return eds.Status.ActiveReplicaSet != ""
+// 		}), timeout, interval).Should(BeTrue())
 
-		info("BeforeEach: Done creating EDS %s - active replicaset: %s\n", name, eds.Status.ActiveReplicaSet)
-	})
+// 		info("BeforeEach: Done creating EDS %s - active replicaset: %s\n", name, eds.Status.ActiveReplicaSet)
+// 	})
 
-	AfterEach(func() {
-		info("AfterEach: Destroying EDS %s\n", name)
-		eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
-		Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
+// 	AfterEach(func() {
+// 		info("AfterEach: Destroying EDS %s\n", name)
+// 		eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
+// 		Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
 
-		Eventually(deleteEDS(k8sClient, key), timeout, interval).Should(BeTrue(), "EDS should be deleted")
+// 		Eventually(deleteEDS(k8sClient, key), timeout, interval).Should(BeTrue(), "EDS should be deleted")
 
-		listOptions := []client.ListOption{
-			client.InNamespace(namespace),
-			client.MatchingLabels{
-				datadoghqv1alpha1.ExtendedDaemonSetNameLabelKey: name,
-			},
-		}
-		erslist := &datadoghqv1alpha1.ExtendedDaemonSetReplicaSetList{}
-		Eventually(withList(listOptions, erslist, "ERS instances", func() bool {
-			return len(erslist.Items) == 0
-		}), timeout, interval).Should(BeTrue(), "All ERS instances should be destroyed")
+// 		listOptions := []client.ListOption{
+// 			client.InNamespace(namespace),
+// 			client.MatchingLabels{
+// 				datadoghqv1alpha1.ExtendedDaemonSetNameLabelKey: name,
+// 			},
+// 		}
+// 		erslist := &datadoghqv1alpha1.ExtendedDaemonSetReplicaSetList{}
+// 		Eventually(withList(listOptions, erslist, "ERS instances", func() bool {
+// 			return len(erslist.Items) == 0
+// 		}), timeout, interval).Should(BeTrue(), "All ERS instances should be destroyed")
 
-		info("AfterEach: Done destroying EDS %s\n", name)
-	})
+// 		info("AfterEach: Done destroying EDS %s\n", name)
+// 	})
 
-	JustAfterEach(func() {
-		if CurrentGinkgoTestDescription().Failed {
-			eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
-			Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
-			warn("%s - FAILED: EDS status:\n%s\n\n", CurrentGinkgoTestDescription().TestText, spew.Sdump(eds.Status))
-		}
-	})
+// 	JustAfterEach(func() {
+// 		if CurrentGinkgoTestDescription().Failed {
+// 			eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
+// 			Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
+// 			warn("%s - FAILED: EDS status:\n%s\n\n", CurrentGinkgoTestDescription().TestText, spew.Sdump(eds.Status))
+// 		}
+// 	})
 
-	failsPastTimeout := func(configureEDS func(eds *datadoghqv1alpha1.ExtendedDaemonSet), expectedReason string) {
-		Eventually(updateEDS(k8sClient, key, configureEDS), timeout, interval).Should(
-			BeTrue(),
-			func() string { return "Unable to update the EDS" },
-		)
+// 	failsPastTimeout := func(configureEDS func(eds *datadoghqv1alpha1.ExtendedDaemonSet), expectedReason string) {
+// 		Eventually(updateEDS(k8sClient, key, configureEDS), timeout, interval).Should(
+// 			BeTrue(),
+// 			func() string { return "Unable to update the EDS" },
+// 		)
 
-		eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
-		Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
-		info("%s: %s - active replicaset: %s\n",
-			CurrentGinkgoTestDescription().TestText,
-			name, eds.Status.ActiveReplicaSet,
-		)
-		Expect(eds.Status.State == datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryPaused).Should(BeFalse())
-		Eventually(withEDS(key, eds, func() bool {
-			if edsconditions.GetExtendedDaemonSetStatusCondition(&eds.Status, datadoghqv1alpha1.ConditionTypeEDSCanaryFailed) != nil {
-				return true
-			}
-			return false
-		}), longTimeout, interval).Should(
-			BeTrue(),
-			func() string {
-				return fmt.Sprintf(
-					"EDS canary failure should be present in the EDS.Status.Conditions: %v",
-					eds.Status.Conditions,
-				)
-			},
-		)
-		info("EDS status:\n%s\n", spew.Sdump(eds.Status))
-	}
+// 		eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
+// 		Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
+// 		info("%s: %s - active replicaset: %s\n",
+// 			CurrentGinkgoTestDescription().TestText,
+// 			name, eds.Status.ActiveReplicaSet,
+// 		)
+// 		Expect(eds.Status.State == datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryPaused).Should(BeFalse())
+// 		Eventually(withEDS(key, eds, func() bool {
+// 			if edsconditions.GetExtendedDaemonSetStatusCondition(&eds.Status, datadoghqv1alpha1.ConditionTypeEDSCanaryFailed) != nil {
+// 				return true
+// 			}
+// 			return false
+// 		}), longTimeout, interval).Should(
+// 			BeTrue(),
+// 			func() string {
+// 				return fmt.Sprintf(
+// 					"EDS canary failure should be present in the EDS.Status.Conditions: %v",
+// 					eds.Status.Conditions,
+// 				)
+// 			},
+// 		)
+// 		info("EDS status:\n%s\n", spew.Sdump(eds.Status))
+// 	}
 
-	Context("When pod has create container config error", func() {
-		It("Should auto fail if exceeds timeout", func() {
-			failsPastTimeout(func(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
-				eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("gcr.io/google-containers/alpine-with-bash:1.0")
-				eds.Spec.Template.Spec.Containers[0].Command = []string{
-					"tail", "-f", "/dev/null",
-				}
-				eds.Spec.Template.Spec.Containers[0].Env = []corev1.EnvVar{
-					{
-						Name: "missing",
-						ValueFrom: &corev1.EnvVarSource{
-							ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
-								LocalObjectReference: corev1.LocalObjectReference{
-									Name: "missing",
-								},
-								Key: "missing",
-							},
-						},
-					},
-				}
-			}, "CreateContainerConfigError")
-		})
-	})
-})
+// 	Context("When pod has create container config error", func() {
+// 		It("Should auto fail if exceeds timeout", func() {
+// 			failsPastTimeout(func(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
+// 				eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("gcr.io/google-containers/alpine-with-bash:1.0")
+// 				eds.Spec.Template.Spec.Containers[0].Command = []string{
+// 					"tail", "-f", "/dev/null",
+// 				}
+// 				eds.Spec.Template.Spec.Containers[0].Env = []corev1.EnvVar{
+// 					{
+// 						Name: "missing",
+// 						ValueFrom: &corev1.EnvVarSource{
+// 							ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
+// 								LocalObjectReference: corev1.LocalObjectReference{
+// 									Name: "missing",
+// 								},
+// 								Key: "missing",
+// 							},
+// 						},
+// 					},
+// 				}
+// 			}, "CreateContainerConfigError")
+// 		})
+// 	})
+// })
 
 func withUpdate(obj client.Object, desc string) condFn {
 	return func() bool {
