@@ -1011,6 +1011,113 @@ var _ = Describe("ExtendedDaemonSet e2e Pod within MaxSlowStartDuration", func()
 	})
 })
 
+var _ = Describe("ExtendedDaemonSet e2e rollout create config error", func() {
+	Context("When pod has create container config error", func() {
+		name := "eds-fail-create-config-error"
+
+		key := types.NamespacedName{
+			Namespace: namespace,
+			Name:      name,
+		}
+		It("Should auto-fail canary on exceed timeout", func() {
+			updateFunc := func(eds *datadoghqv1alpha1.ExtendedDaemonSet) {
+				eds.Spec.Strategy.Canary = &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
+					Duration:           &metav1.Duration{Duration: 1 * time.Minute},
+					Replicas:           &intString1,
+					NoRestartsDuration: &metav1.Duration{Duration: 1 * time.Minute},
+					AutoPause: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoPause{
+						Enabled:     datadoghqv1alpha1.NewBool(true),
+						MaxRestarts: datadoghqv1alpha1.NewInt32(1),
+					},
+					AutoFail: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoFail{
+						Enabled:       datadoghqv1alpha1.NewBool(true),
+						MaxRestarts:   datadoghqv1alpha1.NewInt32(3),
+						CanaryTimeout: &metav1.Duration{Duration: 65 * time.Second},
+					},
+				}
+				eds.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("gcr.io/google-containers/alpine-with-bash:1.0")
+				eds.Spec.Template.Spec.Containers[0].Command = []string{
+					"tail", "-f", "/dev/null",
+				}
+				eds.Spec.Template.Spec.Containers[0].Env = []corev1.EnvVar{
+					{
+						Name: "missing",
+						ValueFrom: &corev1.EnvVarSource{
+							ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "missing",
+								},
+								Key: "missing",
+							},
+						},
+					},
+				}
+			}
+
+			Eventually(updateEDS(k8sClient, key, updateFunc), timeout, interval).Should(
+				BeTrue(),
+				func() string { return "Unable to update the EDS" },
+			)
+
+			eds := &datadoghqv1alpha1.ExtendedDaemonSet{}
+			Expect(k8sClient.Get(ctx, key, eds)).Should(Succeed())
+
+			// Eventually(withEDS(key, eds, func() bool {
+			// 	return eds.Status.State == datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryPaused
+			// }), longTimeout, interval).Should(
+			// 	BeTrue(),
+			// 	func() string {
+			// 		return fmt.Sprintf(
+			// 			"EDS should be in [%s] state but is currently in [%s]",
+			// 			datadoghqv1alpha1.ExtendedDaemonSetStatusStateCanaryPaused,
+			// 			eds.Status.State,
+			// 		)
+			// 	},
+			// )
+			info("EDS status 1:\n%s\n", spew.Sdump(eds.Status))
+			Eventually(withEDS(key, eds, func() bool {
+				return eds.Status.Reason == "CreateContainerConfigError"
+			}), timeout, interval).Should(BeTrue(), func() string {
+				return fmt.Sprintf(
+					"EDS should be in [%s] state reason but is currently in [%s]",
+					"CreateContainerConfigError",
+					eds.Status.Reason,
+				)
+			})
+			info("EDS status 2:\n%s\n", spew.Sdump(eds.Status))
+
+			Eventually(withEDS(key, eds, func() bool {
+				return eds.Status.State == datadoghqv1alpha1.ExtendedDaemonSetStatusStateRunning
+			}), longTimeout, interval).Should(
+				BeTrue(),
+				func() string {
+					return fmt.Sprintf(
+						"EDS should be in [%s] state but is currently in [%s]",
+						datadoghqv1alpha1.ExtendedDaemonSetStatusStateRunning,
+						eds.Status.State,
+					)
+				},
+			)
+			info("EDS status 3:\n%s\n", spew.Sdump(eds.Status))
+
+			Eventually(withEDS(key, eds, func() bool {
+				if edsconditions.GetExtendedDaemonSetStatusCondition(&eds.Status, datadoghqv1alpha1.ConditionTypeEDSCanaryFailed) != nil {
+					return true
+				}
+				return false
+			}), longTimeout, interval).Should(
+				BeTrue(),
+				func() string {
+					return fmt.Sprintf(
+						"EDS canary failure should be present in the EDS.Status.Conditions: %v",
+						eds.Status.Conditions,
+					)
+				},
+			)
+		})
+	})
+})
+
 // var _ = Describe("ExtendedDaemonSet e2e Pod CreateContainerConfigError", func() {
 // 	var (
 // 		name string
