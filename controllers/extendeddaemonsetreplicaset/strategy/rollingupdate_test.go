@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -16,8 +18,6 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	"github.com/stretchr/testify/assert"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 )
@@ -319,7 +319,7 @@ func TestManageDeployment(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := ManageDeployment(client, tt.daemonset, tt.params, metaNow)
 			if !tt.wantErr {
-				assert.Nil(t, err, "ManageDeployment() error = %v", err)
+				require.NoError(t, err, "ManageDeployment() error = %v", err)
 			}
 			assert.Equal(t, tt.want, got)
 		})
@@ -502,7 +502,7 @@ func Test_getRollingUpdateStartTime(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := getRollingUpdateStartTime(tt.ersStatus, tt.time)
-			assert.Equal(t, got, tt.want)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

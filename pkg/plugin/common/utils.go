@@ -20,7 +20,7 @@ import (
 
 // IntToString converts int32 into string.
 func IntToString(i int32) string {
-	return fmt.Sprintf("%d", i)
+	return strconv.Itoa(int(i))
 }
 
 // GetDuration gets uptime duration of a resource.

@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/types"
@@ -124,7 +125,7 @@ func Test_addPodLabel(t *testing.T) {
 			Name:      pod.Name,
 		}
 		err := c.Get(context.TODO(), nNs, wantPod)
-		assert.Nilf(t, err, "error must be nil, err: %v", err)
+		require.NoErrorf(t, err, "error must be nil, err: %v", err)
 
 		if gotVal, ok := wantPod.Labels[key]; ok {
 			assert.Equal(t, val, gotVal)
@@ -198,7 +199,7 @@ func Test_deletePodLabel(t *testing.T) {
 			Name:      pod.Name,
 		}
 		err := c.Get(context.TODO(), nNs, wantPod)
-		assert.Nilf(t, err, "error must be nil, err: %v", err)
+		require.NoErrorf(t, err, "error must be nil, err: %v", err)
 		if _, ok := wantPod.Labels[key]; ok {
 			t.Fatalf("Label is present, pod: %#v", wantPod.Labels)
 		}
@@ -268,7 +269,7 @@ func Test_cleanupPods(t *testing.T) {
 	client := fake.NewClientBuilder().WithObjects(pod1).Build()
 
 	err := cleanupPods(client, logger, status, pods)
-	assert.Nilf(t, err, "error must be nil, err: %v", err)
+	require.NoErrorf(t, err, "error must be nil, err: %v", err)
 }
 
 func Test_manageUnscheduledPodNodes(t *testing.T) {
@@ -314,5 +315,5 @@ func Test_manageUnscheduledPodNodes(t *testing.T) {
 	}
 
 	nodes := manageUnscheduledPodNodes(pods)
-	assert.Equal(t, len(nodes), 1)
+	assert.Len(t, nodes, 1)
 }
