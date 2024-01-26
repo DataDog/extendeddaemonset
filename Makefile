@@ -92,13 +92,25 @@ generate: controller-gen generate-openapi
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 # Build the docker image
+# For use locally
 docker-build: generate docker-build-ci docker-build-check-ci
 
+# For use locally
 docker-build-ci:
 	docker build . -t ${IMG} --build-arg LDFLAGS="${LDFLAGS}" --build-arg GOARCH="${GOARCH}"
 
+# For use locally
 docker-build-check-ci:
 	docker build . -t ${IMG_CHECK} -f check-eds.Dockerfile --build-arg LDFLAGS="${LDFLAGS}" --build-arg GOARCH="${GOARCH}"
+
+
+# For use in Gitlab
+docker-build-push-ci:
+	docker buildx build . -t ${IMG} --build-arg LDFLAGS="${LDFLAGS}" --build-arg GOARCH="${GOARCH}" --push
+
+# For use in Gitlab
+docker-build-push-check-ci:
+	docker buildx build . -t ${IMG_CHECK} -f check-eds.Dockerfile --build-arg LDFLAGS="${LDFLAGS}" --build-arg GOARCH="${GOARCH}" --push
 
 # Push the docker images
 docker-push: docker-push-ci docker-push-check-ci
