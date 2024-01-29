@@ -113,12 +113,12 @@ docker-build-push-check-ci:
 	docker buildx build . -t ${IMG_CHECK} -f check-eds.Dockerfile --build-arg LDFLAGS="${LDFLAGS}" --build-arg GOARCH="${GOARCH}" --push
 
 # Push the docker images
-docker-push: docker-push-ci docker-push-check-ci
+docker-push: docker-push-img docker-push-check-img
 
-docker-push-ci:
+docker-push-img:
 	docker push ${IMG}
 
-docker-push-check-ci:
+docker-push-check-img:
 	docker push ${IMG_CHECK}
 
 # find or download controller-gen
