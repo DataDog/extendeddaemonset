@@ -106,11 +106,11 @@ docker-build-check-ci:
 
 # For use in Gitlab
 docker-build-push-ci:
-	docker buildx build . -t ${IMG} --build-arg LDFLAGS="${LDFLAGS}" --build-arg GOARCH="${GOARCH}" --push
+	docker buildx build . -t ${IMG} --build-arg LDFLAGS="${LDFLAGS}" --build-arg GOARCH="${GOARCH}" --platform=linux/${GOARCH} --push
 
 # For use in Gitlab
 docker-build-push-check-ci:
-	docker buildx build . -t ${IMG_CHECK} -f check-eds.Dockerfile --build-arg LDFLAGS="${LDFLAGS}" --build-arg GOARCH="${GOARCH}" --push
+	docker buildx build . -t ${IMG_CHECK} -f check-eds.Dockerfile --build-arg LDFLAGS="${LDFLAGS}" --build-arg GOARCH="${GOARCH}" --platform=linux/${GOARCH} --push
 
 # Push the docker images
 docker-push: docker-push-img docker-push-check-img
