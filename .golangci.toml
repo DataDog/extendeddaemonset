@@ -74,7 +74,12 @@
     "gocritic",
     "errchkjson",
     "gofumpt",
-    "golint"
+    "golint",
+    "deadcode",
+    "structcheck",
+    "varcheck",
+    "unparam",
+    "depguard"
   ]
 
 [issues]

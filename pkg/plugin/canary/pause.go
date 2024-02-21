@@ -8,6 +8,7 @@ package canary
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -187,7 +188,7 @@ func (o *pauseOptions) run() error {
 
 	patch := client.MergeFrom(eds)
 	if err = o.client.Patch(context.TODO(), newEds, patch); err != nil {
-		return fmt.Errorf("unable to %s ExtendedDaemonset deployment, err: %w", fmt.Sprintf("%v", o.pauseStatus), err)
+		return fmt.Errorf("unable to %s ExtendedDaemonset deployment, err: %w", strconv.FormatBool(o.pauseStatus), err)
 	}
 
 	fmt.Fprintf(o.Out, "ExtendedDaemonset '%s/%s' deployment paused set to %t\n", o.userNamespace, o.userExtendedDaemonSetName, o.pauseStatus)

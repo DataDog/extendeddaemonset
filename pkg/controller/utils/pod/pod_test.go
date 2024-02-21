@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -179,7 +180,7 @@ func TestGetNodeNameFromPod(t *testing.T) {
 	want := "node1"
 	got, err := GetNodeNameFromPod(pod)
 	assert.Equal(t, want, got)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	pod2 := ctrltest.NewPod("bar", "pod2", "", &ctrltest.NewPodOptions{
 		ContainerStatuses: []v1.ContainerStatus{
@@ -197,7 +198,7 @@ func TestGetNodeNameFromPod(t *testing.T) {
 	)
 	got, err = GetNodeNameFromPod(pod2)
 	assert.Equal(t, "", got)
-	assert.NotNil(t, err)
+	require.Error(t, err)
 }
 
 func TestIsPodReady(t *testing.T) {

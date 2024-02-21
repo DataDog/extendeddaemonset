@@ -57,7 +57,7 @@ func (h *storesHandler) serveKsmHTTP(w http.ResponseWriter, r *http.Request) {
 		for _, m := range metrics {
 			_, err = expfmt.MetricFamilyToText(w, m)
 			if err != nil {
-				log.Error(err, "Unable to write metrics", "metricFamily", *m.Name)
+				log.Error(err, "Unable to write metrics", "metricFamily", m.GetName())
 			}
 		}
 	} else {

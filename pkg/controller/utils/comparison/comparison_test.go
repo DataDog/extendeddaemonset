@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -80,7 +81,7 @@ func TestGenerateMD5PodTemplateSpec(t *testing.T) {
 	ds = datadoghqv1alpha1.DefaultExtendedDaemonSet(ds, datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto)
 	got, err := GenerateMD5PodTemplateSpec(&ds.Spec.Template)
 	assert.Equal(t, "a2bb34618483323482d9a56ae2515eed", got)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 }
 
 func TestComparePodTemplateSpecMD5Hash(t *testing.T) {
@@ -120,7 +121,7 @@ func TestSetMD5PodTemplateSpecAnnotation(t *testing.T) {
 	ds := &datadoghqv1alpha1.ExtendedDaemonSet{}
 	got, err := SetMD5PodTemplateSpecAnnotation(rs, ds)
 	assert.Equal(t, "a2bb34618483323482d9a56ae2515eed", got)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 }
 
 func Test_StringsContains(t *testing.T) {

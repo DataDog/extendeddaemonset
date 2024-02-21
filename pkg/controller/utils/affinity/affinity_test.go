@@ -133,12 +133,12 @@ func TestReplaceNodeNameNodeAffinity(t *testing.T) {
 func TestGetNodeNameFromAffinity(t *testing.T) {
 	// nil case
 	got := GetNodeNameFromAffinity(nil)
-	assert.Equal(t, got, "")
+	assert.Equal(t, "", got)
 
 	// empty case
 	affinity := &v1.Affinity{}
 	got = GetNodeNameFromAffinity(affinity)
-	assert.Equal(t, got, "")
+	assert.Equal(t, "", got)
 
 	// non-nil case
 	nodeName := "foo-node"
@@ -160,5 +160,5 @@ func TestGetNodeNameFromAffinity(t *testing.T) {
 		},
 	}
 	got = GetNodeNameFromAffinity(affinity)
-	assert.Equal(t, got, "foo-node")
+	assert.Equal(t, "foo-node", got)
 }
