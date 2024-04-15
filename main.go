@@ -210,12 +210,16 @@ func customSetupMetrics(mgr manager.Manager) {
 }
 
 func customSetupLogging(logLevel zapcore.Level, logEncoder string) error {
+	encoderConfig := zap.NewProductionEncoderConfig()
+	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
+	encoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
+
 	var encoder zapcore.Encoder
 	switch logEncoder {
 	case "console":
-		encoder = zapcore.NewConsoleEncoder(zap.NewProductionEncoderConfig())
+		encoder = zapcore.NewConsoleEncoder(encoderConfig)
 	case "json":
-		encoder = zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig())
+		encoder = zapcore.NewJSONEncoder(encoderConfig)
 	default:
 		return fmt.Errorf("unknow log encoder: %s", logEncoder)
 	}
