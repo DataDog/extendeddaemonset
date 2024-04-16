@@ -229,8 +229,7 @@ func customSetupLogging(logLevel zapcore.Level, logEncoder string) error {
 		ctrlzap.Level(logLevel),
 		ctrlzap.StacktraceLevel(zapcore.PanicLevel),
 		ctrlzap.WriteTo(os.Stdout),
-	),
-	)
+	))
 
 	return nil
 }
