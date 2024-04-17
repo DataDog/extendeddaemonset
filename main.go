@@ -23,6 +23,7 @@ import (
 	"k8s.io/client-go/discovery"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	klog "k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	ctrlzap "sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -46,6 +47,8 @@ var (
 )
 
 func init() {
+	klog.SetLogger(ctrl.Log.WithName("klog"))
+
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(datadoghqv1alpha1.AddToScheme(scheme))
@@ -207,12 +210,16 @@ func customSetupMetrics(mgr manager.Manager) {
 }
 
 func customSetupLogging(logLevel zapcore.Level, logEncoder string) error {
+	encoderConfig := zap.NewProductionEncoderConfig()
+	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
+	encoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
+
 	var encoder zapcore.Encoder
 	switch logEncoder {
 	case "console":
-		encoder = zapcore.NewConsoleEncoder(zap.NewProductionEncoderConfig())
+		encoder = zapcore.NewConsoleEncoder(encoderConfig)
 	case "json":
-		encoder = zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig())
+		encoder = zapcore.NewJSONEncoder(encoderConfig)
 	default:
 		return fmt.Errorf("unknow log encoder: %s", logEncoder)
 	}
@@ -220,8 +227,9 @@ func customSetupLogging(logLevel zapcore.Level, logEncoder string) error {
 	ctrl.SetLogger(ctrlzap.New(
 		ctrlzap.Encoder(encoder),
 		ctrlzap.Level(logLevel),
-		ctrlzap.StacktraceLevel(zapcore.PanicLevel)),
-	)
+		ctrlzap.StacktraceLevel(zapcore.PanicLevel),
+		ctrlzap.WriteTo(os.Stdout),
+	))
 
 	return nil
 }
