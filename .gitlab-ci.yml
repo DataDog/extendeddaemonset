@@ -180,7 +180,7 @@ trigger_internal_eds_image:
     - build_eds_image_amd64
   trigger:
     project: DataDog/images
-    branch: levan-m/use-GBI-for-EDS
+    branch: master
     strategy: depend
   variables:
     IMAGE_VERSION: tmpl-v3
