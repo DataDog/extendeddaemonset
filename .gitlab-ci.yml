@@ -180,10 +180,10 @@ trigger_internal_eds_image:
     - build_eds_image_amd64
   trigger:
     project: DataDog/images
-    branch: master
+    branch: levan-m/use-GBI-for-EDS
     strategy: depend
   variables:
-    IMAGE_VERSION: tmpl-v2
+    IMAGE_VERSION: tmpl-v3
     IMAGE_NAME: $PROJECTNAME
     RELEASE_TAG: ${CI_COMMIT_REF_SLUG}
     BUILD_TAG: ${CI_COMMIT_REF_SLUG}
