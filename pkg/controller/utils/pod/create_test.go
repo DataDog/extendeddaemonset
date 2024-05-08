@@ -15,6 +15,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	datadoghqv1alpha1test "github.com/DataDog/extendeddaemonset/api/v1alpha1/test"
@@ -142,19 +143,29 @@ func Test_overwriteResourcesFromEdsNode(t *testing.T) {
 			},
 		},
 	}
+
 	templateCopy := templateOriginal.DeepCopy()
 
 	// nil case, no change to template
-	edsNode := &datadoghqv1alpha1.ExtendedDaemonsetSetting{}
+	edsSettingName := "bar"
+	edsSettingNamespace := "foo"
+	edsNode := &datadoghqv1alpha1.ExtendedDaemonsetSetting{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      edsSettingName,
+			Namespace: edsSettingNamespace,
+		},
+	}
 	overwriteResourcesFromEdsNode(templateOriginal, edsNode)
-	assert.Equal(t, templateCopy, templateOriginal)
+	assert.Equal(t, templateCopy.Spec, templateOriginal.Spec)
+	assert.Equal(t, templateOriginal.GetLabels()[datadoghqv1alpha1.ExtendedDaemonSetSettingNameLabelKey], edsSettingName)
+	assert.Equal(t, templateOriginal.GetLabels()[datadoghqv1alpha1.ExtendedDaemonSetSettingNamespaceLabelKey], edsSettingNamespace)
 
 	// template changed
 	resourcesRef := corev1.ResourceList{
 		"cpu":    resource.MustParse("0.1"),
 		"memory": resource.MustParse("20M"),
 	}
-	edsNode = datadoghqv1alpha1test.NewExtendedDaemonsetSetting("foo", "bar", "reference", &datadoghqv1alpha1test.NewExtendedDaemonsetSettingOptions{
+	edsNode = datadoghqv1alpha1test.NewExtendedDaemonsetSetting(edsSettingNamespace, edsSettingName, "reference", &datadoghqv1alpha1test.NewExtendedDaemonsetSettingOptions{
 		CreationTime: time.Now(),
 		Resources: map[string]corev1.ResourceRequirements{
 			"container1": {
