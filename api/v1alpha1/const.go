@@ -10,6 +10,10 @@ const (
 	ExtendedDaemonSetNameLabelKey = "extendeddaemonset.datadoghq.com/name"
 	// ExtendedDaemonSetReplicaSetNameLabelKey label key use to link a Pod to a ExtendedDaemonSetReplicaSet.
 	ExtendedDaemonSetReplicaSetNameLabelKey = "extendeddaemonsetreplicaset.datadoghq.com/name"
+	// ExtendedDaemonSetSettingNameLabelKey label key use to link a Pod to a ExtendedDaemonSetSetting name.
+	ExtendedDaemonSetSettingNameLabelKey = "extendeddaemonsetsetting.datadoghq.com/name"
+	// ExtendedDaemonSetSettingNamespaceLabelKey label key use to link a Pod to a ExtendedDaemonSetSetting namespace.
+	ExtendedDaemonSetSettingNamespaceLabelKey = "extendeddaemonsetsetting.datadoghq.com/namespace"
 	// ExtendedDaemonSetReplicaSetCanaryLabelKey label key used to identify canary Pods.
 	ExtendedDaemonSetReplicaSetCanaryLabelKey = "extendeddaemonsetreplicaset.datadoghq.com/canary"
 	// ExtendedDaemonSetReplicaSetCanaryLabelValue label value used to identify canary Pods.

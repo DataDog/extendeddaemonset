@@ -85,6 +85,12 @@ func overwriteResourcesFromEdsNode(template *corev1.PodTemplateSpec, edsNode *da
 			}
 		}
 	}
+	// Add ExtendedDaemonsetSetting name and namespace as label on the pod to be able to filter on it
+	if template.Labels == nil {
+		template.Labels = map[string]string{}
+	}
+	template.Labels[datadoghqv1alpha1.ExtendedDaemonSetSettingNameLabelKey] = edsNode.GetName()
+	template.Labels[datadoghqv1alpha1.ExtendedDaemonSetSettingNamespaceLabelKey] = edsNode.GetNamespace()
 }
 
 func overwriteResourcesFromNode(template *corev1.PodTemplateSpec, edsNamespace, edsName string, node *corev1.Node) error {
