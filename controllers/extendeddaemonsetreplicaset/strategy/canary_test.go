@@ -990,7 +990,7 @@ func Test_ensureCanaryPodLabels(t *testing.T) {
 	}
 
 	// Test case 1, pod exists
-	client := fake.NewClientBuilder().WithObjects(pod1).Build()
+	client := fake.NewClientBuilder().WithStatusSubresource(&v1.Pod{}).WithObjects(pod1).Build()
 	t.Run("Pod exists", func(t *testing.T) {
 		err := ensureCanaryPodLabels(client, &params)
 		if err != nil {
