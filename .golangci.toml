@@ -30,6 +30,7 @@
 [linters]
   enable-all = true
   disable = [
+    "goimports",
     "exhaustruct",
     "nosnakecase",
     "logrlint",
