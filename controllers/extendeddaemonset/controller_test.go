@@ -146,7 +146,7 @@ func TestReconciler_selectNodes(t *testing.T) {
 			name: "enough nodes",
 			fields: fields{
 				scheme: s,
-				client: fake.NewClientBuilder().WithStatusSubresource(node1, node2, node3).WithObjects(node1, node2, node3).Build(),
+				client: fake.NewClientBuilder().WithStatusSubresource(&corev1.Node{}).WithObjects(node1, node2, node3).Build(),
 			},
 			args: args{
 				spec:       &extendeddaemonset1.Spec,
@@ -1064,7 +1064,6 @@ func TestReconciler_Reconcile(t *testing.T) {
 		{
 			name: "ExtendedDaemonset found and defaulted, replicaset already exist",
 			fields: fields{
-				// https://github.com/kubernetes-sigs/controller-runtime/issues/2362#issuecomment-1837270195
 				client:   fake.NewClientBuilder().WithStatusSubresource(&datadoghqv1alpha1.ExtendedDaemonSet{}, &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{}).Build(),
 				scheme:   s,
 				recorder: recorder,

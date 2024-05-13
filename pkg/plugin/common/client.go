@@ -24,8 +24,6 @@ func NewClient(clientConfig clientcmd.ClientConfig) (client.Client, error) {
 		return nil, fmt.Errorf("unable to get rest client config, err: %w", err)
 	}
 
-	// earlier version of the refactor
-	// https://github.com/kubernetes-sigs/controller-runtime/pull/2122/files#diff-964e351ee2375d359c78d69e514c4edc42577219761c4475f391ed2daf715e51R427
 	httpClient, err := rest.HTTPClientFor(restConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create http client from rest config, err: %w", err)

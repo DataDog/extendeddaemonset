@@ -53,13 +53,10 @@ func ManagerOptionsWithNamespaces(logger logr.Logger, opt ctrl.Options) ctrl.Opt
 		logger.Info("Manager will watch and manage resources in all namespaces")
 	case len(namespaces) == 1:
 		logger.Info("Manager will be watching namespace", namespaces[0])
-		// https://github.com/kubernetes-sigs/controller-runtime/pull/2166/files#diff-f374f26749771b770d3434984ca95aa55491cc4d7d386890fab7262c165d1d4a
-		// cache.Options.Namespace has been removed in favor of cache.Options.Namespaces, a slice.
 		opt.Cache.Namespaces = []string{namespaces[0]}
 	case len(namespaces) > 1:
 		// configure cluster-scoped with MultiNamespacedCacheBuilder
 		logger.Info("Manager will be watching multiple namespaces", namespaces)
-		// https://github.com/kubernetes-sigs/controller-runtime/pull/2157/files#diff-f374f26749771b770d3434984ca95aa55491cc4d7d386890fab7262c165d1d4aL61-R66
 		opt.NewCache = func(config *rest.Config, opts cache.Options) (cache.Cache, error) {
 			opts.Namespaces = namespaces
 			return cache.New(config, opts)
