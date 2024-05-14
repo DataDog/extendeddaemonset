@@ -149,7 +149,7 @@ func (o *Options) Validate() error {
 func (o *Options) Run() error {
 	o.printOutf("start checking deployment state")
 
-	checkUpgradeDown := func() (bool, error) {
+	checkUpgradeDown := func(ctx context.Context) (bool, error) {
 		eds := &v1alpha1.ExtendedDaemonSet{}
 		err := o.client.Get(context.TODO(), client.ObjectKey{Namespace: o.userNamespace, Name: o.userExtendedDaemonSetName}, eds)
 		if err != nil && errors.IsNotFound(err) {
@@ -201,7 +201,7 @@ func (o *Options) Run() error {
 		return false, nil
 	}
 
-	return wait.Poll(o.checkPeriod, o.checkTimeout, checkUpgradeDown)
+	return wait.PollUntilContextTimeout(context.TODO(), o.checkPeriod, o.checkTimeout, false, checkUpgradeDown)
 }
 
 func (o *Options) printOutf(format string, a ...interface{}) {
