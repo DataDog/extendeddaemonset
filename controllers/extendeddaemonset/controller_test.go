@@ -114,7 +114,7 @@ func TestReconciler_selectNodes(t *testing.T) {
 			name: "enough nodes",
 			fields: fields{
 				scheme: s,
-				client: fake.NewClientBuilder().WithObjects(node1, node2, node3).Build(),
+				client: fake.NewClientBuilder().WithStatusSubresource(&corev1.Node{}).WithObjects(node1, node2, node3).Build(),
 			},
 			args: args{
 				spec:       &extendeddaemonset1.Spec,
@@ -130,7 +130,7 @@ func TestReconciler_selectNodes(t *testing.T) {
 			name: "missing nodes",
 			fields: fields{
 				scheme: s,
-				client: fake.NewClientBuilder().WithObjects(node1, node2).Build(),
+				client: fake.NewClientBuilder().WithStatusSubresource(&corev1.Node{}).WithObjects(node1, node2).Build(),
 			},
 			args: args{
 				spec:       &extendeddaemonset1.Spec,
@@ -146,7 +146,7 @@ func TestReconciler_selectNodes(t *testing.T) {
 			name: "enough nodes",
 			fields: fields{
 				scheme: s,
-				client: fake.NewClientBuilder().WithObjects(node1, node2, node3).Build(),
+				client: fake.NewClientBuilder().WithStatusSubresource(&corev1.Node{}).WithObjects(node1, node2, node3).Build(),
 			},
 			args: args{
 				spec:       &extendeddaemonset1.Spec,
@@ -162,7 +162,7 @@ func TestReconciler_selectNodes(t *testing.T) {
 			name: "dedicated canary nodes",
 			fields: fields{
 				scheme: s,
-				client: fake.NewClientBuilder().WithObjects(node1, node2, node3).Build(),
+				client: fake.NewClientBuilder().WithStatusSubresource(&corev1.Node{}).WithObjects(node1, node2, node3).Build(),
 			},
 			args: args{
 				spec:       &extendeddaemonset2.Spec,
@@ -477,7 +477,7 @@ func TestReconciler_cleanupReplicaSet(t *testing.T) {
 		{
 			name: "on RS to delete",
 			fields: fields{
-				client: fake.NewClientBuilder().WithObjects(replicassetOld, replicassetUpToDate, replicassetCurrent).Build(),
+				client: fake.NewClientBuilder().WithStatusSubresource(&corev1.Node{}).WithObjects(replicassetOld, replicassetUpToDate, replicassetCurrent).Build(),
 				scheme: s,
 			},
 			args: args{
@@ -783,7 +783,7 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 			now:  now,
 			name: "no replicaset == no update",
 			fields: fields{
-				client: fake.NewClientBuilder().WithObjects(daemonset).Build(),
+				client: fake.NewClientBuilder().WithStatusSubresource(&datadoghqv1alpha1.ExtendedDaemonSet{}).WithObjects(daemonset).Build(),
 				scheme: s,
 			},
 			args: args{
@@ -800,7 +800,8 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 			now:  now,
 			name: "current == upToDate; status empty => update",
 			fields: fields{
-				client: fake.NewClientBuilder().WithObjects(daemonset, replicassetCurrent, replicassetUpToDate).Build(),
+				client: fake.NewClientBuilder().WithStatusSubresource(&datadoghqv1alpha1.ExtendedDaemonSet{}, &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{}).
+					WithObjects(daemonset, replicassetCurrent, replicassetUpToDate).Build(),
 				scheme: s,
 			},
 			args: args{
@@ -822,7 +823,8 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 			now:  now,
 			name: "current != upToDate; canary active => update",
 			fields: fields{
-				client: fake.NewClientBuilder().WithObjects(daemonset, replicassetCurrent, replicassetUpToDate).Build(),
+				client: fake.NewClientBuilder().WithStatusSubresource(&datadoghqv1alpha1.ExtendedDaemonSet{}, &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{}).
+					WithObjects(daemonset, replicassetCurrent, replicassetUpToDate).Build(),
 				scheme: s,
 			},
 			args: args{
@@ -844,7 +846,8 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 			now:  now,
 			name: "current != upToDate; canary paused => update",
 			fields: fields{
-				client: fake.NewClientBuilder().WithObjects(daemonset, replicassetCurrent, replicassetUpToDate).Build(),
+				client: fake.NewClientBuilder().WithStatusSubresource(&datadoghqv1alpha1.ExtendedDaemonSet{}, &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{}).
+					WithObjects(daemonset, replicassetCurrent, replicassetUpToDate).Build(),
 				scheme: s,
 			},
 			args: args{
@@ -866,7 +869,8 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 			now:  now,
 			name: "current != upToDate; ers-condition-pause, canary paused => update",
 			fields: fields{
-				client: fake.NewClientBuilder().WithObjects(daemonset, replicassetCurrent, replicassetUpToDate).Build(),
+				client: fake.NewClientBuilder().WithStatusSubresource(&datadoghqv1alpha1.ExtendedDaemonSet{}, &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{}).
+					WithObjects(daemonset, replicassetCurrent, replicassetUpToDate).Build(),
 				scheme: s,
 			},
 			args: args{
@@ -888,7 +892,8 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 			now:  now,
 			name: "canary failed, ers-condition-failed => update",
 			fields: fields{
-				client: fake.NewClientBuilder().WithObjects(daemonsetWithCanaryFailedOldStatus, replicassetCurrent, replicassetUpToDate).Build(),
+				client: fake.NewClientBuilder().WithStatusSubresource(&datadoghqv1alpha1.ExtendedDaemonSet{}, &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{}).
+					WithObjects(daemonsetWithCanaryFailedOldStatus, replicassetCurrent, replicassetUpToDate).Build(),
 				scheme: s,
 			},
 			args: args{
@@ -910,7 +915,7 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 			now:  now,
 			name: "\"available\" correct when current == upToDate",
 			fields: fields{
-				client: fake.NewClientBuilder().WithObjects(daemonset, replicassetCurrent, replicassetUpToDate).Build(),
+				client: fake.NewClientBuilder().WithStatusSubresource(&datadoghqv1alpha1.ExtendedDaemonSet{}, &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{}).WithObjects(daemonset, replicassetCurrent, replicassetUpToDate).Build(),
 				scheme: s,
 			},
 			args: args{
@@ -945,6 +950,18 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 				t.Errorf("ReconcileExtendedDaemonSet.updateInstanceWithCurrentRS() error = %v, wantErr %v", err, tt.wantErr)
 
 				return
+			}
+
+			if len(tt.want.Status.Conditions) > 0 {
+				// https://github.com/kubernetes-sigs/controller-runtime/blob/735b6073bb253c0449bfcf6641855dcf2118bb15/pkg/client/fake/client.go#L1037-L1053
+				// Some of time.Time info is lost here due to marshaling to json and unmarshaling.
+				for i := range tt.want.Status.Conditions {
+					assert.Equal(t, tt.want.Status.Conditions[i].LastTransitionTime.Truncate(time.Second), got.Status.Conditions[i].LastTransitionTime.Truncate(time.Second))
+					assert.Equal(t, tt.want.Status.Conditions[i].LastUpdateTime.Truncate(time.Second), got.Status.Conditions[i].LastUpdateTime.Truncate(time.Second))
+
+					got.Status.Conditions[i].LastTransitionTime = tt.want.Status.Conditions[i].LastTransitionTime
+					got.Status.Conditions[i].LastUpdateTime = tt.want.Status.Conditions[i].LastUpdateTime
+				}
 			}
 			assert.Equal(t, tt.want, got, "ReconcileExtendedDaemonSet.updateInstanceWithCurrentRS()")
 			assert.Equal(t, tt.wantResult, got1, "ReconcileExtendedDaemonSet.updateInstanceWithCurrentRS().result")
@@ -1047,7 +1064,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 		{
 			name: "ExtendedDaemonset found and defaulted, replicaset already exist",
 			fields: fields{
-				client:   fake.NewClientBuilder().Build(),
+				client:   fake.NewClientBuilder().WithStatusSubresource(&datadoghqv1alpha1.ExtendedDaemonSet{}, &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{}).Build(),
 				scheme:   s,
 				recorder: recorder,
 			},

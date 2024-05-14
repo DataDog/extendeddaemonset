@@ -14,7 +14,6 @@ import (
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonset"
@@ -54,6 +53,6 @@ func (r *ExtendedDaemonSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&datadoghqv1alpha1.ExtendedDaemonSet{}).
 		Owns(&datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{}).
-		Watches(&source.Kind{Type: &corev1.Pod{}}, &enqueue.RequestForExtendedDaemonSetLabel{}).
+		Watches(&corev1.Pod{}, &enqueue.RequestForExtendedDaemonSetLabel{}).
 		Complete(r)
 }

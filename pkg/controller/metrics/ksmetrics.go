@@ -8,6 +8,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	ksmetric "k8s.io/kube-state-metrics/pkg/metric"
 	metricsstore "k8s.io/kube-state-metrics/pkg/metrics_store"
@@ -26,7 +27,12 @@ func AddMetrics(gvk schema.GroupVersionKind, mgr manager.Manager, h Handler, met
 	serializerCodec := serializer.NewCodecFactory(mgr.GetScheme())
 	paramCodec := runtime.NewParameterCodec(mgr.GetScheme())
 
-	restClient, err := apiutil.RESTClientForGVK(gvk, false, mgr.GetConfig(), serializerCodec)
+	httpClient, err := rest.HTTPClientFor(mgr.GetConfig())
+	if err != nil {
+		return err
+	}
+
+	restClient, err := apiutil.RESTClientForGVK(gvk, false, mgr.GetConfig(), serializerCodec, httpClient)
 	if err != nil {
 		return err
 	}
