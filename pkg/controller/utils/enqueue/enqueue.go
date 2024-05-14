@@ -27,23 +27,23 @@ var _ handler.EventHandler = &RequestForExtendedDaemonSetLabel{}
 type RequestForExtendedDaemonSetLabel struct{}
 
 // Create implements EventHandler.
-func (e *RequestForExtendedDaemonSetLabel) Create(evt event.CreateEvent, q workqueue.RateLimitingInterface) {
+func (e *RequestForExtendedDaemonSetLabel) Create(ctx context.Context, evt event.CreateEvent, q workqueue.RateLimitingInterface) {
 	e.add(evt.Object, q)
 }
 
 // Update implements EventHandler.
-func (e *RequestForExtendedDaemonSetLabel) Update(evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
+func (e *RequestForExtendedDaemonSetLabel) Update(ctx context.Context, evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
 	e.add(evt.ObjectOld, q)
 	e.add(evt.ObjectNew, q)
 }
 
 // Delete implements EventHandler.
-func (e *RequestForExtendedDaemonSetLabel) Delete(evt event.DeleteEvent, q workqueue.RateLimitingInterface) {
+func (e *RequestForExtendedDaemonSetLabel) Delete(ctx context.Context, evt event.DeleteEvent, q workqueue.RateLimitingInterface) {
 	e.add(evt.Object, q)
 }
 
 // Generic implements EventHandler.
-func (e *RequestForExtendedDaemonSetLabel) Generic(evt event.GenericEvent, q workqueue.RateLimitingInterface) {
+func (e *RequestForExtendedDaemonSetLabel) Generic(ctx context.Context, evt event.GenericEvent, q workqueue.RateLimitingInterface) {
 	e.add(evt.Object, q)
 }
 
@@ -105,23 +105,23 @@ var _ handler.EventHandler = &RequestForExtendedDaemonSetStatus{}
 type RequestForExtendedDaemonSetStatus struct{}
 
 // Create implements EventHandler.
-func (e *RequestForExtendedDaemonSetStatus) Create(evt event.CreateEvent, q workqueue.RateLimitingInterface) {
+func (e *RequestForExtendedDaemonSetStatus) Create(ctx context.Context, evt event.CreateEvent, q workqueue.RateLimitingInterface) {
 	e.add(evt.Object, q)
 }
 
 // Update implements EventHandler.
-func (e *RequestForExtendedDaemonSetStatus) Update(evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
+func (e *RequestForExtendedDaemonSetStatus) Update(ctx context.Context, evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
 	e.add(evt.ObjectOld, q)
 	e.add(evt.ObjectNew, q)
 }
 
 // Delete implements EventHandler.
-func (e *RequestForExtendedDaemonSetStatus) Delete(evt event.DeleteEvent, q workqueue.RateLimitingInterface) {
+func (e *RequestForExtendedDaemonSetStatus) Delete(ctx context.Context, evt event.DeleteEvent, q workqueue.RateLimitingInterface) {
 	e.add(evt.Object, q)
 }
 
 // Generic implements EventHandler.
-func (e *RequestForExtendedDaemonSetStatus) Generic(evt event.GenericEvent, q workqueue.RateLimitingInterface) {
+func (e *RequestForExtendedDaemonSetStatus) Generic(ctx context.Context, evt event.GenericEvent, q workqueue.RateLimitingInterface) {
 	e.add(evt.Object, q)
 }
 
@@ -158,22 +158,22 @@ type RequestForAllReplicaSetFromNodeEvent struct {
 }
 
 // Create implements EventHandler.
-func (e *RequestForAllReplicaSetFromNodeEvent) Create(evt event.CreateEvent, q workqueue.RateLimitingInterface) {
+func (e *RequestForAllReplicaSetFromNodeEvent) Create(ctx context.Context, evt event.CreateEvent, q workqueue.RateLimitingInterface) {
 	e.add(q)
 }
 
 // Update implements EventHandler.
-func (e *RequestForAllReplicaSetFromNodeEvent) Update(evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
+func (e *RequestForAllReplicaSetFromNodeEvent) Update(ctx context.Context, evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
 	// e.add(q)
 }
 
 // Delete implements EventHandler.
-func (e *RequestForAllReplicaSetFromNodeEvent) Delete(evt event.DeleteEvent, q workqueue.RateLimitingInterface) {
+func (e *RequestForAllReplicaSetFromNodeEvent) Delete(ctx context.Context, evt event.DeleteEvent, q workqueue.RateLimitingInterface) {
 	e.add(q)
 }
 
 // Generic implements EventHandler.
-func (e *RequestForAllReplicaSetFromNodeEvent) Generic(evt event.GenericEvent, q workqueue.RateLimitingInterface) {
+func (e *RequestForAllReplicaSetFromNodeEvent) Generic(ctx context.Context, evt event.GenericEvent, q workqueue.RateLimitingInterface) {
 	// e.add(q)
 }
 

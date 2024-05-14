@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/go-logr/logr"
+	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 )
@@ -52,12 +53,14 @@ func ManagerOptionsWithNamespaces(logger logr.Logger, opt ctrl.Options) ctrl.Opt
 		logger.Info("Manager will watch and manage resources in all namespaces")
 	case len(namespaces) == 1:
 		logger.Info("Manager will be watching namespace", namespaces[0])
-		opt.Namespace = namespaces[0]
+		opt.Cache.Namespaces = []string{namespaces[0]}
 	case len(namespaces) > 1:
 		// configure cluster-scoped with MultiNamespacedCacheBuilder
 		logger.Info("Manager will be watching multiple namespaces", namespaces)
-		opt.Namespace = ""
-		opt.NewCache = cache.MultiNamespacedCacheBuilder(namespaces)
+		opt.NewCache = func(config *rest.Config, opts cache.Options) (cache.Cache, error) {
+			opts.Namespaces = namespaces
+			return cache.New(config, opts)
+		}
 	}
 
 	return opt

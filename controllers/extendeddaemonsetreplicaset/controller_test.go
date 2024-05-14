@@ -122,7 +122,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_Reconcile(t *testing.T) {
 		{
 			name: "ReplicaSet, Daemonset exists but not defaulted => should requeue in 1sec",
 			fields: fields{
-				client:   fake.NewClientBuilder().WithObjects(daemonset, replicaset).Build(),
+				client:   fake.NewClientBuilder().WithStatusSubresource(&datadoghqv1alpha1.ExtendedDaemonSet{}, &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{}).WithObjects(daemonset, replicaset).Build(),
 				scheme:   s,
 				recorder: recorder,
 			},
@@ -135,7 +135,8 @@ func TestReconcileExtendedDaemonSetReplicaSet_Reconcile(t *testing.T) {
 		{
 			name: "ReplicaSet, Daemonset exists, defaulted but without a status => should requeue in 1sec",
 			fields: fields{
-				client:   fake.NewClientBuilder().WithObjects(datadoghqv1alpha1.DefaultExtendedDaemonSet(daemonset, datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto), replicaset).Build(),
+				client: fake.NewClientBuilder().WithStatusSubresource(&datadoghqv1alpha1.ExtendedDaemonSet{}, &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{}).
+					WithObjects(datadoghqv1alpha1.DefaultExtendedDaemonSet(daemonset, datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto), replicaset).Build(),
 				scheme:   s,
 				recorder: recorder,
 			},
@@ -148,7 +149,8 @@ func TestReconcileExtendedDaemonSetReplicaSet_Reconcile(t *testing.T) {
 		{
 			name: "ReplicaSet, Daemonset exists, defaulted and with a status",
 			fields: fields{
-				client:   fake.NewClientBuilder().WithObjects(datadoghqv1alpha1.DefaultExtendedDaemonSet(daemonsetWithStatus, datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto), replicaset).Build(),
+				client: fake.NewClientBuilder().WithStatusSubresource(&datadoghqv1alpha1.ExtendedDaemonSet{}, &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{}).
+					WithObjects(datadoghqv1alpha1.DefaultExtendedDaemonSet(daemonsetWithStatus, datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto), replicaset).Build(),
 				scheme:   s,
 				recorder: recorder,
 			},
@@ -340,7 +342,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_getPodList(t *testing.T) {
 		{
 			name: "two pods",
 			fields: fields{
-				client: fake.NewClientBuilder().WithObjects(pod1, pod2).Build(),
+				client: fake.NewClientBuilder().WithStatusSubresource(&corev1.Pod{}).WithObjects(pod1, pod2).Build(),
 				scheme: s,
 			},
 			args: args{
@@ -417,7 +419,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_getNodeList(t *testing.T) {
 		{
 			name: "no nodes",
 			fields: fields{
-				client: fake.NewClientBuilder().WithObjects(node1, node2).Build(),
+				client: fake.NewClientBuilder().WithStatusSubresource(&corev1.Node{}).WithObjects(node1, node2).Build(),
 				scheme: s,
 			},
 			args: args{
@@ -511,7 +513,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_getDaemonsetOwner(t *testing.T) {
 		{
 			name: "with owner define, but not exist, return errror",
 			fields: fields{
-				client: fake.NewClientBuilder().WithObjects(daemonset).Build(),
+				client: fake.NewClientBuilder().WithStatusSubresource(&datadoghqv1alpha1.ExtendedDaemonSet{}).WithObjects(daemonset).Build(),
 				scheme: s,
 			},
 			args: args{
@@ -586,7 +588,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_updateReplicaSet(t *testing.T) {
 		{
 			name: "new status, update should work",
 			fields: fields{
-				client: fake.NewClientBuilder().WithObjects(replicasset).Build(),
+				client: fake.NewClientBuilder().WithStatusSubresource(&datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{}).WithObjects(replicasset).Build(),
 				scheme: s,
 			},
 			args: args{
