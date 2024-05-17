@@ -27,6 +27,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	ctrlzap "sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	"github.com/DataDog/extendeddaemonset/controllers"
@@ -34,6 +35,7 @@ import (
 	"github.com/DataDog/extendeddaemonset/pkg/controller/debug"
 	"github.com/DataDog/extendeddaemonset/pkg/controller/metrics"
 	"github.com/DataDog/extendeddaemonset/pkg/version"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -112,10 +114,13 @@ func main() {
 	restConfig := ctrl.GetConfigOrDie()
 	restConfig.UserAgent = "eds-controller"
 	mgr, err := ctrl.NewManager(restConfig, config.ManagerOptionsWithNamespaces(setupLog, ctrl.Options{
-		Scheme:                     scheme,
-		MetricsBindAddress:         metricsAddr,
+		Scheme: scheme,
+		Metrics: metricsserver.Options{
+			BindAddress:   metricsAddr,
+			ExtraHandlers: debug.GetExtraMetricHandlers(),
+		},
 		HealthProbeBindAddress:     ":8081",
-		Port:                       9443,
+		WebhookServer:              webhook.NewServer(webhook.Options{Port: 9443}),
 		LeaderElection:             enableLeaderElection,
 		LeaderElectionID:           "extendeddaemonset-lock",
 		LeaderElectionResourceLock: leaderElectionResourceLock,
@@ -131,7 +136,6 @@ func main() {
 	customSetupMetrics(mgr)
 	customSetupEnvironment(mgr)
 	customSetupHealthChecks(mgr)
-	customSetupEndpoints(pprofActive, mgr)
 
 	// Read conf (env + CLI flags)
 	nodeAffinityMatchSupport := os.Getenv(config.NodeAffinityMatchSupportEnvVar) == "1"
@@ -244,17 +248,5 @@ func customSetupHealthChecks(mgr manager.Manager) {
 	})
 	if err != nil {
 		setupLog.Error(err, "Unable to start ")
-	}
-}
-
-func customSetupEndpoints(pprofActive bool, mgr manager.Manager) {
-	if pprofActive {
-		if err := debug.RegisterEndpoint(mgr.AddMetricsExtraHandler, nil); err != nil {
-			setupLog.Error(err, "Unable to register pprof endpoint")
-		}
-	}
-
-	if err := metrics.RegisterEndpoint(mgr, mgr.AddMetricsExtraHandler); err != nil {
-		setupLog.Error(err, "Unable to register custom metrics endpoints")
 	}
 }

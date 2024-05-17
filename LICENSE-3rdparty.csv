@@ -29,11 +29,11 @@ core,"github.com/golang/protobuf/ptypes/any",NewBSD
 core,"github.com/golang/protobuf/ptypes/duration",NewBSD
 core,"github.com/golang/protobuf/ptypes/timestamp",NewBSD
 core,"github.com/google/btree",Apache-2.0
-core,"github.com/google/gnostic/compiler",Apache-2.0
-core,"github.com/google/gnostic/extensions",Apache-2.0
-core,"github.com/google/gnostic/jsonschema",Apache-2.0
-core,"github.com/google/gnostic/openapiv2",Apache-2.0
-core,"github.com/google/gnostic/openapiv3",Apache-2.0
+core,"github.com/google/gnostic-models/compiler",Apache-2.0
+core,"github.com/google/gnostic-models/extensions",Apache-2.0
+core,"github.com/google/gnostic-models/jsonschema",Apache-2.0
+core,"github.com/google/gnostic-models/openapiv2",Apache-2.0
+core,"github.com/google/gnostic-models/openapiv3",Apache-2.0
 core,"github.com/google/go-cmp/cmp",NewBSD
 core,"github.com/google/go-cmp/cmp/internal/diff",NewBSD
 core,"github.com/google/go-cmp/cmp/internal/flags",NewBSD
@@ -124,7 +124,6 @@ core,"go.starlark.net/resolve",NewBSD
 core,"go.starlark.net/starlark",NewBSD
 core,"go.starlark.net/starlarkstruct",NewBSD
 core,"go.starlark.net/syntax",NewBSD
-core,"go.uber.org/atomic",MIT
 core,"go.uber.org/multierr",MIT
 core,"go.uber.org/zap",MIT
 core,"go.uber.org/zap/buffer",MIT
@@ -132,7 +131,9 @@ core,"go.uber.org/zap/internal",MIT
 core,"go.uber.org/zap/internal/bufferpool",MIT
 core,"go.uber.org/zap/internal/color",MIT
 core,"go.uber.org/zap/internal/exit",MIT
+core,"go.uber.org/zap/internal/pool",MIT
 core,"go.uber.org/zap/zapcore",MIT
+core,"golang.org/x/exp/maps",NewBSD
 core,"golang.org/x/mod/internal/lazyregexp",NewBSD
 core,"golang.org/x/mod/module",NewBSD
 core,"golang.org/x/mod/semver",NewBSD
@@ -146,7 +147,7 @@ core,"golang.org/x/net/http2/hpack",NewBSD
 core,"golang.org/x/net/idna",NewBSD
 core,"golang.org/x/oauth2",NewBSD
 core,"golang.org/x/oauth2/internal",NewBSD
-core,"golang.org/x/sys/execabs",NewBSD
+core,"golang.org/x/sync/errgroup",NewBSD
 core,"golang.org/x/sys/plan9",NewBSD
 core,"golang.org/x/sys/unix",NewBSD
 core,"golang.org/x/sys/windows",NewBSD
@@ -178,11 +179,10 @@ core,"golang.org/x/tools/internal/event",NewBSD
 core,"golang.org/x/tools/internal/event/core",NewBSD
 core,"golang.org/x/tools/internal/event/keys",NewBSD
 core,"golang.org/x/tools/internal/event/label",NewBSD
-core,"golang.org/x/tools/internal/fastwalk",NewBSD
+core,"golang.org/x/tools/internal/event/tag",NewBSD
 core,"golang.org/x/tools/internal/gocommand",NewBSD
 core,"golang.org/x/tools/internal/gopathwalk",NewBSD
 core,"golang.org/x/tools/internal/imports",NewBSD
-core,"golang.org/x/tools/internal/typeparams",NewBSD
 core,"gomodules.xyz/jsonpatch/v2",Apache-2.0
 core,"google.golang.org/appengine/internal",Apache-2.0
 core,"google.golang.org/appengine/internal/base",Apache-2.0
@@ -196,6 +196,7 @@ core,"google.golang.org/protobuf/encoding/protowire",NewBSD
 core,"google.golang.org/protobuf/internal/descfmt",NewBSD
 core,"google.golang.org/protobuf/internal/descopts",NewBSD
 core,"google.golang.org/protobuf/internal/detrand",NewBSD
+core,"google.golang.org/protobuf/internal/editiondefaults",NewBSD
 core,"google.golang.org/protobuf/internal/encoding/defval",NewBSD
 core,"google.golang.org/protobuf/internal/encoding/messageset",NewBSD
 core,"google.golang.org/protobuf/internal/encoding/tag",NewBSD
@@ -218,6 +219,7 @@ core,"google.golang.org/protobuf/reflect/protoregistry",NewBSD
 core,"google.golang.org/protobuf/runtime/protoiface",NewBSD
 core,"google.golang.org/protobuf/runtime/protoimpl",NewBSD
 core,"google.golang.org/protobuf/types/descriptorpb",NewBSD
+core,"google.golang.org/protobuf/types/gofeaturespb",NewBSD
 core,"google.golang.org/protobuf/types/known/anypb",NewBSD
 core,"google.golang.org/protobuf/types/known/durationpb",NewBSD
 core,"google.golang.org/protobuf/types/known/timestamppb",NewBSD
@@ -323,6 +325,7 @@ core,"k8s.io/apimachinery/pkg/selection",Apache-2.0
 core,"k8s.io/apimachinery/pkg/types",Apache-2.0
 core,"k8s.io/apimachinery/pkg/util/cache",Apache-2.0
 core,"k8s.io/apimachinery/pkg/util/diff",Apache-2.0
+core,"k8s.io/apimachinery/pkg/util/dump",Apache-2.0
 core,"k8s.io/apimachinery/pkg/util/duration",Apache-2.0
 core,"k8s.io/apimachinery/pkg/util/errors",Apache-2.0
 core,"k8s.io/apimachinery/pkg/util/framer",Apache-2.0
@@ -347,6 +350,7 @@ core,"k8s.io/apimachinery/pkg/watch",Apache-2.0
 core,"k8s.io/apimachinery/third_party/forked/golang/json",Apache-2.0
 core,"k8s.io/apimachinery/third_party/forked/golang/reflect",Apache-2.0
 core,"k8s.io/cli-runtime/pkg/genericclioptions",Apache-2.0
+core,"k8s.io/cli-runtime/pkg/genericiooptions",Apache-2.0
 core,"k8s.io/cli-runtime/pkg/printers",Apache-2.0
 core,"k8s.io/cli-runtime/pkg/resource",Apache-2.0
 core,"k8s.io/client-go/applyconfigurations/admissionregistration/v1",Apache-2.0
@@ -457,6 +461,7 @@ core,"k8s.io/client-go/kubernetes/typed/storage/v1beta1",Apache-2.0
 core,"k8s.io/client-go/metadata",Apache-2.0
 core,"k8s.io/client-go/openapi",Apache-2.0
 core,"k8s.io/client-go/openapi/cached",Apache-2.0
+core,"k8s.io/client-go/openapi3",Apache-2.0
 core,"k8s.io/client-go/pkg/apis/clientauthentication",Apache-2.0
 core,"k8s.io/client-go/pkg/apis/clientauthentication/install",Apache-2.0
 core,"k8s.io/client-go/pkg/apis/clientauthentication/v1",Apache-2.0
@@ -577,6 +582,7 @@ core,"sigs.k8s.io/controller-runtime/pkg/log/zap",Apache-2.0
 core,"sigs.k8s.io/controller-runtime/pkg/manager",Apache-2.0
 core,"sigs.k8s.io/controller-runtime/pkg/manager/signals",Apache-2.0
 core,"sigs.k8s.io/controller-runtime/pkg/metrics",Apache-2.0
+core,"sigs.k8s.io/controller-runtime/pkg/metrics/server",Apache-2.0
 core,"sigs.k8s.io/controller-runtime/pkg/predicate",Apache-2.0
 core,"sigs.k8s.io/controller-runtime/pkg/ratelimiter",Apache-2.0
 core,"sigs.k8s.io/controller-runtime/pkg/reconcile",Apache-2.0
@@ -649,13 +655,14 @@ core,"sigs.k8s.io/kustomize/kyaml/kio/filters",Apache-2.0
 core,"sigs.k8s.io/kustomize/kyaml/kio/kioutil",Apache-2.0
 core,"sigs.k8s.io/kustomize/kyaml/openapi",Apache-2.0
 core,"sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi",Apache-2.0
-core,"sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi/v1212",Apache-2.0
+core,"sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi/v1_21_2",Apache-2.0
 core,"sigs.k8s.io/kustomize/kyaml/openapi/kustomizationapi",Apache-2.0
 core,"sigs.k8s.io/kustomize/kyaml/order",Apache-2.0
 core,"sigs.k8s.io/kustomize/kyaml/resid",Apache-2.0
 core,"sigs.k8s.io/kustomize/kyaml/runfn",Apache-2.0
 core,"sigs.k8s.io/kustomize/kyaml/sets",Apache-2.0
 core,"sigs.k8s.io/kustomize/kyaml/sliceutil",Apache-2.0
+core,"sigs.k8s.io/kustomize/kyaml/utils",Apache-2.0
 core,"sigs.k8s.io/kustomize/kyaml/yaml",Apache-2.0
 core,"sigs.k8s.io/kustomize/kyaml/yaml/internal/k8sgen/pkg/labels",Apache-2.0
 core,"sigs.k8s.io/kustomize/kyaml/yaml/internal/k8sgen/pkg/selection",Apache-2.0
