@@ -64,7 +64,7 @@ func main() {
 	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", true,
 		"Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
-	flag.StringVar(&leaderElectionResourceLock, "leader-election-resource", "configmaps", "determines which resource lock to use for leader election. option:[configmapsleases|endpointsleases|configmaps]")
+	flag.StringVar(&leaderElectionResourceLock, "leader-election-resource", "leases", "determines which resource lock to use for leader election. option:[leases]")
 
 	// Custom flags
 	var printVersion, pprofActive, ddProfilingEnabled bool
