@@ -44,7 +44,7 @@ func ManageDeployment(client runtimeclient.Client, daemonset *datadoghqv1alpha1.
 		delete(params.PodByNodeName, params.NodeByName[nodeName])
 	}
 
-	var desiredPods, availablePods, readyPods, unavailableOldPods, createdPods, allPods, oldAvailablePods, podsTerminating, nbIgnoredUnresponsiveNodes int32
+	var desiredPods, availablePods, readyPods, oldUnavailablePods, createdPods, allPods, oldAvailablePods, podsTerminating, nbIgnoredUnresponsiveNodes int32
 
 	allPodToCreate := []*NodeItem{}
 	allPodToDelete := []*NodeItem{}
@@ -82,7 +82,7 @@ func ManageDeployment(client runtimeclient.Client, daemonset *datadoghqv1alpha1.
 				if podutils.IsPodAvailable(pod, 0, metaNow) {
 					oldAvailablePods++
 				} else {
-					unavailableOldPods++
+					oldUnavailablePods++
 				}
 			} else {
 				createdPods++
@@ -120,7 +120,7 @@ func ManageDeployment(client runtimeclient.Client, daemonset *datadoghqv1alpha1.
 		"availablePods", availablePods,
 		"oldAvailablePods", oldAvailablePods,
 		"maxPodsCreation", maxCreation,
-		"unavailableOldPods", unavailableOldPods,
+		"oldUnavailablePods", oldUnavailablePods,
 		"maxUnavailable", maxUnavailable,
 		"nbPodToCreate", len(allPodToCreate),
 		"nbPodToDelete", len(allPodToDelete),
@@ -134,7 +134,7 @@ func ManageDeployment(client runtimeclient.Client, daemonset *datadoghqv1alpha1.
 		NbOldAvailablesPod:   int(oldAvailablePods),
 		NbCreatedPod:         int(createdPods),
 		NbUnresponsiveNodes:  int(nbIgnoredUnresponsiveNodes),
-		NbUnavailableOldPods: int(unavailableOldPods),
+		NbOldUnavailablePods: int(oldUnavailablePods),
 		MaxUnavailablePod:    maxUnavailable,
 		MaxPodCreation:       maxCreation,
 		MaxUnschedulablePod:  maxPodSchedulerFailure,

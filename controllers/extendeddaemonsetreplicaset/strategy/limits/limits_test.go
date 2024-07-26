@@ -218,7 +218,7 @@ func TestCalculatePodToCreateAndDelete(t *testing.T) {
 					NbNodes: 10,
 					NbPods:  10,
 
-					NbUnavailableOldPods: 3,
+					NbOldUnavailablePods: 3,
 					NbAvailablesPod:      7,
 					NbCreatedPod:         10,
 					MaxUnavailablePod:    3,
