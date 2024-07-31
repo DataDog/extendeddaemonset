@@ -99,6 +99,7 @@ func TestReconciler_selectNodes(t *testing.T) {
 		scheme *runtime.Scheme
 	}
 	type args struct {
+		daemonset    *datadoghqv1alpha1.ExtendedDaemonSet
 		spec         *datadoghqv1alpha1.ExtendedDaemonSetSpec
 		replicaset   *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet
 		canaryStatus *datadoghqv1alpha1.ExtendedDaemonSetStatusCanary
@@ -117,6 +118,7 @@ func TestReconciler_selectNodes(t *testing.T) {
 				client: fake.NewClientBuilder().WithStatusSubresource(&corev1.Node{}).WithObjects(node1, node2, node3).Build(),
 			},
 			args: args{
+				daemonset:  extendeddaemonset1,
 				spec:       &extendeddaemonset1.Spec,
 				replicaset: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{},
 				canaryStatus: &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{
@@ -133,6 +135,7 @@ func TestReconciler_selectNodes(t *testing.T) {
 				client: fake.NewClientBuilder().WithStatusSubresource(&corev1.Node{}).WithObjects(node1, node2).Build(),
 			},
 			args: args{
+				daemonset:  extendeddaemonset1,
 				spec:       &extendeddaemonset1.Spec,
 				replicaset: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{},
 				canaryStatus: &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{
@@ -149,6 +152,7 @@ func TestReconciler_selectNodes(t *testing.T) {
 				client: fake.NewClientBuilder().WithStatusSubresource(&corev1.Node{}).WithObjects(node1, node2, node3).Build(),
 			},
 			args: args{
+				daemonset:  extendeddaemonset1,
 				spec:       &extendeddaemonset1.Spec,
 				replicaset: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{},
 				canaryStatus: &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{
@@ -165,6 +169,7 @@ func TestReconciler_selectNodes(t *testing.T) {
 				client: fake.NewClientBuilder().WithStatusSubresource(&corev1.Node{}).WithObjects(node1, node2, node3).Build(),
 			},
 			args: args{
+				daemonset:  extendeddaemonset2,
 				spec:       &extendeddaemonset2.Spec,
 				replicaset: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{},
 				canaryStatus: &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{
@@ -186,11 +191,252 @@ func TestReconciler_selectNodes(t *testing.T) {
 				scheme: tt.fields.scheme,
 				log:    testLogger,
 			}
-			if err := r.selectNodes(reqLogger, tt.args.spec, tt.args.replicaset, tt.args.canaryStatus); (err != nil) != tt.wantErr {
+			if err := r.selectNodes(reqLogger, tt.args.daemonset, tt.args.spec, tt.args.replicaset, tt.args.canaryStatus); (err != nil) != tt.wantErr {
 				t.Errorf("Reconciler.selectNodes() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if tt.wantFunc != nil && !tt.wantFunc(tt.args.canaryStatus) {
 				t.Errorf("ReconcileExtendedDaemonSet.selectNodes() didn’t pass the post-run checks")
+			}
+		})
+	}
+}
+
+func TestReconciler_selectNodes_prioritizingLeastRestarts(t *testing.T) {
+	// Register operator types with the runtime scheme.
+	s := scheme.Scheme
+	s.AddKnownTypes(datadoghqv1alpha1.GroupVersion, &datadoghqv1alpha1.ExtendedDaemonSet{})
+
+	nodeOptions := &commontest.NewNodeOptions{
+		Conditions: []corev1.NodeCondition{
+			{
+				Type:   corev1.NodeReady,
+				Status: corev1.ConditionTrue,
+			},
+		},
+	}
+	node1 := commontest.NewNode("node1", nodeOptions)
+	node2 := commontest.NewNode("node2", nodeOptions)
+	node3 := commontest.NewNode("node3", nodeOptions)
+
+	fourRestartOptions := &commontest.NewPodOptions{
+		Labels: map[string]string{
+			datadoghqv1alpha1.ExtendedDaemonSetNameLabelKey: "foo",
+		},
+		ContainerStatuses: []corev1.ContainerStatus{
+			{
+				RestartCount: 4,
+			},
+		},
+	}
+	twoRestartOptions := &commontest.NewPodOptions{
+		Labels: map[string]string{
+			datadoghqv1alpha1.ExtendedDaemonSetNameLabelKey: "foo",
+		},
+		ContainerStatuses: []corev1.ContainerStatus{
+			{
+				RestartCount: 2,
+			},
+		},
+	}
+	noRestartOptions := &commontest.NewPodOptions{
+		Labels: map[string]string{
+			datadoghqv1alpha1.ExtendedDaemonSetNameLabelKey: "foo",
+		},
+		ContainerStatuses: []corev1.ContainerStatus{
+			{
+				RestartCount: 0,
+			},
+		},
+	}
+	sixRestartMultipleContainersOptions := &commontest.NewPodOptions{
+		Labels: map[string]string{
+			datadoghqv1alpha1.ExtendedDaemonSetNameLabelKey: "foo",
+		},
+		ContainerStatuses: []corev1.ContainerStatus{
+			{
+				RestartCount: 0,
+			},
+			{
+				RestartCount: 2,
+			},
+			{
+				RestartCount: 4,
+			},
+		},
+	}
+
+	pod1 := commontest.NewPod("bar", "foo-pod1", "node1", fourRestartOptions)
+	pod2 := commontest.NewPod("bar", "foo-pod2", "node2", twoRestartOptions)
+	pod3 := commontest.NewPod("bar", "foo-pod3", "node3", noRestartOptions)
+	pod4 := commontest.NewPod("bar", "foo-pod4", "node3", fourRestartOptions)
+	pod5 := commontest.NewPod("bar", "foo-pod5", "node3", sixRestartMultipleContainersOptions)
+
+	intString1 := intstr.FromInt(1)
+
+	node2.Labels = map[string]string{
+		"canary": "true",
+	}
+
+	options1 := &test.NewExtendedDaemonSetOptions{
+		Labels: map[string]string{
+			"foo-key": "bar-value",
+		},
+		Canary: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
+			Replicas: &intString1,
+		},
+		Status: &datadoghqv1alpha1.ExtendedDaemonSetStatus{
+			ActiveReplicaSet: "foo-1",
+			Canary: &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{
+				ReplicaSet: "foo-2",
+				Nodes:      []string{},
+			},
+		},
+	}
+	extendeddaemonset1 := test.NewExtendedDaemonSet("bar", "foo", options1)
+
+	options2 := &test.NewExtendedDaemonSetOptions{
+		Labels: map[string]string{
+			"foo-key": "bar-value",
+		},
+		Canary: &datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanary{
+			Replicas: &intString1,
+			NodeSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"canary": "true",
+				},
+			},
+		},
+		Status: &datadoghqv1alpha1.ExtendedDaemonSetStatus{
+			ActiveReplicaSet: "foo-1",
+			Canary: &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{
+				ReplicaSet: "foo-2",
+				Nodes:      []string{},
+			},
+		},
+	}
+	extendeddaemonset2 := test.NewExtendedDaemonSet("bar", "foo", options2)
+
+	type fields struct {
+		client client.Client
+		scheme *runtime.Scheme
+	}
+	type args struct {
+		daemonset    *datadoghqv1alpha1.ExtendedDaemonSet
+		spec         *datadoghqv1alpha1.ExtendedDaemonSetSpec
+		replicaset   *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet
+		canaryStatus *datadoghqv1alpha1.ExtendedDaemonSetStatusCanary
+	}
+	tests := []struct {
+		name     string
+		fields   fields
+		args     args
+		wantErr  bool
+		wantNode string
+	}{
+		{
+			name: "select lowest restart node",
+			fields: fields{
+				scheme: s,
+				client: fake.NewClientBuilder().WithStatusSubresource(&corev1.Node{}).WithObjects(node1, node2, node3, pod1, pod2, pod3).Build(),
+			},
+			args: args{
+				daemonset:  extendeddaemonset1,
+				spec:       &extendeddaemonset1.Spec,
+				replicaset: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{},
+				canaryStatus: &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{
+					ReplicaSet: "foo",
+					Nodes:      []string{},
+				},
+			},
+			wantErr:  false,
+			wantNode: "node3",
+		},
+		{
+			name: "select lowest restart node, no zero restarts",
+			fields: fields{
+				scheme: s,
+				client: fake.NewClientBuilder().WithStatusSubresource(&corev1.Node{}).WithObjects(node1, node2, pod1, pod2).Build(),
+			},
+			args: args{
+				daemonset:  extendeddaemonset1,
+				spec:       &extendeddaemonset1.Spec,
+				replicaset: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{},
+				canaryStatus: &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{
+					ReplicaSet: "foo",
+					Nodes:      []string{},
+				},
+			},
+			wantErr:  false,
+			wantNode: "node2",
+		},
+		{
+			name: "select lowest restart node with multiple pods on one node",
+			fields: fields{
+				scheme: s,
+				client: fake.NewClientBuilder().WithStatusSubresource(&corev1.Node{}).WithObjects(node1, node2, node3, pod1, pod2, pod3, pod4).Build(),
+			},
+			args: args{
+				daemonset:  extendeddaemonset1,
+				spec:       &extendeddaemonset1.Spec,
+				replicaset: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{},
+				canaryStatus: &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{
+					ReplicaSet: "foo",
+					Nodes:      []string{},
+				},
+			},
+			wantErr:  false,
+			wantNode: "node2",
+		},
+		{
+			name: "select lowest restart node with multiple containers on one pod",
+			fields: fields{
+				scheme: s,
+				client: fake.NewClientBuilder().WithStatusSubresource(&corev1.Node{}).WithObjects(node1, node3, pod1, pod5).Build(),
+			},
+			args: args{
+				daemonset:  extendeddaemonset1,
+				spec:       &extendeddaemonset1.Spec,
+				replicaset: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{},
+				canaryStatus: &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{
+					ReplicaSet: "foo",
+					Nodes:      []string{},
+				},
+			},
+			wantErr:  false,
+			wantNode: "node1",
+		},
+		{
+			name: "select dedicated canary node",
+			fields: fields{
+				scheme: s,
+				client: fake.NewClientBuilder().WithStatusSubresource(&corev1.Node{}).WithObjects(node1, node2, node3, pod1, pod2, pod3).Build(),
+			},
+			args: args{
+				daemonset:  extendeddaemonset2,
+				spec:       &extendeddaemonset2.Spec,
+				replicaset: &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{},
+				canaryStatus: &datadoghqv1alpha1.ExtendedDaemonSetStatusCanary{
+					ReplicaSet: "foo",
+					Nodes:      []string{},
+				},
+			},
+			wantErr:  false,
+			wantNode: "node2",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			reqLogger := testLogger.WithValues("test:", tt.name)
+			r := &Reconciler{
+				client: tt.fields.client,
+				scheme: tt.fields.scheme,
+				log:    testLogger,
+			}
+			if err := r.selectNodes(reqLogger, tt.args.daemonset, tt.args.spec, tt.args.replicaset, tt.args.canaryStatus); (err != nil) != tt.wantErr {
+				t.Errorf("Reconciler.selectNodes() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if tt.wantNode != tt.args.canaryStatus.Nodes[0] {
+				t.Errorf("ReconcileExtendedDaemonSet.selectNodes() didn’t select the node with the least restarts!")
 			}
 		})
 	}

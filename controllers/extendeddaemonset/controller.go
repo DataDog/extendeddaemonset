@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"sort"
 	"strings"
 	"time"
 
@@ -263,7 +264,7 @@ func (r *Reconciler) updateInstanceWithCurrentRS(logger logr.Logger, now time.Ti
 			}
 
 			if nbCanaryPod != len(newDaemonset.Status.Canary.Nodes) {
-				if err = r.selectNodes(logger, &newDaemonset.Spec, upToDate, newDaemonset.Status.Canary); err != nil {
+				if err = r.selectNodes(logger, daemonset, &newDaemonset.Spec, upToDate, newDaemonset.Status.Canary); err != nil {
 					logger.Error(err, "unable to select Nodes for canary")
 
 					return newDaemonset, reconcile.Result{}, err
@@ -305,9 +306,33 @@ func (r *Reconciler) updateInstanceWithCurrentRS(logger logr.Logger, now time.Ti
 	return newDaemonset, reconcile.Result{}, nil
 }
 
-func (r *Reconciler) selectNodes(logger logr.Logger, daemonsetSpec *datadoghqv1alpha1.ExtendedDaemonSetSpec, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, canaryStatus *datadoghqv1alpha1.ExtendedDaemonSetStatusCanary) error {
+func (r *Reconciler) selectNodes(logger logr.Logger, daemonset *datadoghqv1alpha1.ExtendedDaemonSet, daemonsetSpec *datadoghqv1alpha1.ExtendedDaemonSetSpec, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet, canaryStatus *datadoghqv1alpha1.ExtendedDaemonSetStatusCanary) error {
 	// create a Fake pod from the current replicaset.spec.template
 	newPod, _ := podutils.CreatePodFromDaemonSetReplicaSet(r.scheme, replicaset, nil, nil, false)
+
+	// Get list of pods in extendeddaemonset
+	podList := &corev1.PodList{}
+	podSelector := labels.Set{datadoghqv1alpha1.ExtendedDaemonSetNameLabelKey: daemonset.Name}
+	podListOptions := []client.ListOption{
+		client.MatchingLabelsSelector{
+			Selector: podSelector.AsSelectorPreValidated(),
+		},
+	}
+	if err := r.client.List(context.TODO(), podList, podListOptions...); err != nil {
+		return err
+	}
+
+	// Count number of restarts per node
+	var nodeNameRestarts = make(map[string]int)
+
+	for _, pod := range podList.Items {
+		nodeName := pod.Spec.NodeName
+		podRestartCount := 0
+		for _, container := range pod.Status.ContainerStatuses {
+			podRestartCount += int(container.RestartCount)
+		}
+		nodeNameRestarts[nodeName] += podRestartCount
+	}
 
 	nodeList := &corev1.NodeList{}
 
@@ -335,6 +360,11 @@ func (r *Reconciler) selectNodes(logger logr.Logger, daemonsetSpec *datadoghqv1a
 	if err != nil {
 		return err
 	}
+
+	// Sort node list to prioritize nodes with least number of restarts
+	sort.Slice(nodeList.Items, func(i, j int) bool {
+		return nodeNameRestarts[nodeList.Items[i].Name] < nodeNameRestarts[nodeList.Items[j].Name]
+	})
 
 	// Filter Nodes Unschedulable
 	for _, node := range nodeList.Items {
