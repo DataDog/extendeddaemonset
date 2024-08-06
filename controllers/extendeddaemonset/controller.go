@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"math/rand"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -166,10 +165,6 @@ func (r *Reconciler) createNewReplicaSet(logger logr.Logger, daemonset *datadogh
 	if err = controllerutil.SetControllerReference(daemonset, newRS, r.scheme); err != nil {
 		return reconcile.Result{}, err
 	}
-	if newRS.Annotations == nil {
-		newRS.Annotations = make(map[string]string)
-	}
-	newRS.Annotations[datadoghqv1alpha1.ExtendedDaemonSetReplicaSetUnreadyPodsAnnotationKey] = strconv.Itoa(int(podsCounter.Current - podsCounter.Ready))
 
 	logger.Info("Creating a new ReplicaSet", "replicaSet.Namespace", newRS.Namespace, "replicaSet.Name", newRS.Name)
 

@@ -8,7 +8,6 @@ package strategy
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -45,7 +44,7 @@ func ManageDeployment(client runtimeclient.Client, daemonset *datadoghqv1alpha1.
 		delete(params.PodByNodeName, params.NodeByName[nodeName])
 	}
 
-	var desiredPods, availablePods, readyPods, createdPods, allPods, oldAvailablePods, podsTerminating, nbIgnoredUnresponsiveNodes int32
+	var desiredPods, availablePods, readyPods, oldUnavailablePods, createdPods, allPods, oldAvailablePods, podsTerminating, nbIgnoredUnresponsiveNodes int32
 
 	allPodToCreate := []*NodeItem{}
 	allPodToDelete := []*NodeItem{}
@@ -82,6 +81,8 @@ func ManageDeployment(client runtimeclient.Client, daemonset *datadoghqv1alpha1.
 				}
 				if podutils.IsPodAvailable(pod, 0, metaNow) {
 					oldAvailablePods++
+				} else {
+					oldUnavailablePods++
 				}
 			} else {
 				createdPods++
@@ -111,18 +112,6 @@ func ManageDeployment(client runtimeclient.Client, daemonset *datadoghqv1alpha1.
 		return result, err
 	}
 
-	unreadyPodsAnnotation, found := params.Replicaset.Annotations[datadoghqv1alpha1.ExtendedDaemonSetReplicaSetUnreadyPodsAnnotationKey]
-
-	if !found {
-		unreadyPodsAnnotation = "0"
-	}
-
-	nbUnreadyPods, err := strconv.Atoi(unreadyPodsAnnotation)
-	if err != nil {
-		params.Logger.Error(err, "error during parsing number of unready pods from ERS annotations")
-		return result, err
-	}
-
 	params.Logger.V(1).Info("Parameters",
 		"nbNodes", nbNodes,
 		"createdPods", createdPods,
@@ -131,7 +120,7 @@ func ManageDeployment(client runtimeclient.Client, daemonset *datadoghqv1alpha1.
 		"availablePods", availablePods,
 		"oldAvailablePods", oldAvailablePods,
 		"maxPodsCreation", maxCreation,
-		"nbUnreadyPods", nbUnreadyPods,
+		"oldUnavailablePods", oldUnavailablePods,
 		"maxUnavailable", maxUnavailable,
 		"nbPodToCreate", len(allPodToCreate),
 		"nbPodToDelete", len(allPodToDelete),
@@ -140,15 +129,15 @@ func ManageDeployment(client runtimeclient.Client, daemonset *datadoghqv1alpha1.
 	limitParams := limits.Parameters{
 		NbNodes: nbNodes,
 
-		NbPods:              int(allPods),
-		NbAvailablesPod:     int(availablePods),
-		NbOldAvailablesPod:  int(oldAvailablePods),
-		NbCreatedPod:        int(createdPods),
-		NbUnresponsiveNodes: int(nbIgnoredUnresponsiveNodes),
-		NbUnreadyPods:       nbUnreadyPods,
-		MaxUnavailablePod:   maxUnavailable,
-		MaxPodCreation:      maxCreation,
-		MaxUnschedulablePod: maxPodSchedulerFailure,
+		NbPods:               int(allPods),
+		NbAvailablesPod:      int(availablePods),
+		NbOldAvailablesPod:   int(oldAvailablePods),
+		NbCreatedPod:         int(createdPods),
+		NbUnresponsiveNodes:  int(nbIgnoredUnresponsiveNodes),
+		NbOldUnavailablePods: int(oldUnavailablePods),
+		MaxUnavailablePod:    maxUnavailable,
+		MaxPodCreation:       maxCreation,
+		MaxUnschedulablePod:  maxPodSchedulerFailure,
 	}
 	nbPodToCreate, nbPodToDelete := limits.CalculatePodToCreateAndDelete(limitParams)
 	metrics.SetRollingUpdateStuckMetric(params.Replicaset.GetName(), params.Replicaset.GetNamespace(), nbPodToDelete == 0 && len(allPodToDelete) > 0)
