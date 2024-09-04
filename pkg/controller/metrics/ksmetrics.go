@@ -13,42 +13,51 @@ import (
 	ksmetric "k8s.io/kube-state-metrics/pkg/metric"
 	metricsstore "k8s.io/kube-state-metrics/pkg/metrics_store"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
-	"github.com/DataDog/extendeddaemonset/pkg/config"
+	edsconfig "github.com/DataDog/extendeddaemonset/pkg/config"
 )
 
 // AddMetrics add given metricFamilies for type given in gvk.
-func AddMetrics(gvk schema.GroupVersionKind, mgr manager.Manager, h Handler, metricFamilies []ksmetric.FamilyGenerator) error {
-	mapping, err := mgr.GetRESTMapper().RESTMapping(gvk.GroupKind())
-	if err != nil {
-		return err
-	}
-	serializerCodec := serializer.NewCodecFactory(mgr.GetScheme())
-	paramCodec := runtime.NewParameterCodec(mgr.GetScheme())
-
-	httpClient, err := rest.HTTPClientFor(mgr.GetConfig())
+func AddMetrics(gvk schema.GroupVersionKind, scheme *runtime.Scheme, h Handler, metricFamilies []ksmetric.FamilyGenerator) error {
+	restConfig, err := config.GetConfig()
 	if err != nil {
 		return err
 	}
 
-	restClient, err := apiutil.RESTClientForGVK(gvk, false, mgr.GetConfig(), serializerCodec, httpClient)
+	httpClient, err := rest.HTTPClientFor(restConfig)
+	if err != nil {
+		return err
+	}
+	serializerCodec := serializer.NewCodecFactory(scheme)
+	paramCodec := runtime.NewParameterCodec(scheme)
+
+	restMapper, err := apiutil.NewDynamicRESTMapper(restConfig, httpClient)
+	if err != nil {
+		return err
+	}
+	mapping, err := restMapper.RESTMapping(gvk.GroupKind())
 	if err != nil {
 		return err
 	}
 
-	obj, err := mgr.GetScheme().New(gvk)
+	restClient, err := apiutil.RESTClientForGVK(gvk, false, restConfig, serializerCodec, httpClient)
+	if err != nil {
+		return err
+	}
+
+	obj, err := scheme.New(gvk)
 	if err != nil {
 		return err
 	}
 
 	listGVK := gvk.GroupVersion().WithKind(gvk.Kind + "List")
-	listObj, err := mgr.GetScheme().New(listGVK)
+	listObj, err := scheme.New(listGVK)
 	if err != nil {
 		return err
 	}
 
-	namespaces := config.GetWatchNamespaces()
+	namespaces := edsconfig.GetWatchNamespaces()
 	if len(namespaces) == 0 {
 		namespaces = append(namespaces, "")
 	}

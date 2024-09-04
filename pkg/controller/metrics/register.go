@@ -10,34 +10,35 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/expfmt"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/cache"
 	ksmetric "k8s.io/kube-state-metrics/pkg/metric"
 	metricsstore "k8s.io/kube-state-metrics/pkg/metrics_store"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
 var (
-	metricsHandler          []func(manager.Manager, Handler) error
+	metricsHandler          []func(*runtime.Scheme, Handler) error
 	ksmExtraMetricsRegistry = prometheus.NewRegistry()
 	log                     = ctrl.Log.WithName("ksmetrics")
 )
 
 // RegisterHandlerFunc register a function to be added to endpoint when its registered.
-func RegisterHandlerFunc(h func(manager.Manager, Handler) error) {
+func RegisterHandlerFunc(h func(*runtime.Scheme, Handler) error) {
 	metricsHandler = append(metricsHandler, h)
 }
 
-// RegisterEndpoint add custom metrics endpoint to existing HTTP Listener.
-func RegisterEndpoint(mgr ctrl.Manager, register func(string, http.Handler) error) error {
+// GetExtraMetricHandlers return handler for a KSM endpoint.
+func GetExtraMetricHandlers(scheme *runtime.Scheme) (map[string]http.Handler, error) {
 	handler := &storesHandler{}
 	for _, metricsHandler := range metricsHandler {
-		if err := metricsHandler(mgr, handler); err != nil {
-			return err
+		if err := metricsHandler(scheme, handler); err != nil {
+			return nil, err
 		}
 	}
-
-	return register("/ksmetrics", http.HandlerFunc(handler.serveKsmHTTP))
+	handlers := make(map[string]http.Handler)
+	handlers["/ksmetrics"] = http.HandlerFunc(handler.serveKsmHTTP)
+	return handlers, nil
 }
 
 func (h *storesHandler) serveKsmHTTP(w http.ResponseWriter, r *http.Request) {

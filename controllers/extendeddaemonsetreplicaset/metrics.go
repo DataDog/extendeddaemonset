@@ -6,8 +6,8 @@
 package extendeddaemonsetreplicaset
 
 import (
+	"k8s.io/apimachinery/pkg/runtime"
 	ksmetric "k8s.io/kube-state-metrics/pkg/metric"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/conditions"
@@ -30,8 +30,8 @@ func init() {
 	metrics.RegisterHandlerFunc(addMetrics)
 }
 
-func addMetrics(mgr manager.Manager, h metrics.Handler) error {
-	return metrics.AddMetrics(datadoghqv1alpha1.GroupVersion.WithKind("ExtendedDaemonSetReplicaSet"), mgr, h, generateMetricFamilies())
+func addMetrics(scheme *runtime.Scheme, h metrics.Handler) error {
+	return metrics.AddMetrics(datadoghqv1alpha1.GroupVersion.WithKind("ExtendedDaemonSetReplicaSet"), scheme, h, generateMetricFamilies())
 }
 
 func generateMetricFamilies() []ksmetric.FamilyGenerator {
