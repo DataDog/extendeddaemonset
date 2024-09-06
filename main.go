@@ -113,11 +113,17 @@ func main() {
 
 	restConfig := ctrl.GetConfigOrDie()
 	restConfig.UserAgent = "eds-controller"
+	extraMetricHandlers, err := getExtraMetricHandlers(scheme)
+	if err != nil {
+		setupLog.Error(err, "problem registering external extra metric handlers")
+		exitCode = 1
+		return
+	}
 	mgr, err := ctrl.NewManager(restConfig, config.ManagerOptionsWithNamespaces(setupLog, ctrl.Options{
 		Scheme: scheme,
 		Metrics: metricsserver.Options{
 			BindAddress:   metricsAddr,
-			ExtraHandlers: debug.GetExtraMetricHandlers(),
+			ExtraHandlers: extraMetricHandlers,
 		},
 		HealthProbeBindAddress:     ":8081",
 		WebhookServer:              webhook.NewServer(webhook.Options{Port: 9443}),
@@ -249,4 +255,22 @@ func customSetupHealthChecks(mgr manager.Manager) {
 	if err != nil {
 		setupLog.Error(err, "Unable to start ")
 	}
+}
+
+func getExtraMetricHandlers(scheme *runtime.Scheme) (map[string]http.Handler, error) {
+	extraHandlers := map[string]http.Handler{}
+	debugHandler := debug.GetExtraMetricHandlers()
+	ksmHandler, err := metrics.GetExtraMetricHandlers(scheme)
+	if err != nil {
+		return nil, err
+	}
+	for k, v := range debugHandler {
+		extraHandlers[k] = v
+	}
+
+	for k, v := range ksmHandler {
+		extraHandlers[k] = v
+	}
+
+	return extraHandlers, nil
 }
