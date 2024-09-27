@@ -11,12 +11,12 @@ then
 fi
 
 # copy binary in current repo
-mkdir -p $ROOT/bin
+mkdir -p "$ROOT/bin"
 
-WORK_DIR=`mktemp -d`
+WORK_DIR=$(mktemp -d)
 
 # deletes the temp directory
-function cleanup {      
+function cleanup {
   rm -rf "$WORK_DIR"
   echo "Deleted temp working directory $WORK_DIR"
 }
@@ -37,15 +37,15 @@ OS=$(uname_os)
 
 mkdir -p bin
 
-cd $WORK_DIR
+cd "$WORK_DIR"
 if [ "$OS" == "darwin" ]; then
     echo "darwin"
-    curl -OJL https://github.com/operator-framework/operator-sdk/releases/download/${RELEASE_VERSION}/operator-sdk_darwin_amd64
-    mv operator-sdk_darwin_amd64 $ROOT/bin/operator-sdk
+    curl -OJL "https://github.com/operator-framework/operator-sdk/releases/download/${RELEASE_VERSION}/operator-sdk_darwin_amd64"
+    mv operator-sdk_darwin_amd64 "$ROOT/bin/operator-sdk"
 else
     echo "linux"
-    curl -OJL https://github.com/operator-framework/operator-sdk/releases/download/${RELEASE_VERSION}/operator-sdk_linux_amd64
-    mv operator-sdk_linux_amd64 $ROOT/bin/operator-sdk
+    curl -OL "https://github.com/operator-framework/operator-sdk/releases/download/${RELEASE_VERSION}/operator-sdk_linux_amd64"
+    mv operator-sdk_linux_amd64 "$ROOT/bin/operator-sdk"
 fi
 
-chmod +x $ROOT/bin/operator-sdk 
+chmod +x "$ROOT/bin/operator-sdk"

@@ -10,8 +10,8 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-	ksmetric "k8s.io/kube-state-metrics/pkg/metric"
-	metricsstore "k8s.io/kube-state-metrics/pkg/metrics_store"
+	generator "k8s.io/kube-state-metrics/v2/pkg/metric_generator"
+	metricsstore "k8s.io/kube-state-metrics/v2/pkg/metrics_store"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
@@ -19,7 +19,7 @@ import (
 )
 
 // AddMetrics add given metricFamilies for type given in gvk.
-func AddMetrics(gvk schema.GroupVersionKind, scheme *runtime.Scheme, h Handler, metricFamilies []ksmetric.FamilyGenerator) error {
+func AddMetrics(gvk schema.GroupVersionKind, scheme *runtime.Scheme, h Handler, metricFamilies []generator.FamilyGenerator) error {
 	restConfig, err := config.GetConfig()
 	if err != nil {
 		return err
@@ -86,10 +86,10 @@ func AddMetrics(gvk schema.GroupVersionKind, scheme *runtime.Scheme, h Handler, 
 }
 
 // newMetricsStore return new metrics store.
-func newMetricsStore(generators []ksmetric.FamilyGenerator, expectedType interface{}, lw cache.ListerWatcher) *metricsstore.MetricsStore {
+func newMetricsStore(generators []generator.FamilyGenerator, expectedType interface{}, lw cache.ListerWatcher) *metricsstore.MetricsStore {
 	// Generate collector per namespace.
-	composedMetricGenFuncs := ksmetric.ComposeMetricGenFuncs(generators)
-	headers := ksmetric.ExtractMetricFamilyHeaders(generators)
+	composedMetricGenFuncs := generator.ComposeMetricGenFuncs(generators)
+	headers := generator.ExtractMetricFamilyHeaders(generators)
 	store := metricsstore.NewMetricsStore(headers, composedMetricGenFuncs)
 	reflectorPerNamespace(context.TODO(), lw, expectedType, store)
 

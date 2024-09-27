@@ -93,7 +93,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	otherEdsNode, err = searchPossibleConflict(instance, nodesList, edsNodesList)
 	if err != nil {
 		newStatus.Status = datadoghqv1alpha1.ExtendedDaemonsetSettingStatusError
-		newStatus.Error = fmt.Sprintf("conflict with another ExtendedDaemonsetSetting: %s", otherEdsNode)
+		newStatus.Error = "conflict with another ExtendedDaemonsetSetting: " + otherEdsNode
 	}
 
 	if newStatus.Error == "" {
