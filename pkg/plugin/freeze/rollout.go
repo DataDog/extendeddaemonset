@@ -7,13 +7,14 @@ package freeze
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	"github.com/DataDog/extendeddaemonset/pkg/plugin/common"
 
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -142,7 +143,7 @@ func (o *freezeOptions) complete(cmd *cobra.Command, args []string) error {
 // validate ensures that all required arguments and flag values are provided.
 func (o *freezeOptions) validate() error {
 	if len(o.args) < 1 {
-		return fmt.Errorf("the extendeddaemonset name is required")
+		return errors.New("the extendeddaemonset name is required")
 	}
 
 	return nil
@@ -152,14 +153,14 @@ func (o *freezeOptions) validate() error {
 func (o *freezeOptions) run() error {
 	eds := &v1alpha1.ExtendedDaemonSet{}
 	err := o.client.Get(context.TODO(), client.ObjectKey{Namespace: o.userNamespace, Name: o.userExtendedDaemonSetName}, eds)
-	if err != nil && errors.IsNotFound(err) {
+	if err != nil && apierrors.IsNotFound(err) {
 		return fmt.Errorf("ExtendedDaemonSet %s/%s not found", o.userNamespace, o.userExtendedDaemonSetName)
 	} else if err != nil {
 		return fmt.Errorf("unable to get ExtendedDaemonSet, err: %w", err)
 	}
 
 	if eds.Status.Canary != nil {
-		return fmt.Errorf("cannot freeze rollout: the ExtendedDaemonset has an active canary deployment. You should either fail or validate the canary first")
+		return errors.New("cannot freeze rollout: the ExtendedDaemonset has an active canary deployment. You should either fail or validate the canary first")
 	}
 
 	newEds := eds.DeepCopy()
@@ -172,13 +173,13 @@ func (o *freezeOptions) run() error {
 	if o.want == frozen && isFrozen == v1alpha1.ValueStringTrue {
 		// One case where freezing is impossible:
 		// - EDS is already frozen
-		return fmt.Errorf("rollout already frozen")
+		return errors.New("rollout already frozen")
 	}
 	if o.want == unfrozen && (isFrozen == v1alpha1.ValueStringFalse || !found) {
 		// Two cases where unfreezing is impossible:
 		// - EDS is already unfrozen
 		// - EDS was never frozen (freeze annotation not found)
-		return fmt.Errorf("rollout is not frozen; cannot unfreeze")
+		return errors.New("rollout is not frozen; cannot unfreeze")
 	}
 
 	// Set appropriate annotation depending on whether cmd is to freeze or unfreeze

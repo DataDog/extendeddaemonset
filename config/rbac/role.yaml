@@ -1,9 +1,7 @@
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  creationTimestamp: null
   name: manager-role
 rules:
 - apiGroups:
@@ -24,17 +22,6 @@ rules:
   - ""
   resources:
   - pods
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - ""
-  resources:
   - podtemplates
   verbs:
   - create
@@ -55,45 +42,7 @@ rules:
   - datadoghq.com
   resources:
   - extendeddaemonsetreplicasets
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - datadoghq.com
-  resources:
-  - extendeddaemonsetreplicasets/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - datadoghq.com
-  resources:
   - extendeddaemonsets
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - datadoghq.com
-  resources:
-  - extendeddaemonsets/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - datadoghq.com
-  resources:
   - extendeddaemonsetsettings
   verbs:
   - create
@@ -106,6 +55,8 @@ rules:
 - apiGroups:
   - datadoghq.com
   resources:
+  - extendeddaemonsetreplicasets/status
+  - extendeddaemonsets/status
   - extendeddaemonsetsettings/status
   verbs:
   - get

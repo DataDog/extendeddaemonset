@@ -76,8 +76,8 @@ deploy: manifests $(KUSTOMIZE)
 manifests: generate-manifests patch-crds
 
 generate-manifests: controller-gen
-	$(CONTROLLER_GEN) crd:trivialVersions=true,crdVersions=v1 rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases/v1
-	$(CONTROLLER_GEN) crd:trivialVersions=true,crdVersions=v1beta1 rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases/v1beta1
+	$(CONTROLLER_GEN) crd rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases/v1
+	$(CONTROLLER_GEN) crd rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases/v1beta1
 
 # Run go fmt against code
 fmt:
@@ -130,7 +130,7 @@ ifeq (, $(shell which controller-gen))
 	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
 	cd $$CONTROLLER_GEN_TMP_DIR ;\
 	go mod init tmp ;\
-	go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.3.0 ;\
+	go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.16.3 ;\
 	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
 	}
 CONTROLLER_GEN=$(GOBIN)/controller-gen
@@ -160,7 +160,7 @@ install-tools: bin/golangci-lint bin/operator-sdk bin/yq bin/kubebuilder bin/kub
 
 .PHONY: generate-openapi
 generate-openapi: bin/openapi-gen
-	./bin/openapi-gen --logtostderr=true -o "" -i ./api/v1alpha1 -O zz_generated.openapi -p ./api/v1alpha1 -h ./hack/boilerplate.go.txt -r "-"
+	./bin/openapi-gen --logtostderr --output-dir api/v1alpha1 --output-file zz_generated.openapi.go --output-pkg api/v1alpha1 --go-header-file hack/boilerplate.go.txt
 
 .PHONY: patch-crds
 patch-crds: bin/yq
@@ -205,7 +205,7 @@ bin/yq:
 	./hack/install-yq.sh 3.3.0
 
 bin/golangci-lint:
-	hack/install-golangci-lint.sh v1.55.2
+	hack/install-golangci-lint.sh v1.61.0
 
 bin/operator-sdk:
 	./hack/install-operator-sdk.sh v1.5.0

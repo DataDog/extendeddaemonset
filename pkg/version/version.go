@@ -40,11 +40,11 @@ func PrintVersionLogs(logger logr.Logger) {
 
 func printVersionSlice() []string {
 	output := []string{
-		fmt.Sprintf("Version: %v", Version),
-		fmt.Sprintf("Build time: %v", BuildTime),
-		fmt.Sprintf("Git Commit: %v", Commit),
-		fmt.Sprintf("Go Version: %s", runtime.Version()),
-		fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH),
+		"Version: " + Version,
+		"Build time: " + BuildTime,
+		"Git Commit: " + Commit,
+		"Go Version: " + runtime.Version(),
+		"Go OS/Arch: " + runtime.GOOS + "/" + runtime.GOARCH,
 	}
 
 	return output

@@ -7,7 +7,7 @@ package extendeddaemonsetreplicaset
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"math/rand"
 	"strings"
 	"time"
@@ -16,7 +16,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -83,7 +83,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	if !datadoghqv1alpha1.IsDefaultedExtendedDaemonSet(daemonsetInstance) {
 		message := "Parent ExtendedDaemonSet is not defaulted, requeuing"
 		reqLogger.Info(message)
-		err = fmt.Errorf("parent ExtendedDaemonSet is not defaulted")
+		err = errors.New("parent ExtendedDaemonSet is not defaulted")
 		newStatus := replicaSetInstance.Status.DeepCopy()
 		// Updating the status with a new condition will trigger a new Event on the ExtendedDaemonSet-controller
 		// and so the ExtendedDamonset will be defaulted.
@@ -125,7 +125,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	var desc string
 	status := corev1.ConditionTrue
 	if len(strategyResult.UnscheduledNodesDueToResourcesConstraints) > 0 {
-		desc = fmt.Sprintf("nodes:%s", strings.Join(strategyResult.UnscheduledNodesDueToResourcesConstraints, ";"))
+		desc = "nodes:" + strings.Join(strategyResult.UnscheduledNodesDueToResourcesConstraints, ";")
 	} else {
 		status = corev1.ConditionFalse
 	}
@@ -268,7 +268,7 @@ func (r *Reconciler) retrievedReplicaSet(request reconcile.Request) (*datadoghqv
 	replicaSetInstance := &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, replicaSetInstance)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
@@ -400,7 +400,7 @@ func (r *Reconciler) getOldDaemonsetPodList(ds *datadoghqv1alpha1.ExtendedDaemon
 	oldDaemonset := &appsv1.DaemonSet{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Namespace: ds.Namespace, Name: oldDsName}, oldDaemonset)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			return podList, nil
 		}
 		// Error reading the object - requeue the request.
@@ -452,7 +452,7 @@ func retrieveOwnerReference(obj *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) 
 		}
 	}
 
-	return "", fmt.Errorf("unable to retrieve the owner reference name")
+	return "", errors.New("unable to retrieve the owner reference name")
 }
 
 // This method has the effect of deciding if the ERS should be ignored or something should be updated. Note that this

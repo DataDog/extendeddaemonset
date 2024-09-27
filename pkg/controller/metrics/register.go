@@ -12,8 +12,8 @@ import (
 	"github.com/prometheus/common/expfmt"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/cache"
-	ksmetric "k8s.io/kube-state-metrics/pkg/metric"
-	metricsstore "k8s.io/kube-state-metrics/pkg/metrics_store"
+	generator "k8s.io/kube-state-metrics/v2/pkg/metric_generator"
+	metricsstore "k8s.io/kube-state-metrics/v2/pkg/metrics_store"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
@@ -48,8 +48,8 @@ func (h *storesHandler) serveKsmHTTP(w http.ResponseWriter, r *http.Request) {
 	resHeader.Set("Content-Type", `text/plain; version=`+"0.0.4")
 
 	// Write KSM families
-	for _, store := range h.stores {
-		store.WriteAll(w)
+	if err := metricsstore.NewMetricsWriter(h.stores...).WriteAll(w); err != nil {
+		log.Error(err, "Unable to write metrics")
 	}
 
 	// Write extra metrics
@@ -66,7 +66,7 @@ func (h *storesHandler) serveKsmHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *storesHandler) RegisterStore(generators []ksmetric.FamilyGenerator, expectedType interface{}, lw cache.ListerWatcher) error {
+func (h *storesHandler) RegisterStore(generators []generator.FamilyGenerator, expectedType interface{}, lw cache.ListerWatcher) error {
 	store := newMetricsStore(generators, expectedType, lw)
 	h.stores = append(h.stores, store)
 

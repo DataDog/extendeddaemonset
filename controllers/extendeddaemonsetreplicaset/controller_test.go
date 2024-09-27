@@ -331,12 +331,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_getPodList(t *testing.T) {
 			args: args{
 				ds: daemonset,
 			},
-			want: &corev1.PodList{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       "PodList",
-					APIVersion: "v1",
-				},
-			},
+			want:    &corev1.PodList{},
 			wantErr: false,
 		},
 		{
@@ -349,10 +344,6 @@ func TestReconcileExtendedDaemonSetReplicaSet_getPodList(t *testing.T) {
 				ds: daemonset,
 			},
 			want: &corev1.PodList{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       "PodList",
-					APIVersion: "v1",
-				},
 				Items: []corev1.Pod{*pod1, *pod2},
 			},
 			wantErr: false,

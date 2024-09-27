@@ -23,8 +23,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/config"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -93,7 +95,7 @@ var _ = BeforeSuite(func(done Done) {
 
 	if !testConfig.useExistingCluster {
 		// Create some Nodes
-		for i := 0; i < fakeNodesCount; i++ {
+		for i := range fakeNodesCount {
 			nodei := testutils.NewNode(fmt.Sprintf("node%d", i+1), nil)
 			Expect(k8sClient.Create(context.Background(), nodei)).Should(Succeed())
 		}
@@ -111,6 +113,9 @@ var _ = BeforeSuite(func(done Done) {
 	// Start controllers
 	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
 		Scheme: scheme.Scheme,
+		Controller: config.Controller{
+			SkipNameValidation: ptr.To(true), // https://github.com/kubernetes-sigs/controller-runtime/issues/2937
+		},
 	})
 	Expect(err).ToNot(HaveOccurred())
 
