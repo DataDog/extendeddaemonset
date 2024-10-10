@@ -7,6 +7,7 @@
 package pods
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -112,11 +113,11 @@ func (o *podsOptions) complete(cmd *cobra.Command, args []string) error {
 // validate ensures that all required arguments and flag values are provided.
 func (o *podsOptions) validate() error {
 	if len(o.args) < 1 {
-		return fmt.Errorf("the extendeddaemonset name is required")
+		return errors.New("the extendeddaemonset name is required")
 	}
 
 	if selectOpt == "" {
-		return fmt.Errorf("missing --select flag")
+		return errors.New("missing --select flag")
 	}
 
 	if selectOpt != canary && selectOpt != notReady {

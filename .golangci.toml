@@ -18,7 +18,7 @@
 
   [linters-settings.misspell]
     locale = "US"
-  
+
   [linters-settings.gci]
     local-prefixes = "github.com/DataDog/extendeddaemonset"
 
@@ -27,19 +27,21 @@
       ' \+',
     ]
 
+  [linters-settings.errcheck]
+    exclude-functions = [
+      "fmt.Fprintf"
+    ]
+
 [linters]
   enable-all = true
   disable = [
     "exhaustruct",
-    "nosnakecase",
-    "logrlint",
+    "loggercheck",
     "nonamedreturns",
-    "maligned",
     "revive",
     "lll",
-    "gas",
+    "gosec",
     "dupl",
-    "scopelint",
     "gocyclo",
     "gochecknoinits",
     "gochecknoglobals",
@@ -48,16 +50,14 @@
     "cyclop",
     "gomnd",
     "wrapcheck",
-    "exhaustivestruct",
     "forcetypeassert",
-    "goerr113",
+    "err113",
     "testpackage",
     "wastedassign",
     "thelper",
     "paralleltest",
     "nestif",
     "exhaustive",
-    "interfacer",
     "gci",
     "wsl",
     "godox",
@@ -70,16 +70,12 @@
     "nilnil",
     "ireturn",
     "maintidx",
-    "ifshort",
     "gocritic",
     "errchkjson",
     "gofumpt",
-    "golint",
-    "deadcode",
-    "structcheck",
-    "varcheck",
     "unparam",
-    "depguard"
+    "depguard",
+    "mnd",
   ]
 
 [issues]

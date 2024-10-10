@@ -7,11 +7,12 @@ package canary
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -141,7 +142,7 @@ func (o *pauseOptions) complete(cmd *cobra.Command, args []string) error {
 // validate ensures that all required arguments and flag values are provided.
 func (o *pauseOptions) validate() error {
 	if len(o.args) < 1 {
-		return fmt.Errorf("the extendeddaemonset name is required")
+		return errors.New("the extendeddaemonset name is required")
 	}
 
 	return nil
@@ -151,17 +152,17 @@ func (o *pauseOptions) validate() error {
 func (o *pauseOptions) run() error {
 	eds := &v1alpha1.ExtendedDaemonSet{}
 	err := o.client.Get(context.TODO(), client.ObjectKey{Namespace: o.userNamespace, Name: o.userExtendedDaemonSetName}, eds)
-	if err != nil && errors.IsNotFound(err) {
+	if err != nil && apierrors.IsNotFound(err) {
 		return fmt.Errorf("ExtendedDaemonSet %s/%s not found", o.userNamespace, o.userExtendedDaemonSetName)
 	} else if err != nil {
 		return fmt.Errorf("unable to get ExtendedDaemonSet, err: %w", err)
 	}
 
 	if eds.Spec.Strategy.Canary == nil {
-		return fmt.Errorf("the ExtendedDaemonset does not have a canary strategy")
+		return errors.New("the ExtendedDaemonset does not have a canary strategy")
 	}
 	if eds.Status.Canary == nil {
-		return fmt.Errorf("the ExtendedDaemonset does not have an active canary deployment")
+		return errors.New("the ExtendedDaemonset does not have an active canary deployment")
 	}
 
 	newEds := eds.DeepCopy()
@@ -171,9 +172,9 @@ func (o *pauseOptions) run() error {
 		newEds.Annotations = make(map[string]string)
 	} else if isPaused, ok := newEds.Annotations[v1alpha1.ExtendedDaemonSetCanaryPausedAnnotationKey]; ok {
 		if o.pauseStatus && isPaused == v1alpha1.ValueStringTrue {
-			return fmt.Errorf("canary deployment already paused")
+			return errors.New("canary deployment already paused")
 		} else if !o.pauseStatus && isPaused == v1alpha1.ValueStringFalse {
-			return fmt.Errorf("canary deployment is not paused; cannot unpause")
+			return errors.New("canary deployment is not paused; cannot unpause")
 		}
 	}
 	// Set appropriate annotation depending on whether cmd is to pause or unpause

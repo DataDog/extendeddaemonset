@@ -7,11 +7,12 @@ package common
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -23,14 +24,14 @@ import (
 func PrintCanaryPods(c client.Client, ns, edsName string, out io.Writer) error {
 	eds := &v1alpha1.ExtendedDaemonSet{}
 	err := c.Get(context.TODO(), client.ObjectKey{Namespace: ns, Name: edsName}, eds)
-	if err != nil && errors.IsNotFound(err) {
+	if err != nil && apierrors.IsNotFound(err) {
 		return fmt.Errorf("ExtendedDaemonSet %s/%s not found", ns, edsName)
 	} else if err != nil {
 		return fmt.Errorf("unable to get ExtendedDaemonSet, err: %w", err)
 	}
 
 	if eds.Status.Canary == nil {
-		return fmt.Errorf("the ExtendedDaemonset is not currently running a canary replicaset")
+		return errors.New("the ExtendedDaemonset is not currently running a canary replicaset")
 	}
 
 	req, err := labels.NewRequirement(v1alpha1.ExtendedDaemonSetReplicaSetNameLabelKey, selection.Equals, []string{eds.Status.Canary.ReplicaSet})
@@ -47,7 +48,7 @@ func PrintCanaryPods(c client.Client, ns, edsName string, out io.Writer) error {
 func PrintNotReadyPods(c client.Client, ns, edsName string, out io.Writer) error {
 	eds := &v1alpha1.ExtendedDaemonSet{}
 	err := c.Get(context.TODO(), client.ObjectKey{Namespace: ns, Name: edsName}, eds)
-	if err != nil && errors.IsNotFound(err) {
+	if err != nil && apierrors.IsNotFound(err) {
 		return fmt.Errorf("ExtendedDaemonSet %s/%s not found", ns, edsName)
 	} else if err != nil {
 		return fmt.Errorf("unable to get ExtendedDaemonSet, err: %w", err)

@@ -8,13 +8,14 @@ package upgrade
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
 	"time"
 
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -139,7 +140,7 @@ func (o *Options) Complete(cmd *cobra.Command, args []string) error {
 // Validate ensures that all required arguments and flag values are provided.
 func (o *Options) Validate() error {
 	if o.userExtendedDaemonSetName == "" {
-		return fmt.Errorf("the ExtendedDaemonset name needs to be provided")
+		return errors.New("the ExtendedDaemonset name needs to be provided")
 	}
 
 	return nil
@@ -152,7 +153,7 @@ func (o *Options) Run() error {
 	checkUpgradeDown := func(ctx context.Context) (bool, error) {
 		eds := &v1alpha1.ExtendedDaemonSet{}
 		err := o.client.Get(context.TODO(), client.ObjectKey{Namespace: o.userNamespace, Name: o.userExtendedDaemonSetName}, eds)
-		if err != nil && errors.IsNotFound(err) {
+		if err != nil && apierrors.IsNotFound(err) {
 			return false, fmt.Errorf("ExtendedDaemonSet %s/%s not found", o.userNamespace, o.userExtendedDaemonSetName)
 		} else if err != nil {
 			return false, fmt.Errorf("unable to get ExtendedDaemonSet, err: %w", err)
@@ -182,7 +183,7 @@ func (o *Options) Run() error {
 			err = o.client.Get(context.TODO(), client.ObjectKey{Namespace: o.userNamespace, Name: eds.Status.ActiveReplicaSet}, ers)
 			if err == nil {
 				if ers.CreationTimestamp.Before(&canaryFailedCondition.LastTransitionTime) {
-					return false, fmt.Errorf("active canary has a creation timestamp before the last CanaryFailed condition, meaning the deployment failed")
+					return false, errors.New("active canary has a creation timestamp before the last CanaryFailed condition, meaning the deployment failed")
 				}
 			} else {
 				o.printOutf("error getting replicaset %s: %s", eds.Status.ActiveReplicaSet, err.Error())

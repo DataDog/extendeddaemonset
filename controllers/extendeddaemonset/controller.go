@@ -16,7 +16,7 @@ import (
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -77,7 +77,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	instance := &datadoghqv1alpha1.ExtendedDaemonSet{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
@@ -288,16 +288,21 @@ func (r *Reconciler) updateInstanceWithCurrentRS(logger logr.Logger, now time.Ti
 			return extendedDaemonsetCopy, reconcile.Result{}, fmt.Errorf("failed to update ExtendedDaemonSet status, %w", err)
 		}
 
+		extendedDaemonsetCopy.Spec = *newDaemonset.Spec.DeepCopy()
+		extendedDaemonsetCopy.Annotations = newDaemonset.Annotations
+
 		if updateDaemonsetSpec || updateDaemonsetAnnotations {
 			// we use the `extendedDaemonsetCopy` instance to have last version. that contains the latest metadata info (resource version)
 			// Copy the spec part into the extendedDaemonsetCopy.
-			extendedDaemonsetCopy.Spec = *newDaemonset.Spec.DeepCopy()
-			extendedDaemonsetCopy.Annotations = newDaemonset.Annotations
 			// In case of canaryFailed, we also update the ExtendedDaemonset.Spec
 			logger.Info("Updating ExtendedDaemonSet.Spec")
 			if err := r.client.Update(context.TODO(), extendedDaemonsetCopy); err != nil {
 				return extendedDaemonsetCopy, reconcile.Result{}, fmt.Errorf("failed to update ExtendedDaemonSet, %w", err)
 			}
+		}
+
+		if extendedDaemonsetCopy.Annotations == nil {
+			extendedDaemonsetCopy.Annotations = make(map[string]string)
 		}
 
 		newDaemonset = extendedDaemonsetCopy
@@ -484,14 +489,14 @@ func manageCanaryStatusConditions(status *datadoghqv1alpha1.ExtendedDaemonSetSta
 		SupportLastUpdate:              false,
 	}
 	if isCanaryFailed {
-		msg := fmt.Sprintf("canary failed with ers: %s", ersName)
+		msg := "canary failed with ers: " + ersName
 		conditions.UpdateExtendedDaemonSetStatusCondition(status, now, datadoghqv1alpha1.ConditionTypeEDSCanaryFailed, corev1.ConditionTrue, "CanaryFailed", msg, updateOptions)
 	} else {
 		conditions.UpdateExtendedDaemonSetStatusCondition(status, now, datadoghqv1alpha1.ConditionTypeEDSCanaryFailed, corev1.ConditionFalse, "", "", updateOptions)
 	}
 
 	if isCanaryPaused && !isCanaryFailed {
-		msg := fmt.Sprintf("canary paused with ers: %s", ersName)
+		msg := "canary paused with ers: " + ersName
 		conditions.UpdateExtendedDaemonSetStatusCondition(status, now, datadoghqv1alpha1.ConditionTypeEDSCanaryPaused, corev1.ConditionTrue, string(pausedReason), msg, updateOptions)
 	} else {
 		conditions.UpdateExtendedDaemonSetStatusCondition(status, now, datadoghqv1alpha1.ConditionTypeEDSCanaryPaused, corev1.ConditionFalse, "", "", updateOptions)
@@ -554,7 +559,7 @@ func newReplicaSetFromInstance(daemonset *datadoghqv1alpha1.ExtendedDaemonSet) (
 	}
 	rs := &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{
 		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: fmt.Sprintf("%s-", daemonset.Name),
+			GenerateName: daemonset.Name + "-",
 			Namespace:    daemonset.Namespace,
 			Labels:       labels,
 			Annotations:  daemonset.Annotations,

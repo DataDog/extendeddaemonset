@@ -6,6 +6,7 @@
 package canary
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -99,7 +100,7 @@ func (o *podsOptions) complete(cmd *cobra.Command, args []string) error {
 // validate ensures that all required arguments and flag values are provided.
 func (o *podsOptions) validate() error {
 	if len(o.args) < 1 {
-		return fmt.Errorf("the extendeddaemonset name is required")
+		return errors.New("the extendeddaemonset name is required")
 	}
 
 	return nil
