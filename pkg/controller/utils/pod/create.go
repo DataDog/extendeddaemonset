@@ -25,7 +25,7 @@ func CreatePodFromDaemonSetReplicaSet(scheme *runtime.Scheme, replicaset *datado
 	templateCopy := replicaset.Spec.Template.DeepCopy()
 	{
 		templateCopy.ObjectMeta.Namespace = replicaset.Namespace
-		templateCopy.ObjectMeta.GenerateName = fmt.Sprintf("%s-", replicaset.Name)
+		templateCopy.ObjectMeta.GenerateName = replicaset.Name + "-"
 	}
 
 	if templateCopy.ObjectMeta.Labels == nil {

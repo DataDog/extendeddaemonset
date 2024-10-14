@@ -1,20 +1,17 @@
-image: registry.ddbuild.io/images/mirror/golang:1.21
+image: registry.ddbuild.io/images/mirror/golang:1.22
 variables:
-  GO111MODULE: "on"
   PROJECTNAME: "extendeddaemonset"
   PROJECTNAME_CHECK: "extendeddaemonset-check"
-  GOPATH: "$CI_PROJECT_DIR/.cache"
   TARGET_TAG: v$CI_PIPELINE_ID-$CI_COMMIT_SHORT_SHA
   BUILD_DOCKER_REGISTRY: "486234852809.dkr.ecr.us-east-1.amazonaws.com/ci"
-  JOB_DOCKER_IMAGE: "486234852809.dkr.ecr.us-east-1.amazonaws.com/ci-containers-project:v2.0.0"
+  JOB_DOCKER_IMAGE: "registry.ddbuild.io/ci-containers-project:v46367840-16ecadd-v3.0.0"
   DOCKER_REGISTRY_LOGIN_SSM_KEY: docker_hub_login
   DOCKER_REGISTRY_PWD_SSM_KEY: docker_hub_pwd
   DOCKER_REGISTRY_URL: docker.io
-cache: &global_cache
+cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
-  - .cache
-  policy: pull-push
+    - /go/pkg/mod
 
 stages:
   - build
@@ -23,7 +20,6 @@ stages:
   - release
 
 before_script:
-  - mkdir -p .cache
   - make install-tools
 
 build:
@@ -48,7 +44,7 @@ generate_code:
 
 build_eds_image_amd64:
   stage: image
-  tags: 
+  tags:
     - "arch:amd64"
   image: $JOB_DOCKER_IMAGE
   variables:
@@ -65,7 +61,7 @@ build_eds_image_amd64:
 
 build_eds_image_arm64:
   stage: image
-  tags: 
+  tags:
     - "arch:arm64"
   image: $JOB_DOCKER_IMAGE
   variables:
@@ -83,7 +79,7 @@ build_eds_image_arm64:
 
 build_eds_check_image_amd64:
   stage: image
-  tags: 
+  tags:
     - "arch:amd64"
   image: $JOB_DOCKER_IMAGE
   variables:
@@ -100,7 +96,7 @@ build_eds_check_image_amd64:
 
 build_eds_check_image_arm64:
   stage: image
-  tags: 
+  tags:
     - "arch:arm64"
   image: $JOB_DOCKER_IMAGE
   variables:

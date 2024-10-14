@@ -7,7 +7,8 @@ package extendeddaemonset
 
 import (
 	"k8s.io/apimachinery/pkg/runtime"
-	ksmetric "k8s.io/kube-state-metrics/pkg/metric"
+	ksmetric "k8s.io/kube-state-metrics/v2/pkg/metric"
+	generator "k8s.io/kube-state-metrics/v2/pkg/metric_generator"
 
 	datadoghqv1alpha1 "github.com/DataDog/extendeddaemonset/api/v1alpha1"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonset/conditions"
@@ -39,8 +40,8 @@ func addMetrics(scheme *runtime.Scheme, h metrics.Handler) error {
 	return metrics.AddMetrics(datadoghqv1alpha1.GroupVersion.WithKind("ExtendedDaemonSet"), scheme, h, generateMetricFamilies())
 }
 
-func generateMetricFamilies() []ksmetric.FamilyGenerator {
-	return []ksmetric.FamilyGenerator{
+func generateMetricFamilies() []generator.FamilyGenerator {
+	return []generator.FamilyGenerator{
 		{
 			Name: extendeddaemonsetLabels,
 			Type: ksmetric.Gauge,

@@ -7,6 +7,7 @@ package extendeddaemonset
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"testing"
@@ -1029,7 +1030,8 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 			now:  now,
 			name: "no replicaset == no update",
 			fields: fields{
-				client: fake.NewClientBuilder().WithStatusSubresource(&datadoghqv1alpha1.ExtendedDaemonSet{}).WithObjects(daemonset).Build(),
+				client: fake.NewClientBuilder().WithStatusSubresource(&datadoghqv1alpha1.ExtendedDaemonSet{}, &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{}).
+					WithObjects(daemonset).Build(),
 				scheme: s,
 			},
 			args: args{
@@ -1161,7 +1163,8 @@ func TestReconcileExtendedDaemonSet_updateInstanceWithCurrentRS(t *testing.T) {
 			now:  now,
 			name: "\"available\" correct when current == upToDate",
 			fields: fields{
-				client: fake.NewClientBuilder().WithStatusSubresource(&datadoghqv1alpha1.ExtendedDaemonSet{}, &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{}).WithObjects(daemonset, replicassetCurrent, replicassetUpToDate).Build(),
+				client: fake.NewClientBuilder().WithStatusSubresource(&datadoghqv1alpha1.ExtendedDaemonSet{}, &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{}).
+					WithObjects(daemonset, replicassetCurrent, replicassetUpToDate).Build(),
 				scheme: s,
 			},
 			args: args{
@@ -1298,7 +1301,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 					return err
 				}
 				if len(replicasetList.Items) != 1 {
-					return fmt.Errorf("len(replicasetList.Items) is not equal to 1")
+					return errors.New("len(replicasetList.Items) is not equal to 1")
 				}
 				if replicasetList.Items[0].GenerateName != "foo-" {
 					return fmt.Errorf("replicasetList.Items[0] bad generated name, should be: 'foo-', current: %s", replicasetList.Items[0].GenerateName)
@@ -1343,7 +1346,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 					return err
 				}
 				if len(replicasetList.Items) != 1 {
-					return fmt.Errorf("len(replicasetList.Items) is not equal to 1")
+					return errors.New("len(replicasetList.Items) is not equal to 1")
 				}
 				if replicasetList.Items[0].GenerateName != "foo-" {
 					return fmt.Errorf("replicasetList.Items[0] bad generated name, should be: 'foo-', current: %s", replicasetList.Items[0].GenerateName)
@@ -1387,7 +1390,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 					return err
 				}
 				if len(replicasetList.Items) != 2 {
-					return fmt.Errorf("len(replicasetList.Items) is not equal to 1")
+					return errors.New("len(replicasetList.Items) is not equal to 1")
 				}
 
 				return nil
@@ -1535,7 +1538,7 @@ func Test_isCanaryActive(t *testing.T) {
 func Test_manageStatus(t *testing.T) {
 	ns := "bar"
 	edsName := "foo"
-	ersName := fmt.Sprintf("%s-dsdvdv", edsName)
+	ersName := edsName + "-dsdvdv"
 
 	blankStatus := datadoghqv1alpha1.ExtendedDaemonSetStatus{}
 

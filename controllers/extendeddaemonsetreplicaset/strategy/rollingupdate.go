@@ -20,7 +20,6 @@ import (
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/conditions"
 	"github.com/DataDog/extendeddaemonset/controllers/extendeddaemonsetreplicaset/strategy/limits"
 	"github.com/DataDog/extendeddaemonset/pkg/controller/metrics"
-	"github.com/DataDog/extendeddaemonset/pkg/controller/utils"
 	podutils "github.com/DataDog/extendeddaemonset/pkg/controller/utils/pod"
 )
 
@@ -141,8 +140,8 @@ func ManageDeployment(client runtimeclient.Client, daemonset *datadoghqv1alpha1.
 	}
 	nbPodToCreate, nbPodToDelete := limits.CalculatePodToCreateAndDelete(limitParams)
 	metrics.SetRollingUpdateStuckMetric(params.Replicaset.GetName(), params.Replicaset.GetNamespace(), nbPodToDelete == 0 && len(allPodToDelete) > 0)
-	nbPodToDeleteWithConstraint := utils.MinInt(nbPodToDelete, len(allPodToDelete))
-	nbPodToCreateWithConstraint := utils.MinInt(nbPodToCreate, len(allPodToCreate))
+	nbPodToDeleteWithConstraint := min(nbPodToDelete, len(allPodToDelete))
+	nbPodToCreateWithConstraint := min(nbPodToCreate, len(allPodToCreate))
 	params.Logger.V(1).Info(
 		"Pods actions with limits",
 		"nbPodToDelete", nbPodToDelete,

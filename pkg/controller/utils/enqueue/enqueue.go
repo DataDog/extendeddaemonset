@@ -27,27 +27,27 @@ var _ handler.EventHandler = &RequestForExtendedDaemonSetLabel{}
 type RequestForExtendedDaemonSetLabel struct{}
 
 // Create implements EventHandler.
-func (e *RequestForExtendedDaemonSetLabel) Create(ctx context.Context, evt event.CreateEvent, q workqueue.RateLimitingInterface) {
+func (e *RequestForExtendedDaemonSetLabel) Create(ctx context.Context, evt event.CreateEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	e.add(evt.Object, q)
 }
 
 // Update implements EventHandler.
-func (e *RequestForExtendedDaemonSetLabel) Update(ctx context.Context, evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
+func (e *RequestForExtendedDaemonSetLabel) Update(ctx context.Context, evt event.UpdateEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	e.add(evt.ObjectOld, q)
 	e.add(evt.ObjectNew, q)
 }
 
 // Delete implements EventHandler.
-func (e *RequestForExtendedDaemonSetLabel) Delete(ctx context.Context, evt event.DeleteEvent, q workqueue.RateLimitingInterface) {
+func (e *RequestForExtendedDaemonSetLabel) Delete(ctx context.Context, evt event.DeleteEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	e.add(evt.Object, q)
 }
 
 // Generic implements EventHandler.
-func (e *RequestForExtendedDaemonSetLabel) Generic(ctx context.Context, evt event.GenericEvent, q workqueue.RateLimitingInterface) {
+func (e *RequestForExtendedDaemonSetLabel) Generic(ctx context.Context, evt event.GenericEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	e.add(evt.Object, q)
 }
 
-func (e RequestForExtendedDaemonSetLabel) add(meta metav1.Object, q workqueue.RateLimitingInterface) {
+func (e RequestForExtendedDaemonSetLabel) add(meta metav1.Object, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	value, ok := meta.GetLabels()[v1alpha1.ExtendedDaemonSetNameLabelKey]
 	if ok {
 		req := reconcile.Request{
@@ -66,27 +66,27 @@ var _ handler.EventHandler = &RequestForExtendedDaemonSetLabel{}
 type RequestForExtendedDaemonSetReplicaSetLabel struct{}
 
 // Create implements EventHandler.
-func (e *RequestForExtendedDaemonSetReplicaSetLabel) Create(evt event.CreateEvent, q workqueue.RateLimitingInterface) {
+func (e *RequestForExtendedDaemonSetReplicaSetLabel) Create(evt event.CreateEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	e.add(evt.Object, q)
 }
 
 // Update implements EventHandler.
-func (e *RequestForExtendedDaemonSetReplicaSetLabel) Update(evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
+func (e *RequestForExtendedDaemonSetReplicaSetLabel) Update(evt event.UpdateEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	e.add(evt.ObjectOld, q)
 	e.add(evt.ObjectNew, q)
 }
 
 // Delete implements EventHandler.
-func (e *RequestForExtendedDaemonSetReplicaSetLabel) Delete(evt event.DeleteEvent, q workqueue.RateLimitingInterface) {
+func (e *RequestForExtendedDaemonSetReplicaSetLabel) Delete(evt event.DeleteEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	e.add(evt.Object, q)
 }
 
 // Generic implements EventHandler.
-func (e RequestForExtendedDaemonSetReplicaSetLabel) Generic(evt event.GenericEvent, q workqueue.RateLimitingInterface) {
+func (e RequestForExtendedDaemonSetReplicaSetLabel) Generic(evt event.GenericEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	e.add(evt.Object, q)
 }
 
-func (e *RequestForExtendedDaemonSetReplicaSetLabel) add(meta metav1.Object, q workqueue.RateLimitingInterface) {
+func (e *RequestForExtendedDaemonSetReplicaSetLabel) add(meta metav1.Object, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	value, ok := meta.GetLabels()[v1alpha1.ExtendedDaemonSetReplicaSetNameLabelKey]
 	if ok {
 		req := reconcile.Request{
@@ -105,27 +105,27 @@ var _ handler.EventHandler = &RequestForExtendedDaemonSetStatus{}
 type RequestForExtendedDaemonSetStatus struct{}
 
 // Create implements EventHandler.
-func (e *RequestForExtendedDaemonSetStatus) Create(ctx context.Context, evt event.CreateEvent, q workqueue.RateLimitingInterface) {
+func (e *RequestForExtendedDaemonSetStatus) Create(ctx context.Context, evt event.CreateEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	e.add(evt.Object, q)
 }
 
 // Update implements EventHandler.
-func (e *RequestForExtendedDaemonSetStatus) Update(ctx context.Context, evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
+func (e *RequestForExtendedDaemonSetStatus) Update(ctx context.Context, evt event.UpdateEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	e.add(evt.ObjectOld, q)
 	e.add(evt.ObjectNew, q)
 }
 
 // Delete implements EventHandler.
-func (e *RequestForExtendedDaemonSetStatus) Delete(ctx context.Context, evt event.DeleteEvent, q workqueue.RateLimitingInterface) {
+func (e *RequestForExtendedDaemonSetStatus) Delete(ctx context.Context, evt event.DeleteEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	e.add(evt.Object, q)
 }
 
 // Generic implements EventHandler.
-func (e *RequestForExtendedDaemonSetStatus) Generic(ctx context.Context, evt event.GenericEvent, q workqueue.RateLimitingInterface) {
+func (e *RequestForExtendedDaemonSetStatus) Generic(ctx context.Context, evt event.GenericEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	e.add(evt.Object, q)
 }
 
-func (e RequestForExtendedDaemonSetStatus) add(obj runtime.Object, q workqueue.RateLimitingInterface) {
+func (e RequestForExtendedDaemonSetStatus) add(obj runtime.Object, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	// convert unstructured.Unstructured to a ExtendedDaemonSet.
 	eds, ok := obj.(*v1alpha1.ExtendedDaemonSet)
 	if !ok {
@@ -158,26 +158,26 @@ type RequestForAllReplicaSetFromNodeEvent struct {
 }
 
 // Create implements EventHandler.
-func (e *RequestForAllReplicaSetFromNodeEvent) Create(ctx context.Context, evt event.CreateEvent, q workqueue.RateLimitingInterface) {
+func (e *RequestForAllReplicaSetFromNodeEvent) Create(ctx context.Context, evt event.CreateEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	e.add(q)
 }
 
 // Update implements EventHandler.
-func (e *RequestForAllReplicaSetFromNodeEvent) Update(ctx context.Context, evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
+func (e *RequestForAllReplicaSetFromNodeEvent) Update(ctx context.Context, evt event.UpdateEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	// e.add(q)
 }
 
 // Delete implements EventHandler.
-func (e *RequestForAllReplicaSetFromNodeEvent) Delete(ctx context.Context, evt event.DeleteEvent, q workqueue.RateLimitingInterface) {
+func (e *RequestForAllReplicaSetFromNodeEvent) Delete(ctx context.Context, evt event.DeleteEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	e.add(q)
 }
 
 // Generic implements EventHandler.
-func (e *RequestForAllReplicaSetFromNodeEvent) Generic(ctx context.Context, evt event.GenericEvent, q workqueue.RateLimitingInterface) {
+func (e *RequestForAllReplicaSetFromNodeEvent) Generic(ctx context.Context, evt event.GenericEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	// e.add(q)
 }
 
-func (e RequestForAllReplicaSetFromNodeEvent) add(q workqueue.RateLimitingInterface) {
+func (e RequestForAllReplicaSetFromNodeEvent) add(q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	rsList := &v1alpha1.ExtendedDaemonSetReplicaSetList{}
 	err := e.client.List(context.TODO(), rsList)
 	if err != nil {

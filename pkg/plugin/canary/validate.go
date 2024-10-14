@@ -7,10 +7,11 @@ package canary
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -106,7 +107,7 @@ func (o *validateOptions) complete(cmd *cobra.Command, args []string) error {
 // validate ensures that all required arguments and flag values are provided.
 func (o *validateOptions) validate() error {
 	if len(o.args) < 1 {
-		return fmt.Errorf("the extendeddaemonset name is required")
+		return errors.New("the extendeddaemonset name is required")
 	}
 
 	return nil
@@ -116,14 +117,14 @@ func (o *validateOptions) validate() error {
 func (o *validateOptions) run() error {
 	eds := &v1alpha1.ExtendedDaemonSet{}
 	err := o.client.Get(context.TODO(), client.ObjectKey{Namespace: o.userNamespace, Name: o.userExtendedDaemonSetName}, eds)
-	if err != nil && errors.IsNotFound(err) {
+	if err != nil && apierrors.IsNotFound(err) {
 		return fmt.Errorf("ExtendedDaemonSet %s/%s not found", o.userNamespace, o.userExtendedDaemonSetName)
 	} else if err != nil {
 		return fmt.Errorf("unable to get ExtendedDaemonSet, err: %w", err)
 	}
 
 	if eds.Status.Canary == nil {
-		return fmt.Errorf("the ExtendedDaemonset is not currently running a canary replicaset")
+		return errors.New("the ExtendedDaemonset is not currently running a canary replicaset")
 	}
 	rsName := eds.Status.Canary.ReplicaSet
 	newEds := eds.DeepCopy()
