@@ -160,7 +160,7 @@ install-tools: bin/golangci-lint bin/operator-sdk bin/yq bin/kubebuilder bin/kub
 
 .PHONY: generate-openapi
 generate-openapi: bin/openapi-gen
-	./bin/openapi-gen --logtostderr --output-dir api/v1alpha1 --output-file zz_generated.openapi.go --output-pkg api/v1alpha1 --go-header-file hack/boilerplate.go.txt
+	./bin/openapi-gen --logtostderr --output-dir api/v1alpha1 --output-file zz_generated.openapi.go --output-pkg api/v1alpha1 --go-header-file hack/boilerplate.go.txt ./api/v1alpha1
 
 .PHONY: patch-crds
 patch-crds: bin/yq
