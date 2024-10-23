@@ -12,8 +12,825 @@ package v1alpha1
 
 import (
 	common "k8s.io/kube-openapi/pkg/common"
+	spec "k8s.io/kube-openapi/pkg/validation/spec"
 )
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
-	return map[string]common.OpenAPIDefinition{}
+	return map[string]common.OpenAPIDefinition{
+		"github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSet":                            schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonSet(ref),
+		"github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetReplicaSet":                  schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonSetReplicaSet(ref),
+		"github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetReplicaSetSpec":              schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonSetReplicaSetSpec(ref),
+		"github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetReplicaSetSpecStrategy":      schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonSetReplicaSetSpecStrategy(ref),
+		"github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetReplicaSetStatus":            schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonSetReplicaSetStatus(ref),
+		"github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetSpec":                        schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonSetSpec(ref),
+		"github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetSpecStrategy":                schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonSetSpecStrategy(ref),
+		"github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetSpecStrategyCanary":          schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonSetSpecStrategyCanary(ref),
+		"github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoFail":  schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonSetSpecStrategyCanaryAutoFail(ref),
+		"github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoPause": schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonSetSpecStrategyCanaryAutoPause(ref),
+		"github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate":   schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonSetSpecStrategyRollingUpdate(ref),
+		"github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetStatus":                      schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonSetStatus(ref),
+		"github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetStatusCanary":                schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonSetStatusCanary(ref),
+		"github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonsetSetting":                     schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonsetSetting(ref),
+		"github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonsetSettingContainerSpec":        schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonsetSettingContainerSpec(ref),
+		"github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonsetSettingSpec":                 schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonsetSettingSpec(ref),
+		"github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonsetSettingStatus":               schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonsetSettingStatus(ref),
+	}
+}
+
+func schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonSet(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ExtendedDaemonSet is the Schema for the extendeddaemonsets API.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetSpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetSpec", "github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonSetReplicaSet(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ExtendedDaemonSetReplicaSet is the Schema for the extendeddaemonsetreplicasets API.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetReplicaSetSpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetReplicaSetStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetReplicaSetSpec", "github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetReplicaSetStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonSetReplicaSetSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ExtendedDaemonSetReplicaSetSpec defines the desired state of ExtendedDaemonSetReplicaSet",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"selector": {
+						SchemaProps: spec.SchemaProps{
+							Description: "A label query over pods that are managed by the daemon set. Must match in order to be controlled. If empty, defaulted to labels on Pod template.",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
+						},
+					},
+					"template": {
+						SchemaProps: spec.SchemaProps{
+							Description: "An object that describes the pod that will be created. The ExtendedDaemonSetReplicaSet will create exactly one copy of this pod on every node that matches the template's node selector (or on every node if no node selector is specified).",
+							Default:     map[string]interface{}{},
+							Ref:         ref("k8s.io/api/core/v1.PodTemplateSpec"),
+						},
+					},
+					"templateGeneration": {
+						SchemaProps: spec.SchemaProps{
+							Description: "A sequence hash representing a specific generation of the template. Populated by the system. It can be set only during the creation.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"template"},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/api/core/v1.PodTemplateSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"},
+	}
+}
+
+func schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonSetReplicaSetSpecStrategy(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ExtendedDaemonSetReplicaSetSpecStrategy defines the desired state of ExtendedDaemonSet",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"rollingUpdate": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate"),
+						},
+					},
+					"reconcileFrequency": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate", "k8s.io/apimachinery/pkg/apis/meta/v1.Duration"},
+	}
+}
+
+func schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonSetReplicaSetStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ExtendedDaemonSetReplicaSetStatus defines the observed state of ExtendedDaemonSetReplicaSet",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
+						},
+					},
+					"desired": {
+						SchemaProps: spec.SchemaProps{
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
+						},
+					},
+					"current": {
+						SchemaProps: spec.SchemaProps{
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
+						},
+					},
+					"ready": {
+						SchemaProps: spec.SchemaProps{
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
+						},
+					},
+					"available": {
+						SchemaProps: spec.SchemaProps{
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
+						},
+					},
+					"ignoredUnresponsiveNodes": {
+						SchemaProps: spec.SchemaProps{
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
+						},
+					},
+					"conditions": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"type",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Conditions Represents the latest available observations of a DaemonSet's current state.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetReplicaSetCondition"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"status", "desired", "current", "ready", "available", "ignoredUnresponsiveNodes"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetReplicaSetCondition"},
+	}
+}
+
+func schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonSetSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ExtendedDaemonSetSpec defines the desired state of ExtendedDaemonSet",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"selector": {
+						SchemaProps: spec.SchemaProps{
+							Description: "A label query over pods that are managed by the daemon set. Must match in order to be controlled. If empty, defaulted to labels on Pod template. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
+						},
+					},
+					"template": {
+						SchemaProps: spec.SchemaProps{
+							Description: "An object that describes the pod that will be created. The ExtendedDaemonSet will create exactly one copy of this pod on every node that matches the template's node selector (or on every node if no node selector is specified). More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller#pod-template",
+							Default:     map[string]interface{}{},
+							Ref:         ref("k8s.io/api/core/v1.PodTemplateSpec"),
+						},
+					},
+					"strategy": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Daemonset deployment strategy.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetSpecStrategy"),
+						},
+					},
+				},
+				Required: []string{"template", "strategy"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetSpecStrategy", "k8s.io/api/core/v1.PodTemplateSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"},
+	}
+}
+
+func schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonSetSpecStrategy(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ExtendedDaemonSetSpecStrategy defines the deployment strategy of ExtendedDaemonSet.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"rollingUpdate": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate"),
+						},
+					},
+					"canary": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Canary deployment configuration",
+							Ref:         ref("github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetSpecStrategyCanary"),
+						},
+					},
+					"reconcileFrequency": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ReconcileFrequency use to configure how often the ExtendedDeamonset will be fully reconcile, default is 10sec.",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetSpecStrategyCanary", "github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate", "k8s.io/apimachinery/pkg/apis/meta/v1.Duration"},
+	}
+}
+
+func schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonSetSpecStrategyCanary(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ExtendedDaemonSetSpecStrategyCanary defines the canary deployment strategy of ExtendedDaemonSet.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"replicas": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/util/intstr.IntOrString"),
+						},
+					},
+					"duration": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
+						},
+					},
+					"nodeSelector": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
+						},
+					},
+					"nodeAntiAffinityKeys": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"autoPause": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoPause"),
+						},
+					},
+					"autoFail": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoFail"),
+						},
+					},
+					"noRestartsDuration": {
+						SchemaProps: spec.SchemaProps{
+							Description: "NoRestartsDuration defines min duration since last restart to end the canary phase.",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
+						},
+					},
+					"validationMode": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ValidationMode used to configure how a canary deployment is validated. Possible values are 'auto' (default) and 'manual'",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoFail", "github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetSpecStrategyCanaryAutoPause", "k8s.io/apimachinery/pkg/apis/meta/v1.Duration", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector", "k8s.io/apimachinery/pkg/util/intstr.IntOrString"},
+	}
+}
+
+func schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonSetSpecStrategyCanaryAutoFail(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ExtendedDaemonSetSpecStrategyCanaryAutoFail defines the canary deployment AutoFail parameters of the ExtendedDaemonSet.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"enabled": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Enabled enables AutoFail. Default value is true.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"maxRestarts": {
+						SchemaProps: spec.SchemaProps{
+							Description: "MaxRestarts defines the number of tolerable (per pod) Canary pod restarts after which the Canary deployment is autofailed. Default value is 5.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"maxRestartsDuration": {
+						SchemaProps: spec.SchemaProps{
+							Description: "MaxRestartsDuration defines the maximum duration of tolerable Canary pod restarts after which the Canary deployment is autofailed. There is no default value.",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
+						},
+					},
+					"canaryTimeout": {
+						SchemaProps: spec.SchemaProps{
+							Description: "CanaryTimeout defines the maximum duration of a Canary, after which the Canary deployment is autofailed. This is a safeguard against lengthy Canary pauses. There is no default value.",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Duration"},
+	}
+}
+
+func schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonSetSpecStrategyCanaryAutoPause(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ExtendedDaemonSetSpecStrategyCanaryAutoPause defines the canary deployment AutoPause parameters of the ExtendedDaemonSet.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"enabled": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Enabled enables AutoPause. Default value is true.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"maxRestarts": {
+						SchemaProps: spec.SchemaProps{
+							Description: "MaxRestarts defines the number of tolerable (per pod) Canary pod restarts after which the Canary deployment is autopaused. Default value is 2.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"maxSlowStartDuration": {
+						SchemaProps: spec.SchemaProps{
+							Description: "MaxSlowStartDuration defines the maximum slow start duration for a pod (stuck in Creating state) after which the Canary deployment is autopaused. There is no default value.",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Duration"},
+	}
+}
+
+func schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonSetSpecStrategyRollingUpdate(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ExtendedDaemonSetSpecStrategyRollingUpdate defines the rolling update deployment strategy of ExtendedDaemonSet.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"maxUnavailable": {
+						SchemaProps: spec.SchemaProps{
+							Description: "The maximum number of DaemonSet pods that can be unavailable during the update. Value can be an absolute number (ex: 5) or a percentage of total number of DaemonSet pods at the start of the update (ex: 10%). Absolute number is calculated from percentage by rounding up. This cannot be 0. Default value is 1.",
+							Ref:         ref("k8s.io/apimachinery/pkg/util/intstr.IntOrString"),
+						},
+					},
+					"maxPodSchedulerFailure": {
+						SchemaProps: spec.SchemaProps{
+							Description: "MaxPodSchedulerFailure the maxinum number of not scheduled on its Node due to a scheduler failure: resource constraints. Value can be an absolute number (ex: 5) or a percentage of total number of DaemonSet pods at the start of the update (ex: 10%). Absolute.",
+							Ref:         ref("k8s.io/apimachinery/pkg/util/intstr.IntOrString"),
+						},
+					},
+					"maxParallelPodCreation": {
+						SchemaProps: spec.SchemaProps{
+							Description: "The maxium number of pods created in parallel. Default value is 250.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"slowStartIntervalDuration": {
+						SchemaProps: spec.SchemaProps{
+							Description: "SlowStartIntervalDuration the duration between to 2 Default value is 1min.",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
+						},
+					},
+					"slowStartAdditiveIncrease": {
+						SchemaProps: spec.SchemaProps{
+							Description: "SlowStartAdditiveIncrease Value can be an absolute number (ex: 5) or a percentage of total number of DaemonSet pods at the start of the update (ex: 10%). Default value is 5.",
+							Ref:         ref("k8s.io/apimachinery/pkg/util/intstr.IntOrString"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Duration", "k8s.io/apimachinery/pkg/util/intstr.IntOrString"},
+	}
+}
+
+func schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonSetStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ExtendedDaemonSetStatus defines the observed state of ExtendedDaemonSet",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"desired": {
+						SchemaProps: spec.SchemaProps{
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
+						},
+					},
+					"current": {
+						SchemaProps: spec.SchemaProps{
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
+						},
+					},
+					"ready": {
+						SchemaProps: spec.SchemaProps{
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
+						},
+					},
+					"available": {
+						SchemaProps: spec.SchemaProps{
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
+						},
+					},
+					"upToDate": {
+						SchemaProps: spec.SchemaProps{
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
+						},
+					},
+					"ignoredUnresponsiveNodes": {
+						SchemaProps: spec.SchemaProps{
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
+						},
+					},
+					"state": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"activeReplicaSet": {
+						SchemaProps: spec.SchemaProps{
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
+						},
+					},
+					"canary": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetStatusCanary"),
+						},
+					},
+					"reason": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Reason provides an explanation for canary deployment autopause",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"conditions": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"type",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Conditions Represents the latest available observations of a DaemonSet's current state.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetCondition"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"desired", "current", "ready", "available", "upToDate", "ignoredUnresponsiveNodes", "activeReplicaSet"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetCondition", "github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonSetStatusCanary"},
+	}
+}
+
+func schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonSetStatusCanary(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ExtendedDaemonSetStatusCanary defines the observed state of ExtendedDaemonSet canary deployment",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"replicaSet": {
+						SchemaProps: spec.SchemaProps{
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
+						},
+					},
+					"nodes": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"replicaSet"},
+			},
+		},
+	}
+}
+
+func schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonsetSetting(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ExtendedDaemonsetSetting is the Schema for the extendeddaemonsetsettings API.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonsetSettingSpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonsetSettingStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonsetSettingSpec", "github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonsetSettingStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonsetSettingContainerSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ExtendedDaemonsetSettingContainerSpec defines the resources override for a container identified by its name",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
+						},
+					},
+					"resources": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/api/core/v1.ResourceRequirements"),
+						},
+					},
+				},
+				Required: []string{"name", "resources"},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/api/core/v1.ResourceRequirements"},
+	}
+}
+
+func schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonsetSettingSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ExtendedDaemonsetSettingSpec is the Schema for the extendeddaemonsetsetting API",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"reference": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Reference contains enough information to let you identify the referred resource.",
+							Ref:         ref("k8s.io/api/autoscaling/v1.CrossVersionObjectReference"),
+						},
+					},
+					"nodeSelector": {
+						SchemaProps: spec.SchemaProps{
+							Description: "NodeSelector lists labels that must be present on nodes to trigger the usage of this resource.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
+						},
+					},
+					"containers": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"name",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Containers contains a list of container spec override.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonsetSettingContainerSpec"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"reference", "nodeSelector"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/DataDog/extendeddaemonset/api/v1alpha1.ExtendedDaemonsetSettingContainerSpec", "k8s.io/api/autoscaling/v1.CrossVersionObjectReference", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"},
+	}
+}
+
+func schema_DataDog_extendeddaemonset_api_v1alpha1_ExtendedDaemonsetSettingStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ExtendedDaemonsetSettingStatus defines the observed state of ExtendedDaemonsetSetting.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
+						},
+					},
+					"error": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+				},
+				Required: []string{"status"},
+			},
+		},
+	}
 }
