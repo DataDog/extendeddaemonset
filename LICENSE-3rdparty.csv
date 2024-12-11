@@ -32,10 +32,6 @@ core,"github.com/gogo/protobuf/proto",NewBSD
 core,"github.com/gogo/protobuf/sortkeys",NewBSD
 core,"github.com/golang/groupcache/lru",Apache-2.0
 core,"github.com/golang/protobuf/proto",NewBSD
-core,"github.com/golang/protobuf/ptypes",NewBSD
-core,"github.com/golang/protobuf/ptypes/any",NewBSD
-core,"github.com/golang/protobuf/ptypes/duration",NewBSD
-core,"github.com/golang/protobuf/ptypes/timestamp",NewBSD
 core,"github.com/google/btree",Apache-2.0
 core,"github.com/google/gnostic-models/compiler",Apache-2.0
 core,"github.com/google/gnostic-models/extensions",Apache-2.0
@@ -242,7 +238,6 @@ core,"google.golang.org/protobuf/runtime/protoimpl",NewBSD
 core,"google.golang.org/protobuf/types/descriptorpb",NewBSD
 core,"google.golang.org/protobuf/types/gofeaturespb",NewBSD
 core,"google.golang.org/protobuf/types/known/anypb",NewBSD
-core,"google.golang.org/protobuf/types/known/durationpb",NewBSD
 core,"google.golang.org/protobuf/types/known/timestamppb",NewBSD
 core,"gopkg.in/DataDog/dd-trace-go.v1/internal",Apache-2.0
 core,"gopkg.in/DataDog/dd-trace-go.v1/internal/appsec/dyngo",Apache-2.0
