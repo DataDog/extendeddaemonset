@@ -184,7 +184,7 @@ tidy:
 
 .PHONY: vendor
 vendor:
-	go mod vendor
+	go work vendor
 
 kubectl-eds: fmt vet lint
 	CGO_ENABLED=1 go build -ldflags '${LDFLAGS}' -o bin/kubectl-eds ./cmd/kubectl-eds/main.go
