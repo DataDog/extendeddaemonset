@@ -1,0 +1,53 @@
+---
+schema-version: v2
+dd-service: extendeddaemonset
+team: agent-onboarding
+contacts:
+  - type: slack
+    contact: https://dd.slack.com/archives/C037CDX0WJV
+  - type: email
+    contact: team-agentonboarding@datadoghq.com
+links:
+  - name: Runbook
+    type: runbook
+    url: https://datadoghq.atlassian.net/wiki/spaces/ContEco/pages/2446754987/Runbooks
+  - name: extendeddaemonset
+    type: repo
+    url: https://github.com/DataDog/extendeddaemonset
+  - name: deployment
+    type: repo
+    url: https://github.com/DataDog/k8s-datadog-agent-ops
+  - name: internal-chart
+    type: repo
+    url: https://github.com/DataDog/k8s-datadog-agent-ops/tree/main/charts/extendeddaemonset
+  - name: internal-image
+    type: repo
+    url: https://github.com/DataDog/images/tree/master/extendeddaemonset
+  - name: On Call documentation
+    type: doc
+    url: https://datadoghq.atlassian.net/wiki/spaces/ContEco/pages/2445645960/On+Call
+tags:
+  - app:extendeddaemonset
+  - service:extendeddaemonset
+  - team:agent-onboarding
+integrations:
+  pagerduty: https://datadog.pagerduty.com/service-directory/PFZC0QZ
+extensions:
+  datadoghq.com/sdp:
+    conductor:
+      slack: "celene-test"
+      options:
+        rollout_strategy: "installation"
+      targets:
+        - name: "horizon-build-test"
+          # For now, this config is mandatory, even if the target is not a ci_pipeline CNAB object.
+          # Setting this to a placeholder value for now, the intended pipeline that will be triggered will
+          # be the one that is defined in the main .gitlab-ci.yml file.
+          ci_pipeline: "//fake_placeholder:fake_placeholder"
+          parent_environments:
+            - "staging"
+          branch: "v0.10" // Need automation to set this
+          // Run at 8am every 4 Mondays
+          schedule: "0 8/672 * * 1"
+          options:
+            disable_failure_notifications: true
