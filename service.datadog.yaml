@@ -46,8 +46,9 @@ extensions:
           ci_pipeline: "//fake_placeholder:fake_placeholder"
           parent_environments:
             - "staging"
-          branch: "v0.10" // Need automation to set this
-          // Run at 8am every 4 Mondays
+          # Need automation to set this
+          branch: "v0.10"
+          # Run at 8am every 4 Mondays
           schedule: "0 8/672 * * 1"
           options:
             disable_failure_notifications: true
