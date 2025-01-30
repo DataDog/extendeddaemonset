@@ -47,8 +47,7 @@ extensions:
           parent_environments:
             - "staging"
           # Need automation to set this
-          # Testing with tag in lieu of branch
-          branch: "v0.10.0-rc.6"
+          branch: "v0.10"
           # Run at 8am every 4 Mondays
           schedule: "0 8/672 * * 1"
           options:
