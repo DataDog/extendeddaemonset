@@ -47,7 +47,7 @@ extensions:
           parent_environments:
             - "staging"
           # Need automation to set this
-          branch: "v0.10"
+          branch: "celene/v0_10_conductor_test"
           # Run at 8am every 4 Mondays
           schedule: "0 8/672 * * 1"
           options:
