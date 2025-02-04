@@ -10,6 +10,8 @@ variables:
   DOCKER_REGISTRY_LOGIN_SSM_KEY: docker_hub_login
   DOCKER_REGISTRY_PWD_SSM_KEY: docker_hub_pwd
   DOCKER_REGISTRY_URL: docker.io
+  # This should get updated to slug of latest release by make bundle command
+  CONDUCTOR_BUILD_TAG: v0-10-0-rc-6-test
 cache: &global_cache
   key: ${CI_COMMIT_REF_SLUG}
   paths:
@@ -211,3 +213,45 @@ trigger_internal_eds_check_image:
     TMPL_SRC_IMAGE: v${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}
     RELEASE_STAGING: "true"
     RELEASE_PROD: "true"
+
+trigger_internal_eds_image_conductor:
+  stage: release
+  rules:
+    - if: '$DDR == "true"'
+    - when: never
+  needs:
+    - build_eds_image_arm64
+    - build_eds_image_amd64
+  trigger:
+    project: DataDog/images
+    branch: master
+    strategy: depend
+  variables:
+    IMAGE_VERSION: tmpl-v3
+    IMAGE_NAME: $PROJECTNAME
+    RELEASE_TAG: ${CONDUCTOR_BUILD_TAG}
+    BUILD_TAG: ${CONDUCTOR_BUILD_TAG}
+    TMPL_SRC_IMAGE: v${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}
+    RELEASE_STAGING: "true"
+    RELEASE_PROD: "false"
+
+trigger_internal_eds_check_image_conductor:
+  stage: release
+  rules:
+    - if: '$DDR == "true"'
+    - when: never
+  needs:
+    - build_eds_check_image_arm64
+    - build_eds_check_image_amd64
+  trigger:
+    project: DataDog/images
+    branch: master
+    strategy: depend
+  variables:
+    IMAGE_VERSION: tmpl-v3
+    IMAGE_NAME: $PROJECTNAME_CHECK
+    RELEASE_TAG: ${CONDUCTOR_BUILD_TAG}
+    BUILD_TAG: ${CONDUCTOR_BUILD_TAG}
+    TMPL_SRC_IMAGE: v${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}
+    RELEASE_STAGING: "true"
+    RELEASE_PROD: "false"
