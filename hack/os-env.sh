@@ -9,7 +9,12 @@ uname_os() {
 }
 
 OS=$(uname_os)
-SED="sed -i"
-if [ "$OS" == "darwin" ]; then
-    SED="sed -i .bak"
+ARCH=$(uname -m)
+PLATFORM="$OS-$ARCH"
+ROOT=$(git rev-parse --show-toplevel)
+export SED="sed -i"
+if [ "$PLATFORM" == "darwin-arm64" ]; then
+    export SED="sed -i ''"
+elif [ "$OS" == "darwin" ]; then
+    export SED="sed -i .bak"
 fi
