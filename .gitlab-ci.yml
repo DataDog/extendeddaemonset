@@ -208,7 +208,8 @@ trigger_internal_eds_image_conductor:
     BUILD_TAG: ${CONDUCTOR_BUILD_TAG}
     TMPL_SRC_IMAGE: v${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}
     RELEASE_STAGING: "true"
-    RELEASE_PROD: "true"
+    # Temporary
+    RELEASE_PROD: "false"
 
 trigger_internal_eds_check_image:
   stage: release
@@ -250,4 +251,5 @@ trigger_internal_eds_check_image_conductor:
     BUILD_TAG: ${CONDUCTOR_BUILD_TAG}
     TMPL_SRC_IMAGE: v${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}
     RELEASE_STAGING: "true"
-    RELEASE_PROD: "true"
+    # Temporary
+    RELEASE_PROD: "false"
