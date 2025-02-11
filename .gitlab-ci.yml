@@ -191,6 +191,27 @@ trigger_internal_eds_image:
     RELEASE_STAGING: "true"
     RELEASE_PROD: "true"
 
+trigger_internal_eds_image_fips:
+  stage: release
+  rules:
+    - if: $CI_COMMIT_TAG
+    - when: never
+  needs:
+    - build_eds_image_arm64
+    - build_eds_image_amd64
+  trigger:
+    project: DataDog/images
+    branch: master
+    strategy: depend
+  variables:
+    IMAGE_VERSION: tmpl-v3-fips
+    IMAGE_NAME: $PROJECTNAME
+    RELEASE_TAG: ${CI_COMMIT_REF_SLUG}
+    BUILD_TAG: ${CI_COMMIT_REF_SLUG}
+    TMPL_SRC_IMAGE: v${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}
+    RELEASE_STAGING: "true"
+    RELEASE_PROD: "true"
+
 trigger_internal_eds_check_image:
   stage: release
   rules:
