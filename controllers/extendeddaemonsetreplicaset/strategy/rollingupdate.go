@@ -104,7 +104,7 @@ func ManageDeployment(client runtimeclient.Client, daemonset *datadoghqv1alpha1.
 	}
 
 	rollingUpdateStartTime := getRollingUpdateStartTime(&params.Replicaset.Status, now)
-	maxCreation, err := calculateMaxCreation(&params.Strategy.RollingUpdate, nbNodes, rollingUpdateStartTime, now)
+	maxCreation, err := calculateMaxCreation(&params.Strategy.RollingUpdate, nbNodes, len(allPodToDelete), rollingUpdateStartTime, now)
 	if err != nil {
 		params.Logger.Error(err, "error during calculateMaxCreation execution")
 
@@ -220,7 +220,7 @@ func getRollingUpdateStartTime(status *datadoghqv1alpha1.ExtendedDaemonSetReplic
 	return now
 }
 
-func calculateMaxCreation(params *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate, nbNodes int, rsStartTime, now time.Time) (int, error) {
+func calculateMaxCreation(params *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate, nbNodes, podsToDelete int, rsStartTime, now time.Time) (int, error) {
 	startValue, err := intstrutil.GetValueFromIntOrPercent(params.SlowStartAdditiveIncrease, nbNodes, true)
 	if err != nil {
 		return 0, err
@@ -228,6 +228,9 @@ func calculateMaxCreation(params *datadoghqv1alpha1.ExtendedDaemonSetSpecStrateg
 	rollingUpdateDuration := now.Sub(rsStartTime)
 	nbSlowStartSlot := int(rollingUpdateDuration / params.SlowStartIntervalDuration.Duration)
 	result := (1 + nbSlowStartSlot) * startValue
+	if result < podsToDelete {
+		result = podsToDelete
+	}
 	if result > int(*params.MaxParallelPodCreation) {
 		result = int(*params.MaxParallelPodCreation)
 	}
