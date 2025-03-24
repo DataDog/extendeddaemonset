@@ -9,7 +9,7 @@ variables:
   DOCKER_REGISTRY_PWD_SSM_KEY: docker_hub_pwd
   DOCKER_REGISTRY_URL: docker.io
   # This should get updated to slug of latest release by make bundle command
-  CONDUCTOR_BUILD_TAG: v0-10-0-rc-6
+  CONDUCTOR_BUILD_TAG: v0-10-0-rc-8
 cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
