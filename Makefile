@@ -141,7 +141,7 @@ endif
 
 # Generate bundle manifests and metadata, then validate generated files.
 .PHONY: bundle
-bundle: manifests bin/kustomize
+bundle: manifests bin/kustomize patch-gitlab
 	./bin/operator-sdk generate kustomize manifests -q
 	cd config/manager && $(ROOT_DIR)/bin/kustomize edit set image controller=$(IMG)
 	./bin/kustomize build config/manifests | ./bin/operator-sdk generate bundle -q --overwrite --version $(BUNDLE_VERSION) $(BUNDLE_METADATA_OPTS)
@@ -165,6 +165,10 @@ generate-openapi: bin/openapi-gen
 .PHONY: patch-crds
 patch-crds: bin/yq
 	./hack/patch-crds.sh
+
+.PHONY: patch-gitlab
+patch-gitlab:
+	./hack/patch-gitlab.sh $(VERSION)
 
 .PHONY: lint
 lint: bin/golangci-lint fmt vet
