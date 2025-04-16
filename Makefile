@@ -12,6 +12,7 @@ LDFLAGS=-w -s -X ${BUILDINFOPKG}.Commit=${GIT_COMMIT} -X ${BUILDINFOPKG}.Version
 GOARCH?=amd64
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 KUSTOMIZE = bin/kustomize
+FIPS_ENABLED?=false
 
 # Default bundle image tag
 BUNDLE_IMG ?= controller-bundle:$(BUNDLE_VERSION)
@@ -97,7 +98,7 @@ docker-build: generate docker-build-ci docker-build-check-ci
 
 # For use locally
 docker-build-ci:
-	docker build . -t ${IMG} --build-arg LDFLAGS="${LDFLAGS}" --build-arg GOARCH="${GOARCH}"
+	docker build . -t ${IMG} --build-arg  FIPS_ENABLED="${FIPS_ENABLED}" --build-arg LDFLAGS="${LDFLAGS}" --build-arg GOARCH="${GOARCH}"
 
 # For use locally
 docker-build-check-ci:
@@ -106,7 +107,7 @@ docker-build-check-ci:
 
 # For use in Gitlab
 docker-build-push-ci:
-	docker buildx build . -t ${IMG} --build-arg LDFLAGS="${LDFLAGS}" --build-arg GOARCH="${GOARCH}" --platform=linux/${GOARCH} --push
+	docker buildx build . -t ${IMG} --build-arg  FIPS_ENABLED="${FIPS_ENABLED}" --build-arg LDFLAGS="${LDFLAGS}" --build-arg GOARCH="${GOARCH}" --platform=linux/${GOARCH} --push
 
 # For use in Gitlab
 docker-build-push-check-ci:

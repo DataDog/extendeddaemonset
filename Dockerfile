@@ -1,5 +1,7 @@
+ARG FIPS_ENABLED=false
+
 # Build the manager binary
-FROM golang:1.22 as builder
+FROM golang:1.22 AS builder
 
 WORKDIR /workspace
 # Copy the Go Modules manifests
@@ -27,7 +29,14 @@ COPY pkg/ pkg/
 # Build
 ARG LDFLAGS
 ARG GOARCH
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=${GOARCH} GO111MODULE=on go build -a -ldflags "${LDFLAGS}" -o manager main.go
+ARG FIPS_ENABLED
+RUN echo "FIPS_ENABLED is: $FIPS_ENABLED"
+RUN if [ "$FIPS_ENABLED" = "true" ]; then \
+      CGO_ENABLED=1 GOEXPERIMENT=boringcrypto GOOS=linux GOARCH=${GOARCH} GO111MODULE=on go build -tags fips -a -ldflags "${LDFLAGS}" -o manager main.go; \
+    else \
+      CGO_ENABLED=0 GOOS=linux GOARCH=${GOARCH} GO111MODULE=on go build -a -ldflags "${LDFLAGS}" -o manager main.go; \
+    fi
+
 
 FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
 WORKDIR /
