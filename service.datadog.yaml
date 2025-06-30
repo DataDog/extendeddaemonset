@@ -1,7 +1,7 @@
 ---
 schema-version: v2
 dd-service: extendeddaemonset
-team: agent-onboarding
+dd-team: agent-onboarding
 contacts:
   - type: slack
     contact: https://dd.slack.com/archives/C037CDX0WJV
@@ -31,7 +31,7 @@ tags:
   - service:extendeddaemonset
   - team:agent-onboarding
 integrations:
-  pagerduty: https://datadog.pagerduty.com/service-directory/PFZC0QZ
+  pagerduty: https://datadog.pagerduty.com/service-directory/PBVS1V3
 extensions:
   datadoghq.com/sdp:
     conductor:
