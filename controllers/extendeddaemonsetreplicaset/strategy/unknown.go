@@ -55,10 +55,14 @@ func ManageUnknown(client client.Client, params *Parameters) (*Result, error) {
 	result.NewStatus.IgnoredUnresponsiveNodes = nbIgnoredUnresponsiveNodes
 	params.Logger.V(1).Info("Status:", "Desired", result.NewStatus.Desired, "Ready", readyPods, "Available", availablePods)
 
+	// Cleanup Pods that belong to this unknown ReplicaSet but are running on nodes
+	// that no longer match the ReplicaSet's node selector (identified by FilterAndMapPodsByNode)
+	err := cleanupPods(client, params.Logger, result.NewStatus, params.PodToCleanUp)
+
 	if result.NewStatus.Desired != result.NewStatus.Ready {
 		result.Result.Requeue = true
 	}
 	result.Result.RequeueAfter = time.Second
 
-	return result, nil
+	return result, err
 }
