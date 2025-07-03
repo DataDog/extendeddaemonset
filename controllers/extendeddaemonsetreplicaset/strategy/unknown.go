@@ -57,7 +57,11 @@ func ManageUnknown(client client.Client, params *Parameters) (*Result, error) {
 
 	// Cleanup Pods that belong to this unknown ReplicaSet but are running on nodes
 	// that no longer match the ReplicaSet's node selector (identified by FilterAndMapPodsByNode)
-	cleanupPods(client, params.Logger, result.NewStatus, params.PodToCleanUp)
+	err := cleanupPods(client, params.Logger, result.NewStatus, params.PodToCleanUp)
+	if err != nil {
+		params.Logger.Error(err, "Failed to cleanup pods for unknown ReplicaSet")
+		result.Result.Requeue = true
+	}
 
 	if result.NewStatus.Desired != result.NewStatus.Ready {
 		result.Result.Requeue = true
