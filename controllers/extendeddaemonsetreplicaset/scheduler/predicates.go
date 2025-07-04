@@ -8,6 +8,7 @@ package scheduler
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
@@ -23,18 +24,46 @@ import (
 //   - PodMatchNodeSelector: checks pod's NodeSelector and NodeAffinity against node
 //   - PodToleratesNodeTaints: exclude tainted node unless pod has specific toleration
 func CheckNodeFitness(logger logr.Logger, pod *corev1.Pod, node *corev1.Node) bool {
+	// Enhanced logging for debugging (skip pods with "with-profile" in name)
+	if !strings.Contains(pod.Name, "with-profile") {
+		logger.V(1).Info("CheckNodeFitness called",
+			"pod.Name", pod.Name,
+			"pod.Namespace", pod.Namespace,
+			"node.Name", node.Name,
+			"pod.NodeSelector", pod.Spec.NodeSelector,
+			"node.Labels", node.Labels,
+			"pod.Tolerations", pod.Spec.Tolerations,
+			"node.Taints", node.Spec.Taints,
+		)
+		if pod.Spec.Affinity != nil && pod.Spec.Affinity.NodeAffinity != nil {
+			logger.V(1).Info("CheckNodeFitness pod affinity",
+				"pod.Name", pod.Name,
+				"node.Name", node.Name,
+				"pod.NodeAffinity", pod.Spec.Affinity.NodeAffinity,
+			)
+		}
+	}
+
 	// Check pod node selector
 	// Check if node.Labels match pod.Spec.NodeSelector.
 	if !checkNodeSelector(pod, node) {
-		logger.V(1).Info("CheckNodeFitness return false", "reason", "node selector missmatch")
+		if !strings.Contains(pod.Name, "with-profile") {
+			logger.V(1).Info("CheckNodeFitness return false", "reason", "node selector missmatch", "pod.Name", pod.Name, "node.Name", node.Name)
+		}
 
 		return false
 	}
 
 	if !checkPodToleratesNodeTaints(pod, node) {
-		logger.V(1).Info("CheckNodeFitness return false", "reason", "node taints")
+		if !strings.Contains(pod.Name, "with-profile") {
+			logger.V(1).Info("CheckNodeFitness return false", "reason", "node taints", "pod.Name", pod.Name, "node.Name", node.Name)
+		}
 
 		return false
+	}
+
+	if !strings.Contains(pod.Name, "with-profile") {
+		logger.V(1).Info("CheckNodeFitness return true", "pod.Name", pod.Name, "node.Name", node.Name)
 	}
 
 	return true

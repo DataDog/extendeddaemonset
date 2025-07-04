@@ -8,6 +8,7 @@ package extendeddaemonsetreplicaset
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/go-logr/logr"
 	"github.com/spf13/pflag"
@@ -42,8 +43,26 @@ func (r *Reconciler) FilterAndMapPodsByNode(
 	// Create a fake pod from the current replicaset.spec.template
 	// Use this pod to check fitness of nodes in nodeList
 	newPod, _ := podutils.CreatePodFromDaemonSetReplicaSet(nil, replicaset, nil, nil, false)
+
+	// Log the fake pod details for debugging
+	logger.V(1).Info("FilterAndMapPodsByNode created fake pod",
+		"replicaset.Name", replicaset.Name,
+		"replicaset.Namespace", replicaset.Namespace,
+		"fakePod.NodeSelector", newPod.Spec.NodeSelector,
+		"fakePod.Tolerations", newPod.Spec.Tolerations,
+	)
+	if newPod.Spec.Affinity != nil && newPod.Spec.Affinity.NodeAffinity != nil {
+		logger.V(1).Info("FilterAndMapPodsByNode fake pod affinity",
+			"replicaset.Name", replicaset.Name,
+			"fakePod.NodeAffinity", newPod.Spec.Affinity.NodeAffinity,
+		)
+	}
+
 	podsByNodeName := make(map[string][]*corev1.Pod)
 	nodesByName = make(map[string]*strategy.NodeItem)
+	schedulableNodes := []string{}
+	unschedulableNodes := []string{}
+
 	for id := range nodeList.Items {
 		nodeItem := nodeList.Items[id]
 		nodesByName[nodeItem.Node.Name] = nodeItem
@@ -53,10 +72,21 @@ func (r *Reconciler) FilterAndMapPodsByNode(
 		// Populate podsByNodeName with nodes that are deemed schedulable
 		if scheduler.CheckNodeFitness(logger.WithValues("filter", "FilterAndMapPodsByNode"), newPod, nodeItem.Node) {
 			podsByNodeName[nodeItem.Node.Name] = nil
+			schedulableNodes = append(schedulableNodes, nodeItem.Node.Name)
 		} else {
 			logger.V(1).Info("CheckNodeFitness not ok", "reason", "DeletionTimestamp==nil", "node.Name", nodeItem.Node.Name)
+			unschedulableNodes = append(unschedulableNodes, nodeItem.Node.Name)
 		}
 	}
+
+	// Log schedulable vs unschedulable nodes
+	logger.V(1).Info("FilterAndMapPodsByNode node fitness results",
+		"replicaset.Name", replicaset.Name,
+		"schedulableNodes", schedulableNodes,
+		"unschedulableNodes", unschedulableNodes,
+		"totalNodes", len(nodeList.Items),
+		"ignoredNodes", ignoreNodes,
+	)
 
 	// Associate Pods to Nodes
 	for id, pod := range podList.Items {
@@ -112,6 +142,39 @@ func (r *Reconciler) FilterAndMapPodsByNode(
 		logger.V(1).Info("PodToDelete", "reason", "duplicatedPod", "pod.Name", pod.Name, "node.Name", nodeName)
 	}
 	podsToDelete = append(podsToDelete, duplicatedPods...)
+
+	// Log the final results
+	podsByNodeSummary := make(map[string]string)
+	for nodeItem, pod := range podsByNode {
+		if pod != nil {
+			podsByNodeSummary[nodeItem.Node.Name] = pod.Name
+		} else {
+			podsByNodeSummary[nodeItem.Node.Name] = "<nil>"
+		}
+	}
+
+	podsToDeleteNames := make([]string, 0, len(podsToDelete))
+	for _, pod := range podsToDelete {
+		if !strings.Contains(pod.Name, "with-profile") {
+			podsToDeleteNames = append(podsToDeleteNames, pod.Name)
+		}
+	}
+
+	unscheduledPodNames := make([]string, 0, len(unscheduledPods))
+	for _, pod := range unscheduledPods {
+		if !strings.Contains(pod.Name, "with-profile") {
+			unscheduledPodNames = append(unscheduledPodNames, pod.Name)
+		}
+	}
+
+	logger.V(1).Info("FilterAndMapPodsByNode results",
+		"replicaset.Name", replicaset.Name,
+		"podsByNode", podsByNodeSummary,
+		"podsToDelete", podsToDeleteNames,
+		"unscheduledPods", unscheduledPodNames,
+		"totalPodsToDelete", len(podsToDelete),
+		"totalUnscheduledPods", len(unscheduledPods),
+	)
 
 	// Filter Pods in Terminated state
 	return nodesByName, podsByNode, podsToDelete, unscheduledPods
