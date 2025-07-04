@@ -8,6 +8,7 @@ package extendeddaemonsetreplicaset
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/go-logr/logr"
 	"github.com/spf13/pflag"
@@ -42,8 +43,26 @@ func (r *Reconciler) FilterAndMapPodsByNode(
 	// Create a fake pod from the current replicaset.spec.template
 	// Use this pod to check fitness of nodes in nodeList
 	newPod, _ := podutils.CreatePodFromDaemonSetReplicaSet(nil, replicaset, nil, nil, false)
+
+	// Log the fake pod details for debugging
+	logger.V(1).Info("FilterAndMapPodsByNode created fake pod",
+		"replicaset.Name", replicaset.Name,
+		"replicaset.Namespace", replicaset.Namespace,
+		"fakePod.NodeSelector", newPod.Spec.NodeSelector,
+		"fakePod.Tolerations", newPod.Spec.Tolerations,
+	)
+	if newPod.Spec.Affinity != nil && newPod.Spec.Affinity.NodeAffinity != nil {
+		logger.V(1).Info("FilterAndMapPodsByNode fake pod affinity",
+			"replicaset.Name", replicaset.Name,
+			"fakePod.NodeAffinity", newPod.Spec.Affinity.NodeAffinity,
+		)
+	}
+
 	podsByNodeName := make(map[string][]*corev1.Pod)
 	nodesByName = make(map[string]*strategy.NodeItem)
+	schedulableNodes := []string{}
+	unschedulableNodes := []string{}
+
 	for id := range nodeList.Items {
 		nodeItem := nodeList.Items[id]
 		nodesByName[nodeItem.Node.Name] = nodeItem
@@ -53,10 +72,21 @@ func (r *Reconciler) FilterAndMapPodsByNode(
 		// Populate podsByNodeName with nodes that are deemed schedulable
 		if scheduler.CheckNodeFitness(logger.WithValues("filter", "FilterAndMapPodsByNode"), newPod, nodeItem.Node) {
 			podsByNodeName[nodeItem.Node.Name] = nil
+			schedulableNodes = append(schedulableNodes, nodeItem.Node.Name)
 		} else {
 			logger.V(1).Info("CheckNodeFitness not ok", "reason", "DeletionTimestamp==nil", "node.Name", nodeItem.Node.Name)
+			unschedulableNodes = append(unschedulableNodes, nodeItem.Node.Name)
 		}
 	}
+
+	// Log schedulable vs unschedulable nodes
+	logger.V(1).Info("FilterAndMapPodsByNode node fitness results",
+		"replicaset.Name", replicaset.Name,
+		"schedulableNodes", schedulableNodes,
+		"unschedulableNodes", unschedulableNodes,
+		"totalNodes", len(nodeList.Items),
+		"ignoredNodes", ignoreNodes,
+	)
 
 	// Associate Pods to Nodes
 	for id, pod := range podList.Items {
@@ -73,31 +103,40 @@ func (r *Reconciler) FilterAndMapPodsByNode(
 		}
 
 		if _, ok := podsByNodeName[nodeName]; ok {
-			if pod.Status.Phase == corev1.PodFailed {
-				if r.shouldDeleteFailedPod(replicaset, nodeName) {
-					podsToDelete = append(podsToDelete, &podList.Items[id])
-					logger.Info("Failed pod is marked for deletion", "pod.Namespace", pod.Namespace, "pod.Name", pod.Name, "nodeName", nodeName)
-
-					continue
-				} else {
-					logger.V(1).Info("Failed pod deletion has been limited by backoff", pod.Namespace, "pod.Name", pod.Name, "nodeName", nodeName)
+			// Node is schedulable for current ERS
+			// BUT: Check if this pod belongs to the current ERS
+			if podBelongsToCurrentERS(&pod, replicaset) {
+				// Keep pod - it belongs to current ERS
+				if pod.Status.Phase == corev1.PodFailed {
+					if r.shouldDeleteFailedPod(replicaset, nodeName) {
+						podsToDelete = append(podsToDelete, &podList.Items[id])
+						logger.Info("Failed pod is marked for deletion", "pod.Namespace", pod.Namespace, "pod.Name", pod.Name, "nodeName", nodeName)
+						continue
+					} else {
+						logger.V(1).Info("Failed pod deletion has been limited by backoff", "pod.Namespace", pod.Namespace, "pod.Name", pod.Name, "nodeName", nodeName)
+					}
 				}
-			}
-			podsByNodeName[nodeName] = append(podsByNodeName[nodeName], &podList.Items[id])
+				podsByNodeName[nodeName] = append(podsByNodeName[nodeName], &podList.Items[id])
 
-			if _, scheduled := podutils.IsPodScheduled(&pod); !scheduled {
-				unscheduledPods = append(unscheduledPods, &podList.Items[id])
+				if _, scheduled := podutils.IsPodScheduled(&pod); !scheduled {
+					unscheduledPods = append(unscheduledPods, &podList.Items[id])
+				}
+			} else {
+				// Delete pod - it belongs to different ERS but node is schedulable for current ERS
+				if pod.DeletionTimestamp == nil {
+					podsToDelete = append(podsToDelete, &podList.Items[id])
+					logger.V(1).Info("PodToDelete", "reason", "different ERS on schedulable node", "pod.Name", pod.Name, "node.Name", nodeName, "current.ERS", replicaset.Name)
+				}
 			}
 		} else {
 			if _, ok := ignoreMapNode[nodeName]; ok {
 				continue
 			}
 
-			// Add pod with missing Node in podsToDelete slice
-			// Skip pod with DeletionTimestamp already set
+			// Node is not schedulable - delete any pods on it
 			if pod.DeletionTimestamp == nil {
 				podsToDelete = append(podsToDelete, &podList.Items[id])
-				logger.V(1).Info("PodToDelete", "reason", "DeletionTimestamp==nil", "pod.Name", pod.Name, "node.Name", nodeName)
+				logger.V(1).Info("PodToDelete", "reason", "unschedulable node", "pod.Name", pod.Name, "node.Name", nodeName)
 			}
 		}
 	}
@@ -112,6 +151,39 @@ func (r *Reconciler) FilterAndMapPodsByNode(
 		logger.V(1).Info("PodToDelete", "reason", "duplicatedPod", "pod.Name", pod.Name, "node.Name", nodeName)
 	}
 	podsToDelete = append(podsToDelete, duplicatedPods...)
+
+	// Log the final results
+	podsByNodeSummary := make(map[string]string)
+	for nodeItem, pod := range podsByNode {
+		if pod != nil {
+			podsByNodeSummary[nodeItem.Node.Name] = pod.Name
+		} else {
+			podsByNodeSummary[nodeItem.Node.Name] = "<nil>"
+		}
+	}
+
+	podsToDeleteNames := make([]string, 0, len(podsToDelete))
+	for _, pod := range podsToDelete {
+		if !strings.Contains(pod.Name, "with-profile") {
+			podsToDeleteNames = append(podsToDeleteNames, pod.Name)
+		}
+	}
+
+	unscheduledPodNames := make([]string, 0, len(unscheduledPods))
+	for _, pod := range unscheduledPods {
+		if !strings.Contains(pod.Name, "with-profile") {
+			unscheduledPodNames = append(unscheduledPodNames, pod.Name)
+		}
+	}
+
+	logger.V(1).Info("FilterAndMapPodsByNode results",
+		"replicaset.Name", replicaset.Name,
+		"podsByNode", podsByNodeSummary,
+		"podsToDelete", podsToDeleteNames,
+		"unscheduledPods", unscheduledPodNames,
+		"totalPodsToDelete", len(podsToDelete),
+		"totalUnscheduledPods", len(unscheduledPods),
+	)
 
 	// Filter Pods in Terminated state
 	return nodesByName, podsByNode, podsToDelete, unscheduledPods
@@ -174,4 +246,30 @@ func (o sortPodByNodeName) Less(i, j int) bool {
 	}
 
 	return o[i].CreationTimestamp.Before(&o[j].CreationTimestamp)
+}
+
+func podBelongsToCurrentERS(pod *corev1.Pod, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) bool {
+	// Only apply ownership checking if the current replicaset is active and not paused
+	// For non-active replicasets (canary, unknown), don't delete pods from other ERS
+	if replicaset.Status.Status != string(strategy.ReplicaSetStatusActive) {
+		return true // Don't delete pods when current ERS is not active
+	}
+
+	// If ERS is active but paused, don't delete pods from other ERS
+	// Check for rolling update pause condition
+	for _, condition := range replicaset.Status.Conditions {
+		if condition.Type == datadoghqv1alpha1.ConditionTypeRollingUpdatePaused && condition.Status == corev1.ConditionTrue {
+			return true // Don't delete pods when current ERS is paused
+		}
+	}
+
+	// Current ERS is active and not paused - check if the pod belongs to this ERS by examining owner references
+	for _, ownerRef := range pod.OwnerReferences {
+		if ownerRef.Kind == "ExtendedDaemonSetReplicaSet" && ownerRef.Name == replicaset.Name {
+			return true // Pod belongs to current active ERS
+		}
+	}
+
+	// Pod doesn't belong to current active ERS - should be deleted
+	return false
 }
