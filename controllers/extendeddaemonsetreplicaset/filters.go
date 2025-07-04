@@ -249,13 +249,21 @@ func (o sortPodByNodeName) Less(i, j int) bool {
 }
 
 func podBelongsToCurrentERS(pod *corev1.Pod, replicaset *datadoghqv1alpha1.ExtendedDaemonSetReplicaSet) bool {
-	// Only apply ownership checking if the current replicaset is active
+	// Only apply ownership checking if the current replicaset is active and not paused
 	// For non-active replicasets (canary, unknown), don't delete pods from other ERS
 	if replicaset.Status.Status != string(strategy.ReplicaSetStatusActive) {
 		return true // Don't delete pods when current ERS is not active
 	}
 
-	// Current ERS is active - check if the pod belongs to this ERS by examining owner references
+	// If ERS is active but paused, don't delete pods from other ERS
+	// Check for rolling update pause condition
+	for _, condition := range replicaset.Status.Conditions {
+		if condition.Type == datadoghqv1alpha1.ConditionTypeRollingUpdatePaused && condition.Status == corev1.ConditionTrue {
+			return true // Don't delete pods when current ERS is paused
+		}
+	}
+
+	// Current ERS is active and not paused - check if the pod belongs to this ERS by examining owner references
 	for _, ownerRef := range pod.OwnerReferences {
 		if ownerRef.Kind == "ExtendedDaemonSetReplicaSet" && ownerRef.Name == replicaset.Name {
 			return true // Pod belongs to current active ERS
