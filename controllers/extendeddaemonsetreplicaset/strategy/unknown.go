@@ -8,7 +8,6 @@ package strategy
 import (
 	"time"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	podutils "github.com/DataDog/extendeddaemonset/pkg/controller/utils/pod"
@@ -21,8 +20,7 @@ func ManageUnknown(client client.Client, params *Parameters) (*Result, error) {
 	for _, nodeName := range params.CanaryNodes {
 		delete(params.PodByNodeName, params.NodeByName[nodeName])
 	}
-	now := time.Now()
-	metaNow := metav1.NewTime(now)
+
 	var desiredPods, currentPods, availablePods, readyPods, nbIgnoredUnresponsiveNodes int32
 
 	for node, pod := range params.PodByNodeName {
@@ -36,7 +34,7 @@ func ManageUnknown(client client.Client, params *Parameters) (*Result, error) {
 				}
 
 				currentPods++
-				if podutils.IsPodAvailable(pod, 0, metaNow) {
+				if podutils.IsPodReady(pod) {
 					availablePods++
 				}
 				if podutils.IsPodReady(pod) {

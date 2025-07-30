@@ -54,8 +54,6 @@ func manageCanaryStatus(annotations map[string]string, params *Parameters, now t
 	result.IsUnpaused = eds.IsCanaryDeploymentUnpaused(annotations)
 
 	var (
-		metaNow = metav1.NewTime(now)
-
 		desiredPods, currentPods, availablePods, readyPods int32
 
 		needRequeue            bool
@@ -89,7 +87,7 @@ func manageCanaryStatus(annotations map[string]string, params *Parameters, now t
 			}
 
 			currentPods++
-			if podUtils.IsPodAvailable(pod, 0, metaNow) {
+			if podUtils.IsPodReady(pod) {
 				availablePods++
 			}
 			if podUtils.IsPodReady(pod) {

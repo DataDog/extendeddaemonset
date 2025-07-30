@@ -587,65 +587,6 @@ func Test_MostRecentRestart(t *testing.T) {
 	}
 }
 
-func TestIsPodAvailable(t *testing.T) {
-	now := metav1.Now()
-
-	type args struct {
-		pod             *v1.Pod
-		minReadySeconds int32
-		now             metav1.Time
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		{
-			name: "Not available, because not ready",
-			args: args{
-				pod:             newPod(now, false, 0),
-				minReadySeconds: 0,
-				now:             now,
-			},
-			want: false,
-		},
-		{
-			name: "Not available, Pod ready, but not since enough time",
-			args: args{
-				pod:             newPod(now, true, 0),
-				minReadySeconds: 1,
-				now:             now,
-			},
-			want: false,
-		},
-		{
-			name: "Available, Pod ready and minReady == 0",
-			args: args{
-				pod:             newPod(now, true, 0),
-				minReadySeconds: 0,
-				now:             now,
-			},
-			want: true,
-		},
-		{
-			name: "Available, Pod ready since enough time",
-			args: args{
-				pod:             newPod(now, true, 51),
-				minReadySeconds: 50,
-				now:             now,
-			},
-			want: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := IsPodAvailable(tt.args.pod, tt.args.minReadySeconds, tt.args.now); got != tt.want {
-				t.Errorf("IsPodAvailable() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func newPod(now metav1.Time, ready bool, beforeSec int) *v1.Pod {
 	conditionStatus := v1.ConditionFalse
 	if ready {
