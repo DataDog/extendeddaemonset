@@ -78,14 +78,14 @@ func ManageDeployment(client runtimeclient.Client, daemonset *datadoghqv1alpha1.
 
 					continue
 				}
-				if podutils.IsPodAvailable(pod, 0, metaNow) {
+				if podutils.IsPodReady(pod) {
 					oldAvailablePods++
 				} else {
 					oldUnavailablePods++
 				}
 			} else {
 				createdPods++
-				if podutils.IsPodAvailable(pod, 0, metaNow) {
+				if podutils.IsPodReady(pod) {
 					availablePods++
 				}
 				if podutils.IsPodReady(pod) {
