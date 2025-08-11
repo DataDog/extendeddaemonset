@@ -190,6 +190,12 @@ func (o *Options) Run() error {
 			}
 		}
 
+		// Make sure the eds is in a Running state to avoid a case where the eds is in a Canary state and the number of canary pods
+		// is high enough to pass the threshold.
+		if eds.Status.State != v1alpha1.ExtendedDaemonSetStatusStateRunning {
+			return false, fmt.Errorf("eds is not in a Running state, it is in a %s state", eds.Status.State)
+		}
+
 		if float64(eds.Status.UpToDate) > float64(eds.Status.Current)*o.nodeCompletionPct ||
 			eds.Status.Current-eds.Status.UpToDate < o.nodeCompletionMin {
 			o.printOutf("upgrade is now finished (reached threshold): %d, nb updated pods: %d, threshold pct: %f, min threshold: %d", eds.Status.Current, eds.Status.UpToDate, o.nodeCompletionPct, o.nodeCompletionMin)
