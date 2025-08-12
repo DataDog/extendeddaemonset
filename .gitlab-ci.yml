@@ -10,7 +10,7 @@ variables:
   DOCKER_REGISTRY_URL: docker.io
   FIPS_ENABLED: false
   # This should get updated to slug of latest release by make bundle command
-  CONDUCTOR_BUILD_TAG: v0-10-0-rc-8
+  CONDUCTOR_BUILD_TAG: v0-11-0-rc-1
 cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:

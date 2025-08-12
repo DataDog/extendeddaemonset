@@ -25,7 +25,7 @@ metadata:
               "spec": {
                 "containers": [
                   {
-                    "image": "k8s.gcr.io/pause:3.0",
+                    "image": "registry.k8s.io/pause:3.0",
                     "name": "daemon"
                   }
                 ]
@@ -73,7 +73,7 @@ metadata:
     capabilities: Full Lifecycle
     operators.operatorframework.io/builder: operator-sdk-v1.4.0+git
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
-  name: extendeddaemonset.v0.8.0
+  name: extendeddaemonset.v0.11.0-rc.1
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -124,17 +124,6 @@ spec:
           - ""
           resources:
           - pods
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - ""
-          resources:
           - podtemplates
           verbs:
           - create
@@ -155,45 +144,7 @@ spec:
           - datadoghq.com
           resources:
           - extendeddaemonsetreplicasets
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - datadoghq.com
-          resources:
-          - extendeddaemonsetreplicasets/status
-          verbs:
-          - get
-          - patch
-          - update
-        - apiGroups:
-          - datadoghq.com
-          resources:
           - extendeddaemonsets
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - datadoghq.com
-          resources:
-          - extendeddaemonsets/status
-          verbs:
-          - get
-          - patch
-          - update
-        - apiGroups:
-          - datadoghq.com
-          resources:
           - extendeddaemonsetsettings
           verbs:
           - create
@@ -206,6 +157,8 @@ spec:
         - apiGroups:
           - datadoghq.com
           resources:
+          - extendeddaemonsetreplicasets/status
+          - extendeddaemonsets/status
           - extendeddaemonsetsettings/status
           verbs:
           - get
@@ -327,4 +280,4 @@ spec:
   provider:
     name: Datadog
     url: https://github.com/DataDog/extendeddaemonset
-  version: 0.8.0
+  version: 0.11.0-rc.1
