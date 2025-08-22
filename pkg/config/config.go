@@ -52,11 +52,11 @@ func ManagerOptionsWithNamespaces(logger logr.Logger, opt ctrl.Options) ctrl.Opt
 	case len(namespaces) == 0:
 		logger.Info("Manager will watch and manage resources in all namespaces")
 	case len(namespaces) == 1:
-		logger.Info("Manager will be watching namespace", namespaces[0])
+		logger.Info("Manager will be watching namespace", "namespace", namespaces[0])
 		opt.Cache.DefaultNamespaces = map[string]cache.Config{namespaces[0]: {}}
 	case len(namespaces) > 1:
 		// configure cluster-scoped with MultiNamespacedCacheBuilder
-		logger.Info("Manager will be watching multiple namespaces", namespaces)
+		logger.Info("Manager will be watching multiple namespaces", "namespaces", namespaces)
 		opt.NewCache = func(config *rest.Config, opts cache.Options) (cache.Cache, error) {
 			// https://github.com/kubernetes-sigs/controller-runtime/commit/3e35cab1ea29145d8699259b079633a2b8cfc116
 			nsConfigs := make(map[string]cache.Config)
