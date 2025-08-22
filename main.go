@@ -113,7 +113,7 @@ func main() {
 
 	restConfig := ctrl.GetConfigOrDie()
 	restConfig.UserAgent = "eds-controller"
-	extraMetricHandlers, err := getExtraMetricHandlers(scheme)
+	extraMetricHandlers, err := getExtraMetricHandlers(scheme, pprofActive)
 	if err != nil {
 		setupLog.Error(err, "problem registering external extra metric handlers")
 		exitCode = 1
@@ -257,17 +257,18 @@ func customSetupHealthChecks(mgr manager.Manager) {
 	}
 }
 
-func getExtraMetricHandlers(scheme *runtime.Scheme) (map[string]http.Handler, error) {
+func getExtraMetricHandlers(scheme *runtime.Scheme, pprofActive bool) (map[string]http.Handler, error) {
 	extraHandlers := map[string]http.Handler{}
-	debugHandler := debug.GetExtraMetricHandlers()
+	if pprofActive {
+		debugHandler := debug.GetExtraMetricHandlers()
+		for k, v := range debugHandler {
+			extraHandlers[k] = v
+		}
+	}
 	ksmHandler, err := metrics.GetExtraMetricHandlers(scheme)
 	if err != nil {
 		return nil, err
 	}
-	for k, v := range debugHandler {
-		extraHandlers[k] = v
-	}
-
 	for k, v := range ksmHandler {
 		extraHandlers[k] = v
 	}
