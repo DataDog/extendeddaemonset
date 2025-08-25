@@ -47,6 +47,7 @@ func (r *PodTemplateReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	r.internal = internal
 
 	return ctrl.NewControllerManagedBy(mgr).
+		Named("eds_podtemplate").
 		For(&datadoghqv1alpha1.ExtendedDaemonSet{}).
 		Owns(&corev1.PodTemplate{}).
 		Complete(r)
