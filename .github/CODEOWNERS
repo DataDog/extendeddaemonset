@@ -6,5 +6,5 @@
 *                  @Datadog/container-ecosystems
 
 # Documentation
-README.md             @DataDog/documentation @Datadog/container-ecosystems
-/docs/                @DataDog/documentation @Datadog/container-ecosystems
+README.md             @Datadog/container-ecosystems
+/docs/                @Datadog/container-ecosystems
