@@ -256,7 +256,7 @@ func (r *Reconciler) updateInstanceWithCurrentRS(logger logr.Logger, now time.Ti
 
 		if isCanaryActive {
 			// manager CanaryNode selection.
-			nbCanaryPod, err := intstrutil.GetValueFromIntOrPercent(daemonset.Spec.Strategy.Canary.Replicas, int(daemonset.Status.Desired), true)
+			nbCanaryPod, err := intstrutil.GetScaledValueFromIntOrPercent(daemonset.Spec.Strategy.Canary.Replicas, int(daemonset.Status.Desired), true)
 			if err != nil {
 				logger.Error(err, "unable to select Nodes for canary")
 
@@ -361,7 +361,7 @@ func (r *Reconciler) selectNodes(logger logr.Logger, daemonset *datadoghqv1alpha
 		currentNodes = canaryStatus.Nodes
 	}
 
-	nbCanaryPod, err := intstrutil.GetValueFromIntOrPercent(daemonsetSpec.Strategy.Canary.Replicas, int(replicaset.Status.Desired), true)
+	nbCanaryPod, err := intstrutil.GetScaledValueFromIntOrPercent(daemonsetSpec.Strategy.Canary.Replicas, int(daemonset.Status.Desired), true)
 	if err != nil {
 		return err
 	}

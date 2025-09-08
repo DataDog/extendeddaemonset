@@ -50,7 +50,7 @@ func ManageDeployment(client runtimeclient.Client, daemonset *datadoghqv1alpha1.
 
 	nbNodes := len(params.PodByNodeName)
 
-	maxPodSchedulerFailure, err := intstrutil.GetValueFromIntOrPercent(params.Strategy.RollingUpdate.MaxPodSchedulerFailure, nbNodes, true)
+	maxPodSchedulerFailure, err := intstrutil.GetScaledValueFromIntOrPercent(params.Strategy.RollingUpdate.MaxPodSchedulerFailure, nbNodes, true)
 	if err != nil {
 		params.Logger.Error(err, "unable to retrieve maxPodSchedulerFailure from the strategy.RollingUpdate.MaxPodSchedulerFailure parameter")
 
@@ -96,7 +96,7 @@ func ManageDeployment(client runtimeclient.Client, daemonset *datadoghqv1alpha1.
 	}
 
 	// Retrieves parameters for calculation
-	maxUnavailable, err := intstrutil.GetValueFromIntOrPercent(params.Strategy.RollingUpdate.MaxUnavailable, nbNodes, true)
+	maxUnavailable, err := intstrutil.GetScaledValueFromIntOrPercent(params.Strategy.RollingUpdate.MaxUnavailable, nbNodes, true)
 	if err != nil {
 		params.Logger.Error(err, "unable to retrieve maxUnavailable pod from the strategy.RollingUpdate.MaxUnavailable parameter")
 
@@ -221,7 +221,7 @@ func getRollingUpdateStartTime(status *datadoghqv1alpha1.ExtendedDaemonSetReplic
 }
 
 func calculateMaxCreation(params *datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyRollingUpdate, nbNodes int, rsStartTime, now time.Time) (int, error) {
-	startValue, err := intstrutil.GetValueFromIntOrPercent(params.SlowStartAdditiveIncrease, nbNodes, true)
+	startValue, err := intstrutil.GetScaledValueFromIntOrPercent(params.SlowStartAdditiveIncrease, nbNodes, true)
 	if err != nil {
 		return 0, err
 	}
