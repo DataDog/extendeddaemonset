@@ -6,6 +6,8 @@
 package extendeddaemonsetreplicaset
 
 import (
+	"strings"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	ksmetric "k8s.io/kube-state-metrics/v2/pkg/metric"
 	generator "k8s.io/kube-state-metrics/v2/pkg/metric_generator"
@@ -102,6 +104,8 @@ func generateMetricFamilies() []generator.FamilyGenerator {
 			GenerateFunc: func(obj interface{}) *ksmetric.Family {
 				ers := obj.(*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&ers.ObjectMeta)
+				labelKeys = append(labelKeys, "status")
+				labelValues = append(labelValues, strings.ToLower(ers.Status.Status))
 
 				return &ksmetric.Family{
 					Metrics: []*ksmetric.Metric{
