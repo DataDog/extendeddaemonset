@@ -102,6 +102,8 @@ func generateMetricFamilies() []generator.FamilyGenerator {
 			GenerateFunc: func(obj interface{}) *ksmetric.Family {
 				ers := obj.(*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&ers.ObjectMeta)
+				labelKeys = append(labelKeys, "status")
+				labelValues = append(labelValues, ers.Status.Status)
 
 				return &ksmetric.Family{
 					Metrics: []*ksmetric.Metric{
