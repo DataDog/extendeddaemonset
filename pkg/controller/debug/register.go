@@ -32,10 +32,18 @@ func DefaultOptions() *Options {
 // GetExtraMetricHandlers creates debug endpoints.
 func GetExtraMetricHandlers() map[string]http.Handler {
 	handlers := make(map[string]http.Handler)
-	handlers["debug/pprof"] = http.HandlerFunc(pprof.Index)
-	handlers["/debug/pprof/cmdline"] = http.HandlerFunc(pprof.Index)
-	handlers["/debug/pprof/cmdline"] = http.HandlerFunc(pprof.Index)
-	handlers["/debug/pprof/symobol"] = http.HandlerFunc(pprof.Index)
-	handlers["/debug/pprof/trace"] = http.HandlerFunc(pprof.Index)
+	// Root index (must include trailing slash for correct links)
+	handlers["/debug/pprof/"] = http.HandlerFunc(pprof.Index)
+	// Standard pprof endpoints
+	handlers["/debug/pprof/cmdline"] = http.HandlerFunc(pprof.Cmdline)
+	handlers["/debug/pprof/profile"] = http.HandlerFunc(pprof.Profile)
+	handlers["/debug/pprof/symbol"] = http.HandlerFunc(pprof.Symbol)
+	handlers["/debug/pprof/trace"] = http.HandlerFunc(pprof.Trace)
+	// Common profiles
+	handlers["/debug/pprof/heap"] = pprof.Handler("heap")
+	handlers["/debug/pprof/goroutine"] = pprof.Handler("goroutine")
+	handlers["/debug/pprof/block"] = pprof.Handler("block")
+	handlers["/debug/pprof/threadcreate"] = pprof.Handler("threadcreate")
+	handlers["/debug/pprof/allocs"] = pprof.Handler("allocs")
 	return handlers
 }
