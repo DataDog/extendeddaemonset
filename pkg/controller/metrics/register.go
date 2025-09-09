@@ -6,6 +6,7 @@
 package metrics
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -30,7 +31,7 @@ func RegisterHandlerFunc(h func(*runtime.Scheme, Handler) error) {
 
 // GetExtraMetricHandlers return handler for a KSM endpoint.
 func GetExtraMetricHandlers(scheme *runtime.Scheme) (map[string]http.Handler, error) {
-	handler := &storesHandler{}
+	handler := &storesHandler{storesByType: make(map[string][]*metricsstore.MetricsStore)}
 	for _, metricsHandler := range metricsHandler {
 		if err := metricsHandler(scheme, handler); err != nil {
 			return nil, err
@@ -47,9 +48,11 @@ func (h *storesHandler) serveKsmHTTP(w http.ResponseWriter, r *http.Request) {
 	// https://prometheus.io/docs/instrumenting/exposition_formats/#text-based-format
 	resHeader.Set("Content-Type", `text/plain; version=`+"0.0.4")
 
-	// Write KSM families
-	if err := metricsstore.NewMetricsWriter(h.stores...).WriteAll(w); err != nil {
-		log.Error(err, "Unable to write metrics")
+	// Write KSM families grouped by resource type to ensure matching headers across stores
+	for _, group := range h.storesByType {
+		if err := metricsstore.NewMetricsWriter(group...).WriteAll(w); err != nil {
+			log.Error(err, "Unable to write metrics")
+		}
 	}
 
 	// Write extra metrics
@@ -68,11 +71,12 @@ func (h *storesHandler) serveKsmHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (h *storesHandler) RegisterStore(generators []generator.FamilyGenerator, expectedType interface{}, lw cache.ListerWatcher) error {
 	store := newMetricsStore(generators, expectedType, lw)
-	h.stores = append(h.stores, store)
+	typeKey := fmt.Sprintf("%T", expectedType)
+	h.storesByType[typeKey] = append(h.storesByType[typeKey], store)
 
 	return nil
 }
 
 type storesHandler struct {
-	stores []*metricsstore.MetricsStore
+	storesByType map[string][]*metricsstore.MetricsStore
 }
