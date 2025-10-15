@@ -27,19 +27,19 @@ before_script:
 
 build:
   stage: build
-  tags: [ "runner:main", "size:large" ]
+  tags: [ "arch:amd64" ]
   script:
     - make build
 
 tests:
   stage: test
-  tags: [ "runner:main", "size:large" ]
+  tags: [ "arch:amd64" ]
   script:
   - make test
 
 generate_code:
   stage: test
-  tags: [ "runner:main", "size:large" ]
+  tags: [ "arch:amd64" ]
   script:
   - make generate manifests
   - git diff --exit-code
