@@ -6,7 +6,6 @@
 package extendeddaemonset
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"reflect"
@@ -1269,7 +1268,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 			args: args{
 				request: newRequest("bar", "foo"),
 				loadFunc: func(c client.Client) {
-					_ = c.Create(context.TODO(), test.NewExtendedDaemonSet("bar", "foo", &test.NewExtendedDaemonSetOptions{Labels: map[string]string{"foo-key": "bar-value"}}))
+					_ = c.Create(t.Context(), test.NewExtendedDaemonSet("bar", "foo", &test.NewExtendedDaemonSetOptions{Labels: map[string]string{"foo-key": "bar-value"}}))
 				},
 			},
 			want:    reconcile.Result{Requeue: true},
@@ -1287,7 +1286,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 				loadFunc: func(c client.Client) {
 					dd := test.NewExtendedDaemonSet("bar", "foo", &test.NewExtendedDaemonSetOptions{Labels: map[string]string{"foo-key": "bar-value"}})
 					dd = datadoghqv1alpha1.DefaultExtendedDaemonSet(dd, datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto)
-					_ = c.Create(context.TODO(), dd)
+					_ = c.Create(t.Context(), dd)
 				},
 			},
 			want:    reconcile.Result{Requeue: true},
@@ -1297,7 +1296,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 				listOptions := []client.ListOption{
 					client.InNamespace("bar"),
 				}
-				if err := c.List(context.TODO(), replicasetList, listOptions...); err != nil {
+				if err := c.List(t.Context(), replicasetList, listOptions...); err != nil {
 					return err
 				}
 				if len(replicasetList.Items) != 1 {
@@ -1331,8 +1330,8 @@ func TestReconciler_Reconcile(t *testing.T) {
 					}
 					rs := test.NewExtendedDaemonSetReplicaSet("bar", "", rsOptions)
 
-					_ = c.Create(context.TODO(), dd)
-					_ = c.Create(context.TODO(), rs)
+					_ = c.Create(t.Context(), dd)
+					_ = c.Create(t.Context(), rs)
 				},
 			},
 			want:    reconcile.Result{Requeue: false},
@@ -1342,7 +1341,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 				listOptions := []client.ListOption{
 					client.InNamespace("bar"),
 				}
-				if err := c.List(context.TODO(), replicasetList, listOptions...); err != nil {
+				if err := c.List(t.Context(), replicasetList, listOptions...); err != nil {
 					return err
 				}
 				if len(replicasetList.Items) != 1 {
@@ -1375,8 +1374,8 @@ func TestReconciler_Reconcile(t *testing.T) {
 					}
 					rs := test.NewExtendedDaemonSetReplicaSet("bar", "foo-old", rsOptions)
 
-					_ = c.Create(context.TODO(), dd)
-					_ = c.Create(context.TODO(), rs)
+					_ = c.Create(t.Context(), dd)
+					_ = c.Create(t.Context(), rs)
 				},
 			},
 			want:    reconcile.Result{Requeue: true},
@@ -1386,7 +1385,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 				listOptions := []client.ListOption{
 					client.InNamespace("bar"),
 				}
-				if err := c.List(context.TODO(), replicasetList, listOptions...); err != nil {
+				if err := c.List(t.Context(), replicasetList, listOptions...); err != nil {
 					return err
 				}
 				if len(replicasetList.Items) != 2 {
@@ -1408,7 +1407,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 			if tt.args.loadFunc != nil {
 				tt.args.loadFunc(r.client)
 			}
-			got, err := r.Reconcile(context.TODO(), tt.args.request)
+			got, err := r.Reconcile(t.Context(), tt.args.request)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Reconciler.Reconcile() error = %v, wantErr %v", err, tt.wantErr)
 

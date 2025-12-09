@@ -91,7 +91,7 @@ func (o *validateOptions) complete(cmd *cobra.Command, args []string) error {
 
 	ns, err2 := cmd.Flags().GetString("namespace")
 	if err2 != nil {
-		return err
+		return err2
 	}
 	if ns != "" {
 		o.userNamespace = ns

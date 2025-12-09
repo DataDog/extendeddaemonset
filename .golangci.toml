@@ -3,9 +3,6 @@
 
 [linters-settings]
 
-  [linters-settings.govet]
-    check-shadowing = true
-
   [linters-settings.gocyclo]
     min-complexity = 12.0
 
@@ -20,7 +17,9 @@
     locale = "US"
 
   [linters-settings.gci]
-    local-prefixes = "github.com/DataDog/extendeddaemonset"
+    sections = [
+        "prefix(github.com/DataDog/extendeddaemonset)"
+    ]
 
   [linters-settings.godot]
     exclude = [
@@ -48,7 +47,6 @@
     "funlen",
     "gocognit",
     "cyclop",
-    "gomnd",
     "wrapcheck",
     "forcetypeassert",
     "err113",
@@ -76,6 +74,7 @@
     "unparam",
     "depguard",
     "mnd",
+    "tenv"
   ]
 
 [issues]

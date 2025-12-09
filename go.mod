@@ -1,10 +1,11 @@
 module github.com/DataDog/extendeddaemonset
 
-go 1.22.0
+go 1.24.0
 
-toolchain go1.22.4
+toolchain go1.24.11
 
 require (
+	github.com/DataDog/extendeddaemonset/api v0.0.0-20251015144208-a41dec02324e
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/ghodss/yaml v1.0.0
