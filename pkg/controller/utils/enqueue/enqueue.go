@@ -47,7 +47,7 @@ func (e *RequestForExtendedDaemonSetLabel) Generic(ctx context.Context, evt even
 	e.add(evt.Object, q)
 }
 
-func (e RequestForExtendedDaemonSetLabel) add(meta metav1.Object, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
+func (e *RequestForExtendedDaemonSetLabel) add(meta metav1.Object, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	value, ok := meta.GetLabels()[v1alpha1.ExtendedDaemonSetNameLabelKey]
 	if ok {
 		req := reconcile.Request{
@@ -82,7 +82,7 @@ func (e *RequestForExtendedDaemonSetReplicaSetLabel) Delete(evt event.DeleteEven
 }
 
 // Generic implements EventHandler.
-func (e RequestForExtendedDaemonSetReplicaSetLabel) Generic(evt event.GenericEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
+func (e *RequestForExtendedDaemonSetReplicaSetLabel) Generic(evt event.GenericEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	e.add(evt.Object, q)
 }
 
@@ -125,7 +125,7 @@ func (e *RequestForExtendedDaemonSetStatus) Generic(ctx context.Context, evt eve
 	e.add(evt.Object, q)
 }
 
-func (e RequestForExtendedDaemonSetStatus) add(obj runtime.Object, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
+func (e *RequestForExtendedDaemonSetStatus) add(obj runtime.Object, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	// convert unstructured.Unstructured to a ExtendedDaemonSet.
 	eds, ok := obj.(*v1alpha1.ExtendedDaemonSet)
 	if !ok {
@@ -177,7 +177,7 @@ func (e *RequestForAllReplicaSetFromNodeEvent) Generic(ctx context.Context, evt 
 	// e.add(q)
 }
 
-func (e RequestForAllReplicaSetFromNodeEvent) add(q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
+func (e *RequestForAllReplicaSetFromNodeEvent) add(q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	rsList := &v1alpha1.ExtendedDaemonSetReplicaSetList{}
 	err := e.client.List(context.TODO(), rsList)
 	if err != nil {

@@ -6,7 +6,6 @@
 package strategy
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -124,7 +123,7 @@ func Test_addPodLabel(t *testing.T) {
 			Namespace: pod.Namespace,
 			Name:      pod.Name,
 		}
-		err := c.Get(context.TODO(), nNs, wantPod)
+		err := c.Get(t.Context(), nNs, wantPod)
 		require.NoErrorf(t, err, "error must be nil, err: %v", err)
 
 		if gotVal, ok := wantPod.Labels[key]; ok {
@@ -198,7 +197,7 @@ func Test_deletePodLabel(t *testing.T) {
 			Namespace: pod.Namespace,
 			Name:      pod.Name,
 		}
-		err := c.Get(context.TODO(), nNs, wantPod)
+		err := c.Get(t.Context(), nNs, wantPod)
 		require.NoErrorf(t, err, "error must be nil, err: %v", err)
 		if _, ok := wantPod.Labels[key]; ok {
 			t.Fatalf("Label is present, pod: %#v", wantPod.Labels)

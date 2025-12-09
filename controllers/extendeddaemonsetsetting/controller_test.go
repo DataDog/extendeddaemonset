@@ -6,7 +6,6 @@
 package extendeddaemonsetsetting
 
 import (
-	"context"
 	"reflect"
 	"testing"
 	"time"
@@ -129,13 +128,13 @@ func TestReconcile(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r, _ := NewReconciler(ReconcilerOptions{}, tt.client, s, testLogger, recorder)
 
-			got, _ := r.Reconcile(context.TODO(), request)
+			got, _ := r.Reconcile(t.Context(), request)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Reconcile() = %v, but want %v", got, tt.want)
 			}
 
 			instance := &datadoghqv1alpha1.ExtendedDaemonsetSetting{}
-			_ = r.client.Get(context.TODO(), request.NamespacedName, instance)
+			_ = r.client.Get(t.Context(), request.NamespacedName, instance)
 
 			if tt.wantStatusErr && instance.Status.Error == "" {
 				t.Errorf("Reconcile err is nil, but want an error")
