@@ -6,7 +6,6 @@
 package extendeddaemonsetreplicaset
 
 import (
-	"context"
 	"reflect"
 	"testing"
 	"time"
@@ -170,7 +169,7 @@ func TestReconcileExtendedDaemonSetReplicaSet_Reconcile(t *testing.T) {
 				failedPodsBackOff: flowcontrol.NewFakeBackOff(30*time.Second, 15*time.Minute, clock.NewFakeClock(time.Now())),
 				log:               testLogger,
 			}
-			got, err := r.Reconcile(context.TODO(), tt.args.request)
+			got, err := r.Reconcile(t.Context(), tt.args.request)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ReconcileExtendedDaemonSetReplicaSet.Reconcile() error = %v, wantErr %v", err, tt.wantErr)
 

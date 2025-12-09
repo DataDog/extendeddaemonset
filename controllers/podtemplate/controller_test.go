@@ -6,7 +6,6 @@
 package podtemplate
 
 import (
-	"context"
 	"errors"
 	"testing"
 
@@ -142,12 +141,12 @@ func TestReconciler_Reconcile(t *testing.T) {
 			loadFunc: func(c client.Client) {
 				eds := test.NewExtendedDaemonSet("eds-ns", "eds-name", &test.NewExtendedDaemonSetOptions{PodTemplateSpec: podTemplateSpec("name", "image")})
 				eds = datadoghqv1alpha1.DefaultExtendedDaemonSet(eds, datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto)
-				_ = c.Create(context.TODO(), eds)
+				_ = c.Create(t.Context(), eds)
 			},
 			want:    reconcile.Result{},
 			wantErr: false,
 			wantFunc: func(c client.Client) error {
-				return c.Get(context.TODO(), defaultRequest().NamespacedName, &corev1.PodTemplate{})
+				return c.Get(t.Context(), defaultRequest().NamespacedName, &corev1.PodTemplate{})
 			},
 		},
 		{
@@ -156,7 +155,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 			loadFunc: func(c client.Client) {
 				eds := test.NewExtendedDaemonSet("eds-ns", "eds-name", &test.NewExtendedDaemonSetOptions{PodTemplateSpec: podTemplateSpec("name", "image")})
 				eds = datadoghqv1alpha1.DefaultExtendedDaemonSet(eds, datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto)
-				_ = c.Create(context.TODO(), eds)
+				_ = c.Create(t.Context(), eds)
 				podTemplate := &corev1.PodTemplate{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "eds-name",
@@ -171,14 +170,14 @@ func TestReconciler_Reconcile(t *testing.T) {
 					},
 					Template: *podTemplateSpec("name", "image"),
 				}
-				_ = c.Create(context.TODO(), podTemplate)
+				_ = c.Create(t.Context(), podTemplate)
 			},
 			want:    reconcile.Result{},
 			wantErr: false,
 			wantFunc: func(c client.Client) error {
 				podTemplate := &corev1.PodTemplate{}
 
-				return c.Get(context.TODO(), defaultRequest().NamespacedName, podTemplate)
+				return c.Get(t.Context(), defaultRequest().NamespacedName, podTemplate)
 			},
 		},
 		{
@@ -187,7 +186,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 			loadFunc: func(c client.Client) {
 				eds := test.NewExtendedDaemonSet("eds-ns", "eds-name", &test.NewExtendedDaemonSetOptions{PodTemplateSpec: podTemplateSpec("new-name", "new-image")})
 				eds = datadoghqv1alpha1.DefaultExtendedDaemonSet(eds, datadoghqv1alpha1.ExtendedDaemonSetSpecStrategyCanaryValidationModeAuto)
-				_ = c.Create(context.TODO(), eds)
+				_ = c.Create(t.Context(), eds)
 				podTemplate := &corev1.PodTemplate{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "eds-name",
@@ -202,13 +201,13 @@ func TestReconciler_Reconcile(t *testing.T) {
 					},
 					Template: *podTemplateSpec("name", "image"),
 				}
-				_ = c.Create(context.TODO(), podTemplate)
+				_ = c.Create(t.Context(), podTemplate)
 			},
 			want:    reconcile.Result{},
 			wantErr: false,
 			wantFunc: func(c client.Client) error {
 				podTemplate := &corev1.PodTemplate{}
-				err := c.Get(context.TODO(), defaultRequest().NamespacedName, podTemplate)
+				err := c.Get(t.Context(), defaultRequest().NamespacedName, podTemplate)
 				if err != nil {
 					return err
 				}
@@ -243,7 +242,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 				tt.loadFunc(r.client)
 			}
 
-			got, err := r.Reconcile(context.TODO(), tt.request)
+			got, err := r.Reconcile(t.Context(), tt.request)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Reconciler.Reconcile() error = %v, wantErr %v", err, tt.wantErr)
 
