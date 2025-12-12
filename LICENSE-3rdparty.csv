@@ -154,6 +154,7 @@ core,"golang.org/x/net/http/httpguts",NewBSD
 core,"golang.org/x/net/http2",NewBSD
 core,"golang.org/x/net/http2/hpack",NewBSD
 core,"golang.org/x/net/idna",NewBSD
+core,"golang.org/x/net/internal/httpcommon",NewBSD
 core,"golang.org/x/oauth2",NewBSD
 core,"golang.org/x/oauth2/internal",NewBSD
 core,"golang.org/x/sync/errgroup",NewBSD
@@ -185,10 +186,12 @@ core,"golang.org/x/text/unicode/norm",NewBSD
 core,"golang.org/x/time/rate",NewBSD
 core,"golang.org/x/tools/cmd/stringer",NewBSD
 core,"golang.org/x/tools/go/ast/astutil",NewBSD
+core,"golang.org/x/tools/go/ast/edge",NewBSD
+core,"golang.org/x/tools/go/ast/inspector",NewBSD
 core,"golang.org/x/tools/go/gcexportdata",NewBSD
-core,"golang.org/x/tools/go/internal/packagesdriver",NewBSD
 core,"golang.org/x/tools/go/packages",NewBSD
 core,"golang.org/x/tools/go/types/objectpath",NewBSD
+core,"golang.org/x/tools/go/types/typeutil",NewBSD
 core,"golang.org/x/tools/imports",NewBSD
 core,"golang.org/x/tools/internal/aliases",NewBSD
 core,"golang.org/x/tools/internal/event",NewBSD
@@ -199,10 +202,11 @@ core,"golang.org/x/tools/internal/gcimporter",NewBSD
 core,"golang.org/x/tools/internal/gocommand",NewBSD
 core,"golang.org/x/tools/internal/gopathwalk",NewBSD
 core,"golang.org/x/tools/internal/imports",NewBSD
+core,"golang.org/x/tools/internal/modindex",NewBSD
 core,"golang.org/x/tools/internal/packagesinternal",NewBSD
 core,"golang.org/x/tools/internal/pkgbits",NewBSD
 core,"golang.org/x/tools/internal/stdlib",NewBSD
-core,"golang.org/x/tools/internal/tokeninternal",NewBSD
+core,"golang.org/x/tools/internal/typeparams",NewBSD
 core,"golang.org/x/tools/internal/typesinternal",NewBSD
 core,"golang.org/x/tools/internal/versions",NewBSD
 core,"gomodules.xyz/jsonpatch/v2",Apache-2.0
