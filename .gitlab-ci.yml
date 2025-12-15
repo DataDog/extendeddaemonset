@@ -4,13 +4,15 @@ variables:
   PROJECTNAME_CHECK: "extendeddaemonset-check"
   TARGET_TAG: v$CI_PIPELINE_ID-$CI_COMMIT_SHORT_SHA
   BUILD_DOCKER_REGISTRY: "486234852809.dkr.ecr.us-east-1.amazonaws.com/ci"
-  JOB_DOCKER_IMAGE: "registry.ddbuild.io/ci-containers-project:v68399443-88dc260-v1.22"
+  JOB_DOCKER_IMAGE: "registry.ddbuild.io/ci-containers-project:v86664379-76eea96-v1.24"
   DOCKER_REGISTRY_LOGIN_SSM_KEY: docker_hub_login
   DOCKER_REGISTRY_PWD_SSM_KEY: docker_hub_pwd
   DOCKER_REGISTRY_URL: docker.io
   FIPS_ENABLED: false
   # This should get updated to slug of latest release by make bundle command
   CONDUCTOR_BUILD_TAG: v0-11-0-rc-5
+  KUBERNETES_MEMORY_LIMIT: 8Gi
+  KUBERNETES_MEMORY_REQUEST: 8Gi
 cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
