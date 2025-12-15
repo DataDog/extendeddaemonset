@@ -11,6 +11,8 @@ variables:
   FIPS_ENABLED: false
   # This should get updated to slug of latest release by make bundle command
   CONDUCTOR_BUILD_TAG: v0-10-0-rc-8
+  KUBERNETES_MEMORY_LIMIT: 4Gi
+  KUBERNETES_MEMORY_REQUEST: 4Gi
 cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
