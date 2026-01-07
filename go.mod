@@ -1,8 +1,6 @@
 module github.com/DataDog/extendeddaemonset
 
-go 1.24.0
-
-toolchain go1.24.11
+go 1.25.5
 
 require (
 	github.com/DataDog/extendeddaemonset/api v0.0.0-20251015144208-a41dec02324e
