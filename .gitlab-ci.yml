@@ -1,4 +1,4 @@
-image: registry.ddbuild.io/images/mirror/golang:1.24
+image: registry.ddbuild.io/images/mirror/golang:1.25.6
 variables:
   PROJECTNAME: "extendeddaemonset"
   PROJECTNAME_CHECK: "extendeddaemonset-check"

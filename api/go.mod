@@ -1,8 +1,6 @@
 module github.com/DataDog/extendeddaemonset/api
 
-go 1.22.0
-
-toolchain go1.22.12
+go 1.25.6
 
 require (
 	github.com/stretchr/testify v1.9.0
