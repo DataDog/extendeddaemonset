@@ -18,11 +18,6 @@ version = "2"
   [linters-settings.misspell]
     locale = "US"
 
-  [linters-settings.gci]
-    sections = [
-        "prefix(github.com/DataDog/extendeddaemonset)"
-    ]
-
   [linters-settings.godot]
     exclude = [
       ' \+',
@@ -58,7 +53,6 @@ version = "2"
     "paralleltest",
     "nestif",
     "exhaustive",
-    "gci",
     "wsl",
     "godox",
     "godot",
