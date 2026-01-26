@@ -5,6 +5,11 @@ version = "2"
 
 [linters-settings]
 
+  [linters-settings.staticcheck]
+    # Disable quickfix suggestions (QF*) - these are style suggestions, not bugs
+    # They were not enabled in golangci-lint v1
+    checks = ["all", "-QF*"]
+
   [linters-settings.gocyclo]
     min-complexity = 12.0
 
