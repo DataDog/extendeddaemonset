@@ -131,7 +131,7 @@ ifeq (, $(shell which controller-gen))
 	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
 	cd $$CONTROLLER_GEN_TMP_DIR ;\
 	go mod init tmp ;\
-	go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.16.3 ;\
+	go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.20.0 ;\
 	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
 	}
 CONTROLLER_GEN=$(GOBIN)/controller-gen
@@ -210,7 +210,7 @@ bin/yq:
 	./hack/install-yq.sh 3.3.0
 
 bin/golangci-lint:
-	hack/install-golangci-lint.sh v1.64.2
+	hack/install-golangci-lint.sh v2.8.0
 
 bin/operator-sdk:
 	./hack/install-operator-sdk.sh v1.5.0

@@ -1,35 +1,7 @@
+version = "2"
+
 [run]
-  deadline = "5m"
-
-[linters-settings]
-
-  [linters-settings.gocyclo]
-    min-complexity = 12.0
-
-  [linters-settings.maligned]
-    suggest-new = true
-
-  [linters-settings.goconst]
-    min-len = 3.0
-    min-occurrences = 3.0
-
-  [linters-settings.misspell]
-    locale = "US"
-
-  [linters-settings.gci]
-    sections = [
-        "prefix(github.com/DataDog/extendeddaemonset)"
-    ]
-
-  [linters-settings.godot]
-    exclude = [
-      ' \+',
-    ]
-
-  [linters-settings.errcheck]
-    exclude-functions = [
-      "fmt.Fprintf"
-    ]
+  timeout = "5m"
 
 [linters]
   enable-all = true
@@ -56,7 +28,6 @@
     "paralleltest",
     "nestif",
     "exhaustive",
-    "gci",
     "wsl",
     "godox",
     "godot",
@@ -70,12 +41,31 @@
     "maintidx",
     "gocritic",
     "errchkjson",
-    "gofumpt",
     "unparam",
     "depguard",
-    "mnd",
-    "tenv"
+    "mnd"
   ]
+
+[linters.settings.staticcheck]
+  # Disable quickfix suggestions (QF*) - these are style suggestions, not bugs
+  # They were not enabled in golangci-lint v1
+  checks = ["all", "-QF*"]
+
+[linters.settings.gocyclo]
+  min-complexity = 12
+
+[linters.settings.goconst]
+  min-len = 3
+  min-occurrences = 3
+
+[linters.settings.misspell]
+  locale = "US"
+
+[linters.settings.godot]
+  exclude = [' \+']
+
+[linters.settings.errcheck]
+  exclude-functions = ["fmt.Fprintf"]
 
 [issues]
   exclude-use-default = false
