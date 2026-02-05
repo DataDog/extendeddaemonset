@@ -186,8 +186,6 @@ core,"golang.org/x/text/unicode/norm",NewBSD
 core,"golang.org/x/time/rate",NewBSD
 core,"golang.org/x/tools/cmd/stringer",NewBSD
 core,"golang.org/x/tools/go/ast/astutil",NewBSD
-core,"golang.org/x/tools/go/ast/edge",NewBSD
-core,"golang.org/x/tools/go/ast/inspector",NewBSD
 core,"golang.org/x/tools/go/gcexportdata",NewBSD
 core,"golang.org/x/tools/go/packages",NewBSD
 core,"golang.org/x/tools/go/types/objectpath",NewBSD
