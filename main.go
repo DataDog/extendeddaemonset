@@ -13,7 +13,7 @@ import (
 	goruntime "runtime"
 	"strings"
 
-	"github.com/blang/semver"
+	"github.com/blang/semver/v4"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/DataDog/dd-trace-go.v1/profiler"
