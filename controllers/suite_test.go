@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	gc "github.com/onsi/ginkgo/config"
 	"github.com/onsi/ginkgo/reporters"
 	st "github.com/onsi/ginkgo/reporters/stenographer"
