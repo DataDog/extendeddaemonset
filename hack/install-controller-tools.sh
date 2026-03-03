@@ -17,7 +17,7 @@ TEST_DEPS_PATH=${2:-"$ROOT/bin/kubebuilder-tools"}
 
 if [ -z "$VERSION" ];
 then
-  echo "usage: bin/install-kubebuilder-tools.sh <version>"
+  echo "usage: bin/install-controller-tools.sh <version>"
   exit 1
 fi
 
