@@ -201,7 +201,7 @@ bin/kubebuilder:
 	./hack/install-kubebuilder.sh 3.4.0 ./bin
 
 bin/kubebuilder-tools:
-	./hack/install-kubebuilder-tools.sh 1.24.1
+	./hack/install-controller-tools.sh 1.28.3
 
 bin/openapi-gen:
 	go build -o ./bin/openapi-gen k8s.io/kube-openapi/cmd/openapi-gen
