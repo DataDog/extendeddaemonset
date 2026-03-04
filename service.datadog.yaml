@@ -1,12 +1,12 @@
 ---
 schema-version: v2
 dd-service: extendeddaemonset
-dd-team: agent-onboarding
+dd-team: container-platform
 contacts:
   - type: slack
-    contact: https://dd.slack.com/archives/C037CDX0WJV
+    contact: https://dd.enterprise.slack.com/archives/C0702JHC7G8
   - type: email
-    contact: team-agentonboarding@datadoghq.com
+    contact: team-container-platform@datadoghq.com
 links:
   - name: Runbook
     type: runbook
@@ -29,9 +29,7 @@ links:
 tags:
   - app:extendeddaemonset
   - service:extendeddaemonset
-  - team:agent-onboarding
-integrations:
-  pagerduty: https://datadog.pagerduty.com/service-directory/PBVS1V3
+  - team:container-platform
 extensions:
   datadoghq.com/sdp:
     conductor:
