@@ -227,10 +227,7 @@ func calculateMaxCreation(params *datadoghqv1alpha1.ExtendedDaemonSetSpecStrateg
 	}
 	rollingUpdateDuration := now.Sub(rsStartTime)
 	nbSlowStartSlot := int(rollingUpdateDuration / params.SlowStartIntervalDuration.Duration)
-	result := (1 + nbSlowStartSlot) * startValue
-	if result > int(*params.MaxParallelPodCreation) {
-		result = int(*params.MaxParallelPodCreation)
-	}
+	result := min((1+nbSlowStartSlot)*startValue, int(*params.MaxParallelPodCreation))
 
 	return result, nil
 }

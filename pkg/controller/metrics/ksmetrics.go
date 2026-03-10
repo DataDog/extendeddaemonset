@@ -86,7 +86,7 @@ func AddMetrics(gvk schema.GroupVersionKind, scheme *runtime.Scheme, h Handler, 
 }
 
 // newMetricsStore return new metrics store.
-func newMetricsStore(generators []generator.FamilyGenerator, expectedType interface{}, lw cache.ListerWatcher) *metricsstore.MetricsStore {
+func newMetricsStore(generators []generator.FamilyGenerator, expectedType any, lw cache.ListerWatcher) *metricsstore.MetricsStore {
 	// Generate collector per namespace.
 	composedMetricGenFuncs := generator.ComposeMetricGenFuncs(generators)
 	headers := generator.ExtractMetricFamilyHeaders(generators)
@@ -99,7 +99,7 @@ func newMetricsStore(generators []generator.FamilyGenerator, expectedType interf
 func reflectorPerNamespace(
 	ctx context.Context,
 	lw cache.ListerWatcher,
-	expectedType interface{},
+	expectedType any,
 	store cache.Store,
 ) {
 	reflector := cache.NewReflector(lw, expectedType, store, 0)
