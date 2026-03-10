@@ -7,6 +7,8 @@
 package test
 
 import (
+	"maps"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -38,14 +40,10 @@ func NewNode(name string, opts *NewNodeOptions) *corev1.Node {
 
 	if opts != nil {
 		if opts.Annotations != nil {
-			for key, value := range opts.Annotations {
-				node.Annotations[key] = value
-			}
+			maps.Copy(node.Annotations, opts.Annotations)
 		}
 		if opts.Labels != nil {
-			for key, value := range opts.Labels {
-				node.Labels[key] = value
-			}
+			maps.Copy(node.Labels, opts.Labels)
 		}
 
 		node.Spec.Unschedulable = opts.Unschedulable
@@ -99,20 +97,14 @@ func NewPod(namespace, name, nodeName string, opts *NewPodOptions) *corev1.Pod {
 		pod.Spec.Containers[0].Resources = opts.Resources
 
 		if opts.Annotations != nil {
-			for key, value := range opts.Annotations {
-				pod.Annotations[key] = value
-			}
+			maps.Copy(pod.Annotations, opts.Annotations)
 		}
 		if opts.Labels != nil {
-			for key, value := range opts.Labels {
-				pod.Labels[key] = value
-			}
+			maps.Copy(pod.Labels, opts.Labels)
 		}
 		if opts.NodeSelector != nil {
 			pod.Spec.NodeSelector = map[string]string{}
-			for key, value := range opts.NodeSelector {
-				pod.Spec.NodeSelector[key] = value
-			}
+			maps.Copy(pod.Spec.NodeSelector, opts.NodeSelector)
 		}
 		pod.Status.Phase = opts.Phase
 		pod.Status.Reason = opts.Reason

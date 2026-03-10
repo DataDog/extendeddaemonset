@@ -46,7 +46,7 @@ func generateMetricFamilies() []generator.FamilyGenerator {
 			Name: extendeddaemonsetLabels,
 			Type: ksmetric.Gauge,
 			Help: "Kubernetes labels converted to Prometheus labels",
-			GenerateFunc: func(obj interface{}) *ksmetric.Family {
+			GenerateFunc: func(obj any) *ksmetric.Family {
 				eds := obj.(*datadoghqv1alpha1.ExtendedDaemonSet)
 
 				labelKeys, labelValues := utils.GetLabelsValues(&eds.ObjectMeta)
@@ -67,7 +67,7 @@ func generateMetricFamilies() []generator.FamilyGenerator {
 			Name: extendeddaemonsetCreated,
 			Type: ksmetric.Gauge,
 			Help: "Unix creation timestamp",
-			GenerateFunc: func(obj interface{}) *ksmetric.Family {
+			GenerateFunc: func(obj any) *ksmetric.Family {
 				eds := obj.(*datadoghqv1alpha1.ExtendedDaemonSet)
 
 				labelKeys, labelValues := utils.GetLabelsValues(&eds.ObjectMeta)
@@ -87,7 +87,7 @@ func generateMetricFamilies() []generator.FamilyGenerator {
 			Name: extendeddaemonsetStatusDesired,
 			Type: ksmetric.Gauge,
 			Help: "The number of nodes that should be running the daemon pod.",
-			GenerateFunc: func(obj interface{}) *ksmetric.Family {
+			GenerateFunc: func(obj any) *ksmetric.Family {
 				eds := obj.(*datadoghqv1alpha1.ExtendedDaemonSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&eds.ObjectMeta)
 
@@ -106,7 +106,7 @@ func generateMetricFamilies() []generator.FamilyGenerator {
 			Name: extendeddaemonsetStatusCurrent,
 			Type: ksmetric.Gauge,
 			Help: "The number of nodes running at least one daemon pod and are supposed to.",
-			GenerateFunc: func(obj interface{}) *ksmetric.Family {
+			GenerateFunc: func(obj any) *ksmetric.Family {
 				eds := obj.(*datadoghqv1alpha1.ExtendedDaemonSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&eds.ObjectMeta)
 
@@ -125,7 +125,7 @@ func generateMetricFamilies() []generator.FamilyGenerator {
 			Name: extendeddaemonsetStatusReady,
 			Type: ksmetric.Gauge,
 			Help: "The number of nodes that should be running the daemon pod and have one or more of the daemon pod running and ready.",
-			GenerateFunc: func(obj interface{}) *ksmetric.Family {
+			GenerateFunc: func(obj any) *ksmetric.Family {
 				eds := obj.(*datadoghqv1alpha1.ExtendedDaemonSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&eds.ObjectMeta)
 
@@ -144,7 +144,7 @@ func generateMetricFamilies() []generator.FamilyGenerator {
 			Name: extendeddaemonsetStatusAvailable,
 			Type: ksmetric.Gauge,
 			Help: "The number of nodes that should be running the daemon pod and have one or more of the daemon pod running and available.",
-			GenerateFunc: func(obj interface{}) *ksmetric.Family {
+			GenerateFunc: func(obj any) *ksmetric.Family {
 				eds := obj.(*datadoghqv1alpha1.ExtendedDaemonSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&eds.ObjectMeta)
 
@@ -163,7 +163,7 @@ func generateMetricFamilies() []generator.FamilyGenerator {
 			Name: extendeddaemonsetStatusUpToDate,
 			Type: ksmetric.Gauge,
 			Help: "The total number of nodes that are running updated daemon pod",
-			GenerateFunc: func(obj interface{}) *ksmetric.Family {
+			GenerateFunc: func(obj any) *ksmetric.Family {
 				eds := obj.(*datadoghqv1alpha1.ExtendedDaemonSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&eds.ObjectMeta)
 
@@ -182,7 +182,7 @@ func generateMetricFamilies() []generator.FamilyGenerator {
 			Name: extendeddaemonsetStatusIgnoredUnresponsiveNodes,
 			Type: ksmetric.Gauge,
 			Help: "The total number of nodes that are ignored by the rolling update strategy due to an unresponsive state",
-			GenerateFunc: func(obj interface{}) *ksmetric.Family {
+			GenerateFunc: func(obj any) *ksmetric.Family {
 				eds := obj.(*datadoghqv1alpha1.ExtendedDaemonSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&eds.ObjectMeta)
 
@@ -201,7 +201,7 @@ func generateMetricFamilies() []generator.FamilyGenerator {
 			Name: extendeddaemonsetStatusCanaryActivated,
 			Type: ksmetric.Gauge,
 			Help: "The status of the canary deployment, set to 1 if active, else 0",
-			GenerateFunc: func(obj interface{}) *ksmetric.Family {
+			GenerateFunc: func(obj any) *ksmetric.Family {
 				eds := obj.(*datadoghqv1alpha1.ExtendedDaemonSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&eds.ObjectMeta)
 				val := float64(0)
@@ -228,7 +228,7 @@ func generateMetricFamilies() []generator.FamilyGenerator {
 			Name: extendeddaemonsetStatusCanaryPaused,
 			Type: ksmetric.Gauge,
 			Help: "The paused state of the canary deployment, set to 1 if paused, else 0",
-			GenerateFunc: func(obj interface{}) *ksmetric.Family {
+			GenerateFunc: func(obj any) *ksmetric.Family {
 				eds := obj.(*datadoghqv1alpha1.ExtendedDaemonSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&eds.ObjectMeta)
 				val := float64(0)
@@ -261,7 +261,7 @@ func generateMetricFamilies() []generator.FamilyGenerator {
 			Name: extendeddaemonsetStatusCanaryNumberOfNodes,
 			Type: ksmetric.Gauge,
 			Help: "The total number of nodes that are running a canary pod",
-			GenerateFunc: func(obj interface{}) *ksmetric.Family {
+			GenerateFunc: func(obj any) *ksmetric.Family {
 				eds := obj.(*datadoghqv1alpha1.ExtendedDaemonSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&eds.ObjectMeta)
 				val := float64(0)
@@ -284,7 +284,7 @@ func generateMetricFamilies() []generator.FamilyGenerator {
 			Name: extendeddaemonsetStatusRollingUpdatePaused,
 			Type: ksmetric.Gauge,
 			Help: "The paused state of a rolling update, 1 if paused, 0 otherwise",
-			GenerateFunc: func(obj interface{}) *ksmetric.Family {
+			GenerateFunc: func(obj any) *ksmetric.Family {
 				eds := obj.(*datadoghqv1alpha1.ExtendedDaemonSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&eds.ObjectMeta)
 				val := float64(0)
@@ -308,7 +308,7 @@ func generateMetricFamilies() []generator.FamilyGenerator {
 			Name: extendeddaemonsetStatusRolloutFrozen,
 			Type: ksmetric.Gauge,
 			Help: "The frozen state of a rollout, 1 if frozen, 0 otherwise",
-			GenerateFunc: func(obj interface{}) *ksmetric.Family {
+			GenerateFunc: func(obj any) *ksmetric.Family {
 				eds := obj.(*datadoghqv1alpha1.ExtendedDaemonSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&eds.ObjectMeta)
 				val := float64(0)

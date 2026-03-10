@@ -25,28 +25,15 @@ type Parameters struct {
 // * nbCreation: the number of pods to create
 // * nbDeletion: the number of pods to delete.
 func CalculatePodToCreateAndDelete(params Parameters) (nbCreation, nbDeletion int) {
-	nbCreation = params.NbNodes - params.NbPods
-	if nbCreation > params.MaxPodCreation {
-		nbCreation = params.MaxPodCreation
-	}
-	if nbCreation < 0 {
-		nbCreation = 0
-	}
+	nbCreation = min(params.NbNodes-params.NbPods, params.MaxPodCreation)
+	// Prevent negative number of pods to create
+	nbCreation = max(nbCreation)
 
-	effectiveUnresponsive := params.NbUnresponsiveNodes
-	if effectiveUnresponsive > params.MaxUnschedulablePod {
-		effectiveUnresponsive = params.MaxUnschedulablePod
-	}
+	effectiveUnresponsive := min(params.NbUnresponsiveNodes, params.MaxUnschedulablePod)
 
-	nbDeletion = params.MaxUnavailablePod - (params.NbNodes - effectiveUnresponsive - params.NbAvailablesPod - params.NbOldAvailablesPod) + params.NbOldUnavailablePods
-
-	if nbDeletion > params.MaxUnavailablePod {
-		nbDeletion = params.MaxUnavailablePod
-	}
-
-	if nbDeletion < 0 {
-		nbDeletion = 0
-	}
+	nbDeletion = min(params.MaxUnavailablePod-(params.NbNodes-effectiveUnresponsive-params.NbAvailablesPod-params.NbOldAvailablesPod)+params.NbOldUnavailablePods, params.MaxUnavailablePod)
+	// Prevent negative number of pods to delete
+	nbDeletion = max(nbDeletion, 0)
 
 	return nbCreation, nbDeletion
 }

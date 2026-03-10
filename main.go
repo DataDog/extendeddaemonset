@@ -8,6 +8,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"maps"
 	"net/http"
 	"os"
 	goruntime "runtime"
@@ -261,17 +262,13 @@ func getExtraMetricHandlers(scheme *runtime.Scheme, pprofActive bool) (map[strin
 	extraHandlers := map[string]http.Handler{}
 	if pprofActive {
 		debugHandler := debug.GetExtraMetricHandlers()
-		for k, v := range debugHandler {
-			extraHandlers[k] = v
-		}
+		maps.Copy(extraHandlers, debugHandler)
 	}
 	ksmHandler, err := metrics.GetExtraMetricHandlers(scheme)
 	if err != nil {
 		return nil, err
 	}
-	for k, v := range ksmHandler {
-		extraHandlers[k] = v
-	}
+	maps.Copy(extraHandlers, ksmHandler)
 
 	return extraHandlers, nil
 }

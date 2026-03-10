@@ -8,6 +8,7 @@ package comparison
 
 import (
 	"bytes"
+	"slices"
 
 	// #nosec
 	"crypto/md5"
@@ -74,13 +75,7 @@ func SetMD5PodTemplateSpecAnnotation(rs *datadoghqv1alpha1.ExtendedDaemonSetRepl
 
 // StringsContains contains tells whether a contains x.
 func StringsContains(a []string, x string) bool {
-	for _, n := range a {
-		if x == n {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(a, x)
 }
 
 // GenerateHashFromEDSResourceNodeAnnotation is used to generate the MD5 hash from EDS Node annotations that allow a user
