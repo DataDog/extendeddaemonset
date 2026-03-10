@@ -4,7 +4,6 @@
 // Copyright 2016-2019 Datadog, Inc.
 
 //go:build !e2e
-// +build !e2e
 
 package controllers
 

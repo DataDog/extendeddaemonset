@@ -113,7 +113,7 @@ func TestReconciler_newPodTemplate(t *testing.T) {
 			r := &Reconciler{scheme: s}
 			got, err := r.newPodTemplate(tt.eds)
 			assert.True(t, (err == nil), tt.wantErr)
-			assert.EqualValues(t, tt.want, got)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

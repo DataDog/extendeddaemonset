@@ -211,8 +211,8 @@ func (o *Options) Run() error {
 	return wait.PollUntilContextTimeout(context.TODO(), o.checkPeriod, o.checkTimeout, false, checkUpgradeDown)
 }
 
-func (o *Options) printOutf(format string, a ...interface{}) {
-	args := []interface{}{time.Now().UTC().Format("2006-01-02T15:04:05.999Z"), o.userNamespace, o.userExtendedDaemonSetName}
+func (o *Options) printOutf(format string, a ...any) {
+	args := []any{time.Now().UTC().Format("2006-01-02T15:04:05.999Z"), o.userNamespace, o.userExtendedDaemonSetName}
 	args = append(args, a...)
 	_, _ = fmt.Fprintf(o.Out, "[%s] ExtendedDaemonset '%s/%s': "+format+"\n", args...)
 }

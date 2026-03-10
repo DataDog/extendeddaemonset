@@ -42,6 +42,14 @@ func GetExtraMetricHandlers(scheme *runtime.Scheme) (map[string]http.Handler, er
 	return handlers, nil
 }
 
+func (h *storesHandler) RegisterStore(generators []generator.FamilyGenerator, expectedType any, lw cache.ListerWatcher) error {
+	store := newMetricsStore(generators, expectedType, lw)
+	typeKey := fmt.Sprintf("%T", expectedType)
+	h.storesByType[typeKey] = append(h.storesByType[typeKey], store)
+
+	return nil
+}
+
 func (h *storesHandler) serveKsmHTTP(w http.ResponseWriter, r *http.Request) {
 	resHeader := w.Header()
 	// 0.0.4 is the exposition format version of prometheus
@@ -67,14 +75,6 @@ func (h *storesHandler) serveKsmHTTP(w http.ResponseWriter, r *http.Request) {
 	} else {
 		log.Error(err, "Unable to export extra metrics")
 	}
-}
-
-func (h *storesHandler) RegisterStore(generators []generator.FamilyGenerator, expectedType interface{}, lw cache.ListerWatcher) error {
-	store := newMetricsStore(generators, expectedType, lw)
-	typeKey := fmt.Sprintf("%T", expectedType)
-	h.storesByType[typeKey] = append(h.storesByType[typeKey], store)
-
-	return nil
 }
 
 type storesHandler struct {

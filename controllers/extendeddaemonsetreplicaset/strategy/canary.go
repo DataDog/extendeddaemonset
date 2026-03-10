@@ -174,29 +174,29 @@ func manageCanaryPodFailures(pods []*v1.Pod, params *Parameters, result *Result,
 			restartTime, recentRestartReason := podUtils.MostRecentRestart(pod)
 			if restartTime.After(newRestartTime) {
 				newRestartTime = restartTime
-				restartingPodStatus = fmt.Sprintf("Pod %s restarting with reason: %s", pod.ObjectMeta.Name, string(recentRestartReason))
+				restartingPodStatus = fmt.Sprintf("Pod %s restarting with reason: %s", pod.Name, string(recentRestartReason))
 			}
 		}
 
 		var cannotStartReason v1alpha1.ExtendedDaemonSetStatusReason
 		cannotStart, cannotStartReason = podUtils.CannotStart(pod)
 		// We do not want to raise an error yet if MaxSlowStartDuration is specified and not exceeded
-		if cannotStart && params.Strategy.Canary.AutoPause.MaxSlowStartDuration != nil && !now.After(pod.Status.StartTime.Time.Add(params.Strategy.Canary.AutoPause.MaxSlowStartDuration.Duration)) {
+		if cannotStart && params.Strategy.Canary.AutoPause.MaxSlowStartDuration != nil && !now.After(pod.Status.StartTime.Add(params.Strategy.Canary.AutoPause.MaxSlowStartDuration.Duration)) {
 			cannotStart = false
 			cannotStartReason = v1alpha1.ExtendedDaemonSetStatusReasonUnknown
 		} else if cannotStart {
-			cannotStartPodStatus = fmt.Sprintf("Pod %s cannot start with reason: %s", pod.ObjectMeta.Name, string(cannotStartReason))
+			cannotStartPodStatus = fmt.Sprintf("Pod %s cannot start with reason: %s", pod.Name, string(cannotStartReason))
 			cannotStartPodReason = cannotStartReason
 		} else if autoPauseEnabled && podUtils.PendingCreate(pod) && params.Strategy.Canary.AutoPause.MaxSlowStartDuration != nil {
-			if now.After(pod.Status.StartTime.Time.Add(params.Strategy.Canary.AutoPause.MaxSlowStartDuration.Duration)) {
+			if now.After(pod.Status.StartTime.Add(params.Strategy.Canary.AutoPause.MaxSlowStartDuration.Duration)) {
 				params.Logger.Info(
 					"PendingCreate",
-					"PodName", pod.ObjectMeta.Name,
+					"PodName", pod.Name,
 					"Exceeded", params.Strategy.Canary.AutoPause.MaxSlowStartDuration.Duration,
 				)
 				cannotStart = true
 				cannotStartReason = v1alpha1.ExtendedDaemonSetStatusSlowStartTimeoutExceeded
-				cannotStartPodStatus = fmt.Sprintf("Pod %s cannot start with reason: %s", pod.ObjectMeta.Name, cannotStartReason)
+				cannotStartPodStatus = fmt.Sprintf("Pod %s cannot start with reason: %s", pod.Name, cannotStartReason)
 				cannotStartPodReason = cannotStartReason
 			}
 		}

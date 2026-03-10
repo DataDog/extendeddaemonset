@@ -1,84 +1,101 @@
-[run]
-  deadline = "5m"
-
-[linters-settings]
-
-  [linters-settings.gocyclo]
-    min-complexity = 12.0
-
-  [linters-settings.maligned]
-    suggest-new = true
-
-  [linters-settings.goconst]
-    min-len = 3.0
-    min-occurrences = 3.0
-
-  [linters-settings.misspell]
-    locale = "US"
-
-  [linters-settings.gci]
-    sections = [
-        "prefix(github.com/DataDog/extendeddaemonset)"
-    ]
-
-  [linters-settings.godot]
-    exclude = [
-      ' \+',
-    ]
-
-  [linters-settings.errcheck]
-    exclude-functions = [
-      "fmt.Fprintf"
-    ]
+version = '2'
 
 [linters]
-  enable-all = true
-  disable = [
-    "exhaustruct",
-    "loggercheck",
-    "nonamedreturns",
-    "revive",
-    "lll",
-    "gosec",
-    "dupl",
-    "gocyclo",
-    "gochecknoinits",
-    "gochecknoglobals",
-    "funlen",
-    "gocognit",
-    "cyclop",
-    "wrapcheck",
-    "forcetypeassert",
-    "err113",
-    "testpackage",
-    "wastedassign",
-    "thelper",
-    "paralleltest",
-    "nestif",
-    "exhaustive",
-    "gci",
-    "wsl",
-    "godox",
-    "godot",
-    "nlreturn",
-    "varnamelen",
-    "tagliatelle",
-    "containedctx",
-    "contextcheck",
-    "nilnil",
-    "ireturn",
-    "maintidx",
-    "gocritic",
-    "errchkjson",
-    "gofumpt",
-    "unparam",
-    "depguard",
-    "mnd",
-    "tenv"
-  ]
+default = 'all'
+disable = [
+  'containedctx',
+  'contextcheck',
+  'cyclop',
+  'depguard',
+  'dupl',
+  'embeddedstructfieldcheck',
+  'err113',
+  'errchkjson',
+  'exhaustive',
+  'exhaustruct',
+  'forcetypeassert',
+  'funlen',
+  'gochecknoglobals',
+  'gochecknoinits',
+  'gocognit',
+  'gocritic',
+  'gocyclo',
+  'godot',
+  'godox',
+  'gosec',
+  'ireturn',
+  'lll',
+  'loggercheck',
+  'maintidx',
+  'mnd',
+  'nestif',
+  'nilnil',
+  'nlreturn',
+  'noctx',
+  'noinlineerr',
+  'nonamedreturns',
+  'paralleltest',
+  'prealloc',
+  'revive',
+  'tagliatelle',
+  'testpackage',
+  'thelper',
+  'unparam',
+  'varnamelen',
+  'wastedassign',
+  'wrapcheck',
+  'wsl',
+  'wsl_v5'
+]
+
+[linters.settings]
+[linters.settings.errcheck]
+exclude-functions = [
+  'fmt.Fprintf'
+]
+
+[linters.settings.goconst]
+min-len = 3
+min-occurrences = 3
+
+[linters.settings.gocyclo]
+min-complexity = 12
+
+[linters.settings.godot]
+exclude = [
+  ' \+'
+]
+
+[linters.settings.misspell]
+locale = 'US'
+
+[linters.exclusions]
+generated = 'lax'
+paths = [
+  'third_party$',
+  'builtin$',
+  'examples$'
+]
 
 [issues]
-  exclude-use-default = false
-  max-per-linter = 0
-  max-same-issues = 0
-  exclude = []
+max-same-issues = 0
+
+[formatters]
+enable = [
+  'gofmt',
+  'goimports'
+]
+
+[formatters.settings]
+[formatters.settings.gci]
+sections = [
+  'prefix(github.com/DataDog/extendeddaemonset)'
+]
+
+[formatters.exclusions]
+generated = 'lax'
+paths = [
+  'third_party$',
+  'builtin$',
+  'examples$'
+]
