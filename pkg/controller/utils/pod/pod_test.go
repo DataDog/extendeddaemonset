@@ -148,7 +148,7 @@ func TestIsPodScheduled(t *testing.T) {
 	},
 	)
 	got, isScheduled = IsPodScheduled(pod2)
-	assert.Equal(t, "", got)
+	assert.Empty(t, got)
 	assert.False(t, isScheduled)
 }
 
@@ -197,7 +197,7 @@ func TestGetNodeNameFromPod(t *testing.T) {
 	},
 	)
 	got, err = GetNodeNameFromPod(pod2)
-	assert.Equal(t, "", got)
+	assert.Empty(t, got)
 	require.Error(t, err)
 }
 
