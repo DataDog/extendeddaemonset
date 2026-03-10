@@ -6,6 +6,7 @@
 package testutils
 
 import (
+	"maps"
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -68,21 +69,17 @@ func NewExtendedDaemonset(ns, name, image string, options *NewExtendedDaemonsetO
 		}
 
 		if options.ExtraLabels != nil {
-			if newDaemonset.ObjectMeta.Labels == nil {
-				newDaemonset.ObjectMeta.Labels = map[string]string{}
+			if newDaemonset.Labels == nil {
+				newDaemonset.Labels = map[string]string{}
 			}
-			for key, val := range options.ExtraLabels {
-				newDaemonset.ObjectMeta.Labels[key] = val
-			}
+			maps.Copy(newDaemonset.Labels, options.ExtraLabels)
 		}
 
 		if options.ExtraAnnotations != nil {
-			if newDaemonset.ObjectMeta.Annotations == nil {
-				newDaemonset.ObjectMeta.Annotations = map[string]string{}
+			if newDaemonset.Annotations == nil {
+				newDaemonset.Annotations = map[string]string{}
 			}
-			for key, val := range options.ExtraAnnotations {
-				newDaemonset.ObjectMeta.Annotations[key] = val
-			}
+			maps.Copy(newDaemonset.Annotations, options.ExtraAnnotations)
 		}
 
 		if options.ReconcileFrequency != nil {
@@ -164,12 +161,10 @@ func NewDaemonset(ns, name, image string, options *NewDaemonsetOptions) *appsv1.
 	}
 	if options != nil {
 		if options.ExtraLabels != nil {
-			if newDaemonset.ObjectMeta.Labels == nil {
-				newDaemonset.ObjectMeta.Labels = map[string]string{}
+			if newDaemonset.Labels == nil {
+				newDaemonset.Labels = map[string]string{}
 			}
-			for key, val := range options.ExtraLabels {
-				newDaemonset.ObjectMeta.Labels[key] = val
-			}
+			maps.Copy(newDaemonset.Labels, options.ExtraLabels)
 		}
 	}
 

@@ -8,7 +8,9 @@ package extendeddaemonset
 import (
 	"context"
 	"fmt"
+	"maps"
 	"math/rand"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -404,12 +406,8 @@ func (r *Reconciler) selectNodes(logger logr.Logger, daemonset *datadoghqv1alpha
 					antiAffinityKeysValues[antiAffinityKeysValue] = 0
 				}
 
-				for _, currentNode := range currentNodes {
-					if node.Name == currentNode {
-						antiAffinityKeysValues[antiAffinityKeysValue]++
-
-						break
-					}
+				if slices.Contains(currentNodes, node.Name) {
+					antiAffinityKeysValues[antiAffinityKeysValue]++
 				}
 			}
 		}
@@ -417,14 +415,7 @@ func (r *Reconciler) selectNodes(logger logr.Logger, daemonset *datadoghqv1alpha
 		// Look for new canary nodes
 		for _, node := range nodeList.Items {
 			// Check if that node is already selected
-			alreadySelected := false
-			for _, currentNode := range currentNodes {
-				if node.Name == currentNode {
-					alreadySelected = true
-
-					break
-				}
-			}
+			alreadySelected := slices.Contains(currentNodes, node.Name)
 			if alreadySelected {
 				continue
 			}
@@ -554,9 +545,7 @@ func newReplicaSetFromInstance(daemonset *datadoghqv1alpha1.ExtendedDaemonSet) (
 	labels := map[string]string{
 		datadoghqv1alpha1.ExtendedDaemonSetNameLabelKey: daemonset.Name,
 	}
-	for key, val := range daemonset.Labels {
-		labels[key] = val
-	}
+	maps.Copy(labels, daemonset.Labels)
 	rs := &datadoghqv1alpha1.ExtendedDaemonSetReplicaSet{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: daemonset.Name + "-",

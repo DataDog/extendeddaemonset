@@ -47,11 +47,7 @@ func IsCanaryDeploymentEnded(specCanary *datadoghqv1alpha1.ExtendedDaemonSetSpec
 		pendingNoRestartDuration = lastRestartTime.Add(specCanary.NoRestartsDuration.Duration).Sub(now)
 	}
 
-	pendingDuration = rs.CreationTimestamp.Add(specCanary.Duration.Duration).Sub(now)
-
-	if pendingNoRestartDuration > pendingDuration {
-		pendingDuration = pendingNoRestartDuration
-	}
+	pendingDuration = max(pendingNoRestartDuration, rs.CreationTimestamp.Add(specCanary.Duration.Duration).Sub(now))
 
 	if pendingDuration >= 0 {
 		return false, pendingDuration

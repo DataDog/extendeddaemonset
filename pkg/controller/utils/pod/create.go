@@ -24,22 +24,22 @@ func CreatePodFromDaemonSetReplicaSet(scheme *runtime.Scheme, replicaset *datado
 	var err error
 	templateCopy := replicaset.Spec.Template.DeepCopy()
 	{
-		templateCopy.ObjectMeta.Namespace = replicaset.Namespace
-		templateCopy.ObjectMeta.GenerateName = replicaset.Name + "-"
+		templateCopy.Namespace = replicaset.Namespace
+		templateCopy.GenerateName = replicaset.Name + "-"
 	}
 
-	if templateCopy.ObjectMeta.Labels == nil {
-		templateCopy.ObjectMeta.Labels = map[string]string{}
+	if templateCopy.Labels == nil {
+		templateCopy.Labels = map[string]string{}
 	}
-	templateCopy.ObjectMeta.Labels[datadoghqv1alpha1.ExtendedDaemonSetReplicaSetNameLabelKey] = replicaset.Name
+	templateCopy.Labels[datadoghqv1alpha1.ExtendedDaemonSetReplicaSetNameLabelKey] = replicaset.Name
 	edsName := replicaset.Labels[datadoghqv1alpha1.ExtendedDaemonSetNameLabelKey]
-	templateCopy.ObjectMeta.Labels[datadoghqv1alpha1.ExtendedDaemonSetNameLabelKey] = edsName
+	templateCopy.Labels[datadoghqv1alpha1.ExtendedDaemonSetNameLabelKey] = edsName
 
-	if templateCopy.ObjectMeta.Annotations == nil {
-		templateCopy.ObjectMeta.Annotations = map[string]string{}
+	if templateCopy.Annotations == nil {
+		templateCopy.Annotations = map[string]string{}
 	}
-	templateCopy.ObjectMeta.Annotations[datadoghqv1alpha1.MD5ExtendedDaemonSetAnnotationKey] = replicaset.Spec.TemplateGeneration
-	templateCopy.ObjectMeta.Annotations[DaemonsetClusterAutoscalerPodAnnotationKey] = "true"
+	templateCopy.Annotations[datadoghqv1alpha1.MD5ExtendedDaemonSetAnnotationKey] = replicaset.Spec.TemplateGeneration
+	templateCopy.Annotations[DaemonsetClusterAutoscalerPodAnnotationKey] = "true"
 
 	templateCopy.Spec.Tolerations = append(templateCopy.Spec.Tolerations, StandardDaemonSetTolerations...)
 
@@ -49,7 +49,7 @@ func CreatePodFromDaemonSetReplicaSet(scheme *runtime.Scheme, replicaset *datado
 		err = overwriteResourcesFromNode(templateCopy, replicaset.Namespace, edsName, node)
 		hash := comparison.GenerateHashFromEDSResourceNodeAnnotation(replicaset.Namespace, edsName, node.Annotations)
 		if hash != "" {
-			templateCopy.ObjectMeta.Annotations[datadoghqv1alpha1.MD5NodeExtendedDaemonSetAnnotationKey] = hash
+			templateCopy.Annotations[datadoghqv1alpha1.MD5NodeExtendedDaemonSetAnnotationKey] = hash
 		}
 	}
 
