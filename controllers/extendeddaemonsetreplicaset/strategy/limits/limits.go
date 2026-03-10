@@ -27,7 +27,7 @@ type Parameters struct {
 func CalculatePodToCreateAndDelete(params Parameters) (nbCreation, nbDeletion int) {
 	nbCreation = min(params.NbNodes-params.NbPods, params.MaxPodCreation)
 	// Prevent negative number of pods to create
-	nbCreation = max(nbCreation)
+	nbCreation = max(nbCreation, 0)
 
 	effectiveUnresponsive := min(params.NbUnresponsiveNodes, params.MaxUnschedulablePod)
 
