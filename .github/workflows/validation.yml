@@ -39,6 +39,15 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: cover.out
         flags: unittests
+    - name: Upload coverage to Datadog
+      if: always()
+      continue-on-error: true
+      uses: DataDog/coverage-upload-github-action@v1
+      with:
+        api_key: ${{ secrets.DD_API_KEY }}
+        files: cover.out
+        format: go-coverprofile
+        flags: unittests
   e2e:
     runs-on: ubuntu-latest
     strategy:
