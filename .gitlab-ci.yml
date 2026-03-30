@@ -10,7 +10,7 @@ variables:
   DOCKER_REGISTRY_URL: docker.io
   FIPS_ENABLED: false
   # This should get updated to slug of latest release by make bundle command
-  CONDUCTOR_BUILD_TAG: v0-11-0-rc-6
+  CONDUCTOR_BUILD_TAG: v0-11-0-rc-7
   KUBERNETES_MEMORY_LIMIT: 8Gi
   KUBERNETES_MEMORY_REQUEST: 8Gi
 cache:
