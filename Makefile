@@ -77,8 +77,8 @@ deploy: manifests $(KUSTOMIZE)
 manifests: generate-manifests patch-crds
 
 generate-manifests: controller-gen
-	$(CONTROLLER_GEN) crd rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases/v1
-	$(CONTROLLER_GEN) crd rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases/v1beta1
+	$(CONTROLLER_GEN) crd rbac:roleName=manager-role webhook paths="./api/..." paths="./controllers/..." output:crd:artifacts:config=config/crd/bases/v1
+	$(CONTROLLER_GEN) crd rbac:roleName=manager-role webhook paths="./api/..." paths="./controllers/..." output:crd:artifacts:config=config/crd/bases/v1beta1
 
 # Run go fmt against code
 fmt:
@@ -90,7 +90,7 @@ vet:
 
 # Generate code
 generate: controller-gen generate-openapi
-	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./api/..."
 
 # Build the docker image
 # For use locally
@@ -210,7 +210,7 @@ bin/yq:
 	./hack/install-yq.sh 3.3.0
 
 bin/golangci-lint:
-	hack/install-golangci-lint.sh v1.64.2
+	hack/install-golangci-lint.sh v2.11.3
 
 bin/operator-sdk:
 	./hack/install-operator-sdk.sh v1.5.0

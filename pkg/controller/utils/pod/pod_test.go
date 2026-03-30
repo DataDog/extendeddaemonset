@@ -148,7 +148,7 @@ func TestIsPodScheduled(t *testing.T) {
 	},
 	)
 	got, isScheduled = IsPodScheduled(pod2)
-	assert.Equal(t, "", got)
+	assert.Empty(t, got)
 	assert.False(t, isScheduled)
 }
 
@@ -197,7 +197,7 @@ func TestGetNodeNameFromPod(t *testing.T) {
 	},
 	)
 	got, err = GetNodeNameFromPod(pod2)
-	assert.Equal(t, "", got)
+	assert.Empty(t, got)
 	require.Error(t, err)
 }
 
@@ -598,7 +598,7 @@ func newPod(now metav1.Time, ready bool, beforeSec int) *v1.Pod {
 			Conditions: []v1.PodCondition{
 				{
 					Type:               v1.PodReady,
-					LastTransitionTime: metav1.NewTime(now.Time.Add(time.Duration(-beforeSec) * time.Second)),
+					LastTransitionTime: metav1.NewTime(now.Add(time.Duration(-beforeSec) * time.Second)),
 					Status:             conditionStatus,
 				},
 			},

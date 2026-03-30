@@ -7,5 +7,5 @@ import (
 
 // Handler use to registry controller metrics.
 type Handler interface {
-	RegisterStore(generators []generator.FamilyGenerator, expectedType interface{}, lw cache.ListerWatcher) error
+	RegisterStore(generators []generator.FamilyGenerator, expectedType any, lw cache.ListerWatcher) error
 }

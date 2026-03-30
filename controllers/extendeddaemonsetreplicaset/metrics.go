@@ -43,7 +43,7 @@ func generateMetricFamilies() []generator.FamilyGenerator {
 			Name: ersLabels,
 			Type: ksmetric.Gauge,
 			Help: "Kubernetes labels converted to Prometheus labels",
-			GenerateFunc: func(obj interface{}) *ksmetric.Family {
+			GenerateFunc: func(obj any) *ksmetric.Family {
 				ers := obj.(*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&ers.ObjectMeta)
 				extraKeys, extraValues := utils.BuildInfoLabels(&ers.ObjectMeta)
@@ -63,7 +63,7 @@ func generateMetricFamilies() []generator.FamilyGenerator {
 			Name: ersCreated,
 			Type: ksmetric.Gauge,
 			Help: "Unix creation timestamp",
-			GenerateFunc: func(obj interface{}) *ksmetric.Family {
+			GenerateFunc: func(obj any) *ksmetric.Family {
 				ers := obj.(*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&ers.ObjectMeta)
 
@@ -82,7 +82,7 @@ func generateMetricFamilies() []generator.FamilyGenerator {
 			Name: ersStatusDesired,
 			Type: ksmetric.Gauge,
 			Help: "The number of nodes that should be running the daemon pod.",
-			GenerateFunc: func(obj interface{}) *ksmetric.Family {
+			GenerateFunc: func(obj any) *ksmetric.Family {
 				ers := obj.(*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&ers.ObjectMeta)
 
@@ -101,7 +101,7 @@ func generateMetricFamilies() []generator.FamilyGenerator {
 			Name: ersStatusCurrent,
 			Type: ksmetric.Gauge,
 			Help: "The number of nodes running at least one daemon pod and are supposed to.",
-			GenerateFunc: func(obj interface{}) *ksmetric.Family {
+			GenerateFunc: func(obj any) *ksmetric.Family {
 				ers := obj.(*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&ers.ObjectMeta)
 				labelKeys = append(labelKeys, "status")
@@ -122,7 +122,7 @@ func generateMetricFamilies() []generator.FamilyGenerator {
 			Name: ersStatusReady,
 			Type: ksmetric.Gauge,
 			Help: "The number of nodes that should be running the daemon pod and have one or more of the daemon pod running and ready.",
-			GenerateFunc: func(obj interface{}) *ksmetric.Family {
+			GenerateFunc: func(obj any) *ksmetric.Family {
 				ers := obj.(*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&ers.ObjectMeta)
 
@@ -141,7 +141,7 @@ func generateMetricFamilies() []generator.FamilyGenerator {
 			Name: ersStatusAvailable,
 			Type: ksmetric.Gauge,
 			Help: "The number of nodes that should be running the daemon pod and have one or more of the daemon pod running and available.",
-			GenerateFunc: func(obj interface{}) *ksmetric.Family {
+			GenerateFunc: func(obj any) *ksmetric.Family {
 				ers := obj.(*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&ers.ObjectMeta)
 
@@ -160,7 +160,7 @@ func generateMetricFamilies() []generator.FamilyGenerator {
 			Name: ersStatusIgnoredUnresponsiveNodes,
 			Type: ksmetric.Gauge,
 			Help: "The total number of nodes that are ignored by the rolling update strategy due to an unresponsive state",
-			GenerateFunc: func(obj interface{}) *ksmetric.Family {
+			GenerateFunc: func(obj any) *ksmetric.Family {
 				ers := obj.(*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&ers.ObjectMeta)
 
@@ -179,7 +179,7 @@ func generateMetricFamilies() []generator.FamilyGenerator {
 			Name: ersStatusCanaryFailed,
 			Type: ksmetric.Gauge,
 			Help: "The failed state of the canary deployment, set to 1 if failed, else 0",
-			GenerateFunc: func(obj interface{}) *ksmetric.Family {
+			GenerateFunc: func(obj any) *ksmetric.Family {
 				ers := obj.(*datadoghqv1alpha1.ExtendedDaemonSetReplicaSet)
 				labelKeys, labelValues := utils.GetLabelsValues(&ers.ObjectMeta)
 
