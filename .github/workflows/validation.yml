@@ -13,6 +13,9 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # needed for dd-sts OIDC token exchange
     steps:
     - name: Set up Go
       uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
@@ -38,6 +41,21 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: cover.out
+        flags: unittests
+    - name: Get Datadog credentials
+      id: dd-sts
+      continue-on-error: true
+      uses: DataDog/dd-sts-action@2e8187910199bd93129520183c093e19aa585c75 # v1.0.0
+      with:
+        policy: extendeddaemonset
+    - name: Upload coverage to Datadog
+      if: steps.dd-sts.outputs.api_key != ''
+      continue-on-error: true
+      uses: DataDog/coverage-upload-github-action@v1
+      with:
+        api_key: ${{ steps.dd-sts.outputs.api_key }}
+        files: cover.out
+        format: go-coverprofile
         flags: unittests
   e2e:
     runs-on: ubuntu-latest
