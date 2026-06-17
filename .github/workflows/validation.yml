@@ -37,11 +37,6 @@ jobs:
     - name: Run unit/control plane tests (fake cluster)
       run: |
         make test
-    - uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        file: cover.out
-        flags: unittests
     - name: Get Datadog credentials
       id: dd-sts
       continue-on-error: true
