@@ -205,7 +205,7 @@ trigger_internal_eds_image:
     - build_eds_image_arm64
     - build_eds_image_amd64
   trigger:
-    project: DataDog/images
+    project: ddoghq/images
     branch: master
     strategy: depend
   variables:
@@ -226,7 +226,7 @@ trigger_internal_eds_image_fips:
     - build_eds_image_arm64
     - build_eds_image_amd64
   trigger:
-    project: DataDog/images
+    project: ddoghq/images
     branch: master
     strategy: depend
   variables:
@@ -247,7 +247,7 @@ trigger_internal_eds_image_conductor:
     - build_eds_image_arm64
     - build_eds_image_amd64
   trigger:
-    project: DataDog/images
+    project: ddoghq/images
     branch: master
     strategy: depend
   variables:
@@ -270,7 +270,7 @@ trigger_internal_eds_check_image:
     - build_eds_check_image_arm64
     - build_eds_check_image_amd64
   trigger:
-    project: DataDog/images
+    project: ddoghq/images
     branch: master
     strategy: depend
   variables:
@@ -291,7 +291,7 @@ trigger_internal_eds_check_image_conductor:
     - build_eds_check_image_arm64
     - build_eds_check_image_amd64
   trigger:
-    project: DataDog/images
+    project: ddoghq/images
     branch: master
     strategy: depend
   variables:

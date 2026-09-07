@@ -22,7 +22,7 @@ links:
     url: https://github.com/DataDog/k8s-datadog-agent-ops/tree/main/charts/extendeddaemonset
   - name: internal-image
     type: repo
-    url: https://github.com/DataDog/images/tree/master/extendeddaemonset
+    url: https://github.com/ddoghq/images/tree/master/extendeddaemonset
   - name: On Call documentation
     type: doc
     url: https://datadoghq.atlassian.net/wiki/spaces/ContEco/pages/2445645960/On+Call
