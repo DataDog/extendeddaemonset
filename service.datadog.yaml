@@ -16,10 +16,10 @@ links:
     url: https://github.com/DataDog/extendeddaemonset
   - name: deployment
     type: repo
-    url: https://github.com/DataDog/k8s-datadog-agent-ops
+    url: https://github.com/ddoghq/k8s-datadog-agent-ops
   - name: internal-chart
     type: repo
-    url: https://github.com/DataDog/k8s-datadog-agent-ops/tree/main/charts/extendeddaemonset
+    url: https://github.com/ddoghq/k8s-datadog-agent-ops/tree/main/charts/extendeddaemonset
   - name: internal-image
     type: repo
     url: https://github.com/DataDog/images/tree/master/extendeddaemonset
