@@ -1,5 +1,9 @@
 # ExtendedDaemonSet
 
+> [!IMPORTANT]
+> This repository is a public, read-only archive and is no longer maintained.
+> It will not receive new features, bug fixes, or support.
+
 ![badge](https://action-badges.now.sh/datadog/extendeddaemonset)
 [![Go Report Card](https://goreportcard.com/badge/github.com/DataDog/extendeddaemonset)](https://goreportcard.com/report/github.com/DataDog/extendeddaemonset)
 [![codecov](https://codecov.io/gh/datadog/extendeddaemonset/branch/main/graph/badge.svg)](https://codecov.io/gh/datadog/extendeddaemonset)
